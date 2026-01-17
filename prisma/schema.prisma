@@ -43,22 +43,24 @@ model User {
   subscriptionFeatures  SubscriptionFeature[]
   userSubscription      UserSubscription?
   userUsage             UserUsageCounter?
+  presentations         Presentation[]        @relation("UserPresentations")
 }
 
 model Course {
-  id           String             @id @default(cuid())
-  title        String
-  code         String?
-  term         String?
-  description  String?
-  instructorId String
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  assignments  Assignment[]
-  instructor   User               @relation("InstructorCourses", fields: [instructorId], references: [id])
-  discussions  DiscussionThread[]
-  enrollments  Enrollment[]
-  modules      Module[]
+  id            String             @id @default(cuid())
+  title         String
+  code          String?
+  term          String?
+  description   String?
+  instructorId  String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  assignments   Assignment[]
+  instructor    User               @relation("InstructorCourses", fields: [instructorId], references: [id])
+  discussions   DiscussionThread[]
+  enrollments   Enrollment[]
+  modules       Module[]
+  presentations Presentation[]
 }
 
 model Enrollment {
@@ -79,6 +81,56 @@ model Module {
   content   String?
   createdAt DateTime @default(now())
   course    Course   @relation(fields: [courseId], references: [id])
+}
+
+model Presentation {
+  id              String             @id @default(cuid())
+  courseId        String
+  userId          String
+  title           String
+  description     String?
+  sourceType      PresentationSource @default(MIXED)
+  templateStyle   String             @default("modern-minimalist")
+  slideCount      Int                @default(0)
+  targetDuration  Int?               // in minutes
+  status          PresentationStatus @default(DRAFT)
+  fileUrl         String?
+  pdfUrl          String?
+  previewUrl      String?
+  metadata        String?            // JSON metadata
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  course          Course             @relation(fields: [courseId], references: [id])
+  user            User               @relation("UserPresentations", fields: [userId], references: [id])
+  slides          PresentationSlide[]
+  sources         PresentationSourceFile[]
+}
+
+model PresentationSlide {
+  id             String       @id @default(cuid())
+  presentationId String
+  slideNumber    Int
+  title          String?
+  content        String?      // JSON content
+  notes          String?
+  layout         String       @default("title-content")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+
+  @@unique([presentationId, slideNumber])
+}
+
+model PresentationSourceFile {
+  id             String       @id @default(cuid())
+  presentationId String
+  fileName       String
+  fileType       String
+  fileUrl        String
+  fileSize       Int?
+  pages          String?      // e.g., "1-10,15,20-25"
+  createdAt      DateTime     @default(now())
+  presentation   Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
 }
 
 model Assignment {
@@ -532,4 +584,20 @@ enum CreditType {
   ROLLOVER
   BONUS
   REFUND
+}
+
+enum PresentationSource {
+  TEXTBOOK
+  LECTURE_NOTES
+  RESEARCH_PAPER
+  WEB_CONTENT
+  MIXED
+}
+
+enum PresentationStatus {
+  DRAFT
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPORTED
 }

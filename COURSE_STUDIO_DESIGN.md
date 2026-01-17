@@ -21,6 +21,7 @@ Create complete lecture content from various sources:
 Transform educational content into professional presentations:
 
 #### Input Sources
+
 - 📚 **Textbooks**: Upload textbook chapters (PDF, Word, text)
 - 📄 **Lecture Notes**: Use existing notes as foundation
 - 🗂️ **Course Resources**: Combine multiple documents and materials
@@ -28,6 +29,7 @@ Transform educational content into professional presentations:
 - 🔗 **Online Resources**: Import from URLs and web content
 
 #### Presentation Features
+
 - **Smart Slide Generation**: Optimal content per slide (no overcrowding)
 - **Visual Hierarchy**: Proper use of titles, subtitles, and bullet points
 - **Multimedia Integration**: Placeholder slots for images and videos
@@ -69,6 +71,7 @@ Navigate to: Dashboard → Courses → [Your Course] → Studio Design → New L
 ### Step 2: Upload Source Materials
 
 Upload one or multiple sources:
+
 - Textbook chapters (PDF)
 - Lecture notes (Word, text)
 - Research papers (PDF)
@@ -112,6 +115,7 @@ The system performs:
 ### Step 6: Export & Share
 
 Export in multiple formats:
+
 - **PowerPoint (.pptx)**: Editable PPTX file
 - **PDF**: Static PDF for distribution
 - **Google Slides**: Direct export to Google Slides
@@ -207,6 +211,7 @@ POST /api/course-studio/generate-presentation
 The system can extract and structure:
 
 #### From Textbooks
+
 - Chapter titles and sections
 - Key concepts and definitions
 - Examples and case studies
@@ -215,6 +220,7 @@ The system can extract and structure:
 - Review questions
 
 #### From Research Papers
+
 - Abstract and introduction
 - Methodology overview
 - Key findings and results
@@ -222,6 +228,7 @@ The system can extract and structure:
 - Citations and references
 
 #### From Lecture Notes
+
 - Outline structure
 - Topic hierarchy
 - Important points
@@ -233,6 +240,7 @@ The system can extract and structure:
 ### Available Templates
 
 #### 1. Academic Classic
+
 ```css
 Colors: Navy blue, white, light gray
 Fonts: Times New Roman, Arial
@@ -241,6 +249,7 @@ Best for: University lectures, formal presentations
 ```
 
 #### 2. Modern Minimalist
+
 ```css
 Colors: Black, white, accent color
 Fonts: Helvetica, Roboto
@@ -249,6 +258,7 @@ Best for: Technical topics, modern courses
 ```
 
 #### 3. Corporate Professional
+
 ```css
 Colors: Blue, gray, white
 Fonts: Calibri, Arial
@@ -257,6 +267,7 @@ Best for: Business courses, executive education
 ```
 
 #### 4. Creative Dynamic
+
 ```css
 Colors: Bold, vibrant palette
 Fonts: Modern sans-serif
@@ -284,6 +295,7 @@ Upload your institution's branding:
 ### Multi-Language Support
 
 Generate presentations in multiple languages:
+
 - English, Spanish, French, German
 - Chinese, Japanese, Korean
 - Arabic, Portuguese, Russian
@@ -306,6 +318,7 @@ Generate presentations in multiple languages:
 ### Integration with LMS
 
 Export directly to:
+
 - Canvas
 - Blackboard
 - Moodle
@@ -319,6 +332,7 @@ Export directly to:
 **Scenario**: Professor needs to create 30 lectures for a new course
 
 **Process**:
+
 1. Upload textbook (PDF)
 2. Generate 30 lecture outlines automatically
 3. Customize each lecture as needed
@@ -332,6 +346,7 @@ Export directly to:
 **Scenario**: Update last year's lectures with new content
 
 **Process**:
+
 1. Upload previous year's presentations
 2. Upload new research papers and materials
 3. AI merges old and new content
@@ -345,6 +360,7 @@ Export directly to:
 **Scenario**: Create presentation from conference paper
 
 **Process**:
+
 1. Upload research paper PDF
 2. Set duration: 60 minutes
 3. Generate presentation with 20 slides
@@ -358,6 +374,7 @@ Export directly to:
 **Scenario**: Create pre-class video presentation materials
 
 **Process**:
+
 1. Upload textbook chapter
 2. Generate concise presentation (10-12 slides)
 3. Add narration notes
@@ -427,24 +444,28 @@ const SUPPORTED_FORMATS = {
 ## 📈 Roadmap
 
 ### Phase 1: Core Features (Completed)
+
 - [x] Basic PowerPoint generation
 - [x] Textbook content extraction
 - [x] Multiple templates
 - [x] Export to PPTX and PDF
 
 ### Phase 2: Enhanced Features (In Progress)
+
 - [ ] Real-time preview editor
 - [ ] Advanced customization options
 - [ ] Collaboration tools
 - [ ] Version control system
 
 ### Phase 3: Advanced AI (Planned)
+
 - [ ] Voice narration generation
 - [ ] Automatic image sourcing
 - [ ] Video clip suggestions
 - [ ] Interactive quiz generation
 
 ### Phase 4: Integration (Future)
+
 - [ ] LMS deep integration
 - [ ] Live presentation mode
 - [ ] Student analytics
@@ -471,8 +492,9 @@ const SUPPORTED_FORMATS = {
 ## 📞 Support
 
 For Course Studio Design questions:
+
 - **Documentation**: See [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)
-- **Technical Support**: support@profgenie.com
+- **Technical Support**: <support@profgenie.com>
 - **Feature Requests**: Submit via GitHub Issues
 - **Video Tutorials**: Available in-app help center
 
