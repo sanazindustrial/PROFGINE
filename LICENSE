@@ -5,6 +5,7 @@ Copyright (c) 2026 Professor GENIE Platform
 NOTICE: This license is based on the Business Source License 1.1 model.
 
 Parameters:
+
 - Licensor: Professor GENIE Platform
 - Licensed Work: Professor GENIE Platform (the "Software")
 - Change Date: January 16, 2030 (4 years from publication)
@@ -13,7 +14,7 @@ Parameters:
 TERMS AND CONDITIONS:
 
 1. LICENSE GRANT
-   Subject to the limitations in Section 2, the Licensor grants you a 
+   Subject to the limitations in Section 2, the Licensor grants you a
    non-exclusive, non-transferable license to:
    a) Use the Software for non-production purposes (development, testing, evaluation)
    b) Modify the Software for your internal non-production use
@@ -22,14 +23,14 @@ TERMS AND CONDITIONS:
 2. LIMITATIONS
    You may NOT use the Software for Production Use unless you have obtained
    a separate Commercial Production License from the Licensor.
-   
+
    "Production Use" means using the Software:
    a) For commercial purposes or in a commercial product or service
    b) To provide services to external customers or users
    c) In any revenue-generating capacity
    d) For more than 3 concurrent users in a single organization
-   
-   For Commercial Production Licenses, contact: licensing@profgenie.com
+
+   For Commercial Production Licenses, contact: <licensing@profgenie.com>
 
 3. INTELLECTUAL PROPERTY
    All rights, title, and interest in the Software remain with the Licensor.
@@ -76,9 +77,10 @@ TERMS AND CONDITIONS:
     This license constitutes the entire agreement concerning the subject matter.
 
 ADDITIONAL INFORMATION:
-- For Commercial Production Licenses: licensing@profgenie.com
-- For Technical Support: support@profgenie.com  
-- Repository: https://github.com/sanazindustrial/PROFGINE
+
+- For Commercial Production Licenses: <licensing@profgenie.com>
+- For Technical Support: <support@profgenie.com>  
+- Repository: <https://github.com/sanazindustrial/PROFGINE>
 
 This license is inspired by the Business Source License 1.1 created by
 MariaDB Corporation Ab. For questions about this specific license, contact

@@ -129,52 +129,6 @@ See [`GOOGLE_OAUTH_SETUP.md`](GOOGLE_OAUTH_SETUP.md) for OAuth configuration.
 
 ## 📁 Project Structure
 
-   ```bash
-   cd profhelp
-   ```
-
-1. Install the dependencies:
-
-   ```bash
-   pnpm install
-   ```
-
-2. Start the development server:
-
-   ```bash
-   pnpm dev
-   ```
-
-3. Init your prisma client:
-
-   ```bash
-   pnpm prisma:generate
-   ```
-
-4. Run prisma migrations
-
-   ```bash
-   pnpm migration:postgres:local
-   ```
-
-5. Open your browser and visit `http://localhost:3000` to see the application running.
-
-### Create your first use in your local setup
-
-1. Go to `app/api/auth/[...nextauth]/route.ts`
-2. Edit the signIn function to look like this:
-
-   ```bash
-   async signIn({ user, account, profile, email, credentials }) {
-    return true
-   }
-   ```
-
-3. Log into the app at `http://localhost:3000`
-4. Roll back your changes, an try to login with the same email you use in the previous step.
-
-## Project Structure
-
 The project follows the Next.js 13 App Directory structure. Here's an overview of the main directories and files:
 
 - `app/`: Contains the application routes and pages.
@@ -281,6 +235,64 @@ The project includes configuration files for various tools and libraries used:
 - `prettier.config.js`: Defines the Prettier configuration for code formatting.
 - `tailwind.config.js`: Contains the Tailwind CSS configuration, including theme customization, content paths, and plugin settings.
 
-## License
+## 📜 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+This project is licensed under the **Business Source License 1.1**.
+
+- ✅ **Free for non-production use** (development, testing, learning)
+- 💼 **Commercial/production use requires a license** - Contact: licensing@profgenie.com
+- 📅 **Converts to Apache 2.0** on January 16, 2030 (becomes fully open source)
+- 👥 **Limited to 3 concurrent users** without commercial license
+
+See the [LICENSE](LICENSE) file for complete terms.
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+### Quick Contribution Guide
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📞 Support & Contact
+
+- **Repository**: [https://github.com/sanazindustrial/PROFGINE](https://github.com/sanazindustrial/PROFGINE)
+- **Commercial Licensing**: licensing@profgenie.com
+- **Technical Support**: support@profgenie.com
+- **Documentation**: See `/docs` and individual `.md` files in the root directory
+
+## 🎯 Roadmap
+
+- [x] Multi-AI provider system with automatic fallback
+- [x] Role-based access control (ADMIN/PROFESSOR/STUDENT)
+- [x] Subscription management with trial periods
+- [x] Chrome extension for LMS integration
+- [x] Dark mode support
+- [ ] Mobile app (React Native)
+- [ ] Additional LMS integrations (Moodle, D2L)
+- [ ] Advanced analytics dashboard
+- [ ] Real-time collaboration features
+
+## ⚠️ Important Notes
+
+- **Production Deployment**: See [PRODUCTION_SETUP_CHECKLIST.md](PRODUCTION_SETUP_CHECKLIST.md)
+- **Google OAuth Setup**: See [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md)
+- **Stripe Integration**: See [STRIPE_SETUP_GUIDE.md](STRIPE_SETUP_GUIDE.md)
+- **Security**: Never commit `.env` files or API keys to version control
+- **Database**: Neon PostgreSQL requires both pooled and direct connection URLs
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- UI components from [Radix UI](https://www.radix-ui.com/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Database with [Prisma](https://www.prisma.io/)
+- Authentication via [NextAuth.js](https://next-auth.js.org/)
+
+---
+
+**Made with ❤️ for educators worldwide**
