@@ -1,95 +1,89 @@
-PROPRIETARY LICENSE AGREEMENT
+BUSINESS SOURCE LICENSE 1.1
 
-Copyright (c) 2026 Professor GENIE Platform. All Rights Reserved.
+Copyright (c) 2026 Professor GENIE Platform
 
-IMPORTANT: READ CAREFULLY BEFORE USING THIS SOFTWARE
+NOTICE: This license is based on the Business Source License 1.1 model.
 
-This software and associated documentation files (the "Software") are proprietary 
-and confidential information of Professor GENIE Platform ("Company"). 
+Parameters:
+- Licensor: Professor GENIE Platform
+- Licensed Work: Professor GENIE Platform (the "Software")
+- Change Date: January 16, 2030 (4 years from publication)
+- Change License: Apache License 2.0
+
+TERMS AND CONDITIONS:
 
 1. LICENSE GRANT
-   Subject to the terms of this Agreement, Company grants you a limited, 
-   non-exclusive, non-transferable, revocable license to use the Software 
-   for evaluation and personal educational purposes only.
+   Subject to the limitations in Section 2, the Licensor grants you a 
+   non-exclusive, non-transferable license to:
+   a) Use the Software for non-production purposes (development, testing, evaluation)
+   b) Modify the Software for your internal non-production use
+   c) Distribute the Software for non-commercial, non-production purposes
 
-2. RESTRICTIONS
-   You are expressly prohibited from:
-   a) Using the Software for commercial purposes without written permission
-   b) Copying, modifying, distributing, or creating derivative works
-   c) Reverse engineering, decompiling, or disassembling the Software
-   d) Removing or altering any proprietary notices or labels
-   e) Renting, leasing, lending, selling, or sublicensing the Software
-   f) Using the Software to create competing products or services
-   g) Publishing performance benchmarks without prior written consent
-
-3. COMMERCIAL USE
-   Commercial use, hosting as a service, or integration into commercial 
-   products requires a separate Commercial License Agreement. Contact 
-   licensing@profgenie.com for commercial licensing inquiries.
-
-4. INTELLECTUAL PROPERTY
-   All title, ownership rights, and intellectual property rights in and 
-   to the Software remain with Company. This Agreement does not grant you 
-   any rights to trademarks, service marks, or trade names of Company.
-
-5. CONFIDENTIALITY
-   The Software contains trade secrets and proprietary information. You 
-   agree to maintain the confidentiality of the Software and not disclose 
-   it to third parties without Company's prior written consent.
-
-6. DATA COLLECTION AND PRIVACY
-   Company may collect usage data and analytics. By using the Software, 
-   you consent to data collection as described in the Privacy Policy.
-
-7. WARRANTY DISCLAIMER
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, 
-   FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
-
-8. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL COMPANY BE LIABLE FOR ANY INDIRECT, INCIDENTAL, 
-   SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, 
-   REVENUE, DATA, OR DATA USE, ARISING OUT OF OR RELATED TO THIS AGREEMENT 
-   OR THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+2. LIMITATIONS
+   You may NOT use the Software for Production Use unless you have obtained
+   a separate Commercial Production License from the Licensor.
    
-   COMPANY'S TOTAL LIABILITY SHALL NOT EXCEED $100 USD.
+   "Production Use" means using the Software:
+   a) For commercial purposes or in a commercial product or service
+   b) To provide services to external customers or users
+   c) In any revenue-generating capacity
+   d) For more than 3 concurrent users in a single organization
+   
+   For Commercial Production Licenses, contact: licensing@profgenie.com
 
-9. INDEMNIFICATION
-   You agree to indemnify, defend, and hold harmless Company and its 
-   officers, directors, employees, and agents from any claims, damages, 
-   losses, liabilities, and expenses arising from your use of the Software 
-   or violation of this Agreement.
+3. INTELLECTUAL PROPERTY
+   All rights, title, and interest in the Software remain with the Licensor.
+   This license does not grant trademark rights.
 
-10. TERMINATION
-    This license is effective until terminated. Company may terminate this 
-    license at any time if you fail to comply with any term. Upon termination, 
-    you must destroy all copies of the Software.
+4. SOURCE CODE AVAILABILITY
+   This is a source-available license. You may view and study the source code
+   but must comply with all restrictions herein.
 
-11. GOVERNING LAW AND JURISDICTION
-    This Agreement shall be governed by and construed in accordance with 
-    the laws of the State of California, United States, without regard to 
-    its conflict of law provisions. Any legal action must be brought in 
-    the state or federal courts located in California.
+5. FUTURE LICENSING (CHANGE LICENSE)
+   On the Change Date (January 16, 2030), this license automatically converts
+   to the Apache License 2.0, and all restrictions in Section 2 are lifted.
+   At that time, the Software becomes fully open source.
 
-12. EXPORT COMPLIANCE
-    You agree to comply with all applicable export and import laws and 
-    regulations. You will not export or re-export the Software to any 
-    prohibited country or entity.
+6. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
-13. ENTIRE AGREEMENT
-    This Agreement constitutes the entire agreement between you and Company 
-    regarding the Software and supersedes all prior agreements and understandings.
+7. LIMITATION OF LIABILITY
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE LICENSOR BE
+   LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES
+   WHATSOEVER (INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF BUSINESS
+   PROFITS, BUSINESS INTERRUPTION, LOSS OF BUSINESS INFORMATION, OR ANY OTHER
+   PECUNIARY LOSS) ARISING OUT OF THE USE OF OR INABILITY TO USE THE SOFTWARE.
 
-14. MODIFICATIONS
-    Company reserves the right to modify this Agreement at any time. 
-    Continued use of the Software constitutes acceptance of modifications.
+8. TERMINATION
+   This license terminates automatically if you breach any of its terms.
+   Upon termination, you must cease all use and delete all copies of the Software.
 
-15. CONTACT INFORMATION
-    For licensing inquiries: licensing@profgenie.com
-    For support: support@profgenie.com
-    Website: https://github.com/sanazindustrial/PROFGINE
+9. SEVERABILITY
+   If any provision of this license is held to be unenforceable, such provision
+   shall be reformed only to the extent necessary to make it enforceable.
 
-BY USING THE SOFTWARE, YOU ACKNOWLEDGE THAT YOU HAVE READ THIS AGREEMENT, 
-UNDERSTAND IT, AND AGREE TO BE BOUND BY ITS TERMS AND CONDITIONS.
+10. NO DISCRIMINATION
+    This license does not discriminate against any person, group, or field
+    of endeavor (except as specified in the Production Use limitations).
 
-Last Updated: January 16, 2026
+11. GOVERNING LAW
+    This license shall be governed by the laws of the jurisdiction in which
+    the Licensor resides, without regard to conflict of law provisions.
+
+12. ENTIRE AGREEMENT
+    This license constitutes the entire agreement concerning the subject matter.
+
+ADDITIONAL INFORMATION:
+- For Commercial Production Licenses: licensing@profgenie.com
+- For Technical Support: support@profgenie.com  
+- Repository: https://github.com/sanazindustrial/PROFGINE
+
+This license is inspired by the Business Source License 1.1 created by
+MariaDB Corporation Ab. For questions about this specific license, contact
+the Licensor directly.
+
+License Version: 1.0
+Effective Date: January 16, 2026
+Change Date: January 16, 2030
