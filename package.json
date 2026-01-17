@@ -2,6 +2,7 @@
   "name": "next-template",
   "version": "0.0.2",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "prisma generate && next build",
