@@ -15,7 +15,7 @@
 
 ## 🚀 Deployment Status
 
-- **Repository**: https://github.com/sanazindustrial/PROFGINE
+- **Repository**: <https://github.com/sanazindustrial/PROFGINE>
 - **Latest Commit**: `10f2b93` - Course Studio complete with navigation & tests
 - **Database**: Synced with `prisma db push` ✅
 - **Dependencies**: Updated (Next.js 16.1.3, React 18.3.1, pptxgenjs 3.12.0) ✅
@@ -24,11 +24,13 @@
 ## 📍 Access Points
 
 ### For Professors
+
 1. **Main Dashboard** → "Course Studio" button in Quick Actions sidebar
 2. **Sidebar Navigation** → "Course Studio" with Presentation icon
 3. **Direct URL**: `/dashboard/courses/[courseId]/studio`
 
 ### Example
+
 ```
 https://profginie.app/dashboard/courses/cm123abc/studio
 ```
@@ -36,6 +38,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ## 🎯 Feature Capabilities
 
 ### AI-Powered Presentation Generation
+
 - **Input Sources**: Textbooks, lecture notes, research papers, web content
 - **Template Styles**: 4 professional designs
   - Modern Minimalist (clean, sans-serif, blue gradient)
@@ -44,12 +47,14 @@ https://profginie.app/dashboard/courses/cm123abc/studio
   - Creative Dynamic (Montserrat, colorful gradients)
 
 ### Customization Options
+
 - Target slide count: 10-50 slides
 - Duration: 30-120 minutes
 - Difficulty level: Beginner, Intermediate, Advanced
 - Interactive elements: Quizzes, discussion prompts, activities
 
 ### Smart Features
+
 - Automatic outline generation via AI
 - Slide content generation with speaker notes
 - Professional PowerPoint export (.pptx)
@@ -59,17 +64,20 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ## 🗄️ Database Schema
 
 ### Tables Created
+
 1. **Presentation** - Main presentation records
 2. **PresentationSlide** - Individual slide data
 3. **PresentationSourceFile** - Uploaded source materials
 
 ### Enums
+
 1. **PresentationSource**: TEXTBOOK, LECTURE_NOTES, RESEARCH_PAPER, WEB_CONTENT, MIXED
 2. **PresentationStatus**: DRAFT, PROCESSING, COMPLETED, FAILED, EXPORTED
 
 ## 🔧 Technical Implementation
 
 ### Backend
+
 - **API Routes**:
   - `POST /api/course-studio/generate` - Generate new presentation
   - `GET /api/course-studio/presentations/[courseId]` - List presentations
@@ -81,6 +89,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 - **Authorization**: Course instructor or enrolled student
 
 ### Frontend
+
 - **Main Component**: `CourseStudioDesign` (330 lines)
   - React hooks for state management
   - Form validation
@@ -91,6 +100,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
   - Status indicators
 
 ### Dependencies
+
 ```json
 {
   "pptxgenjs": "^3.12.0",
@@ -103,6 +113,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ## 📊 Test Results
 
 ### Database Operations (Real Test)
+
 ```
 ✓ Created test presentation
 ✓ Created 2 slides
@@ -113,6 +124,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ```
 
 ### All Components Verified
+
 - ✅ 9 files created and present
 - ✅ All dependencies installed
 - ✅ Database models accessible
@@ -145,11 +157,13 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ## 🎨 UI/UX Features
 
 ### Dashboard Integration
+
 - **Quick Action Button**: One-click access from dashboard
 - **Sidebar Navigation**: Always accessible with Presentation icon
 - **Visual Hierarchy**: Clear action buttons and status indicators
 
 ### Studio Interface
+
 - **Clean Layout**: Two-column design (main panel + sidebar)
 - **Recent Presentations**: Shows last 5 with status badges
 - **Template Preview**: Visual template selector
@@ -166,6 +180,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ## 🎯 Next Steps (Optional Enhancements)
 
 ### Phase 2 Features (Not Required for Launch)
+
 1. **File Upload Processing**
    - PDF parsing with pdf-parse
    - Word document extraction with mammoth
@@ -210,6 +225,7 @@ https://profginie.app/dashboard/courses/cm123abc/studio
 ## 🚀 Production Deployment
 
 ### Environment Variables Required
+
 ```env
 DATABASE_URL="postgresql://..."
 DIRECT_URL="postgresql://..."
@@ -222,6 +238,7 @@ GEMINI_API_KEY="..."
 ```
 
 ### Deployment Commands
+
 ```bash
 # Install dependencies
 pnpm install
@@ -241,7 +258,7 @@ pnpm start
 
 ## 📞 Support & Resources
 
-- **GitHub Repo**: https://github.com/sanazindustrial/PROFGINE
+- **GitHub Repo**: <https://github.com/sanazindustrial/PROFGINE>
 - **Test Script**: Run `node test-course-studio.js`
 - **Feature Docs**: See `COURSE_STUDIO_DESIGN.md`
 - **Setup Guide**: See `COURSE_STUDIO_SETUP.md`
@@ -249,6 +266,7 @@ pnpm start
 ## 🏆 Achievement Summary
 
 ✨ **Complete AI-powered presentation generation system**
+
 - 3 database models with full relations
 - 2 API endpoints with authentication
 - 470-line service layer with AI integration
