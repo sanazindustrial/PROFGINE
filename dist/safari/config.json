@@ -1,0 +1,20 @@
+{
+  "store": "safari",
+  "environment": "production",
+  "apiBaseUrl": "https://api.profgenie.ai",
+  "appBaseUrl": "https://profgenie.ai",
+  "googleClientId": "",
+  "analyticsKey": "",
+  "features": {
+    "aiGrading": true,
+    "discussionResponses": true,
+    "bulkGrading": true,
+    "plagiarismCheck": false,
+    "analytics": true
+  },
+  "security": {
+    "enableAuditLogs": true,
+    "enforceHTTPS": true,
+    "tokenRefreshInterval": 1800000
+  }
+}

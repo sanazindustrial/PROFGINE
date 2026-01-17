@@ -1,0 +1,535 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                    String                @id @default(cuid())
+  name                  String?
+  email                 String                @unique
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  role                  UserRole              @default(STUDENT)
+  emailVerified         DateTime?
+  image                 String?
+  password              String?
+  subscriptionType      SubscriptionType      @default(FREE)
+  subscriptionExpiresAt DateTime?
+  trialStartedAt        DateTime?
+  trialExpiresAt        DateTime?
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  creditBalance         Int                   @default(0)
+  monthlyCredits        Int                   @default(0)
+  accounts              Account[]
+  courses               Course[]              @relation("InstructorCourses")
+  creditTransactions    CreditTransaction[]
+  posts                 DiscussionPost[]
+  enrollments           Enrollment[]
+  gradesGiven           Grade[]               @relation("Grader")
+  gradingActivities     GradingActivity[]
+  organizationMembers   OrganizationMember[]
+  professorProfile      ProfessorProfile?
+  professorStyle        ProfessorStyle?       @relation("ProfessorStyleProfile")
+  sessions              Session[]
+  studentProfile        StudentProfile?
+  submissions           Submission[]
+  subscription          Subscription?
+  subscriptionFeatures  SubscriptionFeature[]
+  userSubscription      UserSubscription?
+  userUsage             UserUsageCounter?
+}
+
+model Course {
+  id           String             @id @default(cuid())
+  title        String
+  code         String?
+  term         String?
+  description  String?
+  instructorId String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  assignments  Assignment[]
+  instructor   User               @relation("InstructorCourses", fields: [instructorId], references: [id])
+  discussions  DiscussionThread[]
+  enrollments  Enrollment[]
+  modules      Module[]
+}
+
+model Enrollment {
+  id       String @id @default(cuid())
+  courseId String
+  userId   String
+  course   Course @relation(fields: [courseId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([courseId, userId])
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  weekNo    Int?
+  content   String?
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id])
+}
+
+model Assignment {
+  id           String         @id @default(cuid())
+  courseId     String
+  lmsId        String?
+  title        String
+  type         AssignmentType @default(OTHER)
+  instructions String?
+  points       Int            @default(100)
+  dueAt        DateTime?
+  createdAt    DateTime       @default(now())
+  course       Course         @relation(fields: [courseId], references: [id])
+  rubric       Rubric?
+  submissions  Submission[]
+
+  @@unique([courseId, lmsId], name: "courseId_lmsId")
+}
+
+model Rubric {
+  id           String            @id @default(cuid())
+  assignmentId String            @unique
+  assignment   Assignment        @relation(fields: [assignmentId], references: [id])
+  criteria     RubricCriterion[]
+}
+
+model RubricCriterion {
+  id        String @id @default(cuid())
+  rubricId  String
+  label     String
+  maxPoints Int
+  order     Int
+  rubric    Rubric @relation(fields: [rubricId], references: [id])
+}
+
+model Submission {
+  id                String            @id @default(cuid())
+  assignmentId      String
+  studentId         String
+  status            SubmissionStatus  @default(SUBMITTED)
+  content           String?
+  contentText       String?
+  fileUrl           String?
+  submittedAt       DateTime          @default(now())
+  gradedAt          DateTime?
+  grade             Grade?
+  gradingActivities GradingActivity[]
+  assignment        Assignment        @relation(fields: [assignmentId], references: [id])
+  student           User              @relation(fields: [studentId], references: [id])
+}
+
+model Grade {
+  id           String     @id @default(cuid())
+  submissionId String     @unique
+  graderId     String
+  score        Float
+  feedback     String?
+  grader       User       @relation("Grader", fields: [graderId], references: [id])
+  submission   Submission @relation(fields: [submissionId], references: [id])
+}
+
+model DiscussionThread {
+  id       String           @id @default(cuid())
+  courseId String
+  title    String
+  prompt   String?
+  posts    DiscussionPost[]
+  course   Course           @relation(fields: [courseId], references: [id])
+}
+
+model DiscussionPost {
+  id        String           @id @default(cuid())
+  threadId  String
+  authorId  String
+  body      String
+  createdAt DateTime         @default(now())
+  author    User             @relation(fields: [authorId], references: [id])
+  thread    DiscussionThread @relation(fields: [threadId], references: [id])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  id                String  @id @default(cuid())
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Subscription {
+  id             String             @id @default(cuid())
+  userId         String             @unique
+  type           SubscriptionType   @default(FREE)
+  status         SubscriptionStatus @default(TRIALING)
+  trialExpiresAt DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
+}
+
+model Organization {
+  id                    String                    @id @default(cuid())
+  name                  String
+  domain                String?                   @unique
+  subscriptionType      SubscriptionType          @default(FREE)
+  subscriptionExpiresAt DateTime?
+  creditBalance         Int                       @default(0)
+  monthlyCredits        Int                       @default(0)
+  settings              Json?
+  customizations        Json?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  creditTransactions    CreditTransaction[]
+  subscription          OrgSubscription?
+  usage                 OrgUsageCounter?
+  members               OrganizationMember[]
+  usageCounters         OrganizationUsageCounter?
+}
+
+model OrganizationMember {
+  id        String       @id @default(cuid())
+  orgId     String
+  userId    String
+  orgRole   OrgRole      @default(MEMBER)
+  createdAt DateTime     @default(now())
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+}
+
+model OrgSubscription {
+  id                   String             @id @default(cuid())
+  orgId                String             @unique
+  tier                 SubscriptionTier   @default(FREE_TRIAL)
+  status               SubscriptionStatus @default(TRIALING)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  org                  Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model OrgUsageCounter {
+  id                   String       @id @default(cuid())
+  orgId                String       @unique
+  periodStart          DateTime     @default(now())
+  studentsCount        Int          @default(0)
+  coursesCount         Int          @default(0)
+  assignmentsCount     Int          @default(0)
+  aiGradesCount        Int          @default(0)
+  plagiarismScansCount Int          @default(0)
+  org                  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model UserSubscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  tier                 SubscriptionTier   @default(FREE_TRIAL)
+  status               SubscriptionStatus @default(TRIALING)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserUsageCounter {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  periodStart          DateTime @default(now())
+  coursesCount         Int      @default(0)
+  assignmentsCount     Int      @default(0)
+  aiGradesCount        Int      @default(0)
+  plagiarismScansCount Int      @default(0)
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invitation {
+  id        String           @id @default(cuid())
+  email     String           @unique
+  role      UserRole         @default(STUDENT)
+  status    InvitationStatus @default(PENDING)
+  invitedBy String?
+  createdAt DateTime         @default(now())
+  expiresAt DateTime?
+}
+
+model ProfessorProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  institution       String?
+  department        String?
+  officeHours       String?
+  bio               String?
+  researchInterests String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StudentProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  studentId String?
+  section   String?
+  major     String?
+  year      Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SubscriptionFeature {
+  id          String      @id @default(cuid())
+  userId      String
+  featureType FeatureType
+  limit       Int         @default(-1)
+  isEnabled   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, featureType])
+}
+
+model ProfessorStyle {
+  id                    String               @id @default(cuid())
+  professorId           String               @unique
+  gradingDifficulty     GradingDifficulty    @default(MEDIUM)
+  feedbackDepth         FeedbackDepth        @default(MODERATE)
+  personality           ProfessorPersonality @default(SUPPORTIVE)
+  customPromptTemplate  String?
+  keyEvaluationCriteria String[]
+  learningPreferences   Json?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  professor             User                 @relation("ProfessorStyleProfile", fields: [professorId], references: [id])
+}
+
+model CreditTransaction {
+  id             String        @id @default(cuid())
+  userId         String?
+  organizationId String?
+  amount         Int
+  type           CreditType
+  description    String?
+  featureType    FeatureType?
+  createdAt      DateTime      @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  user           User?         @relation(fields: [userId], references: [id])
+}
+
+model OrganizationUsageCounter {
+  id                   String       @id @default(cuid())
+  organizationId       String       @unique
+  periodStart          DateTime
+  studentsCount        Int          @default(0)
+  coursesCount         Int          @default(0)
+  assignmentsCount     Int          @default(0)
+  aiGradesCount        Int          @default(0)
+  plagiarismScansCount Int          @default(0)
+  organization         Organization @relation(fields: [organizationId], references: [id])
+}
+
+model GradingActivity {
+  id           String     @id @default(cuid())
+  submissionId String
+  userId       String
+  activityType String
+  details      String
+  createdAt    DateTime   @default(now())
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@index([submissionId, activityType])
+  @@index([userId, createdAt])
+}
+
+model AdminConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String?
+  description String?
+  category    String
+  isActive    Boolean  @default(true)
+  isRequired  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+
+  @@map("admin_configs")
+}
+
+model SystemHealth {
+  id           String    @id @default(cuid())
+  service      String    @unique
+  status       String
+  lastTested   DateTime?
+  lastError    String?
+  responseTime Int?
+  version      String?
+  metadata     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("system_health")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum FeatureType {
+  COURSE_CREATION
+  ASSIGNMENT_CREATION
+  DISCUSSION_CREATION
+  CUSTOM_RUBRICS
+  AI_GRADING
+  ADVANCED_ANALYTICS
+  BULK_OPERATIONS
+  API_ACCESS
+  PLAGIARISM_DETECTION
+  PROFESSOR_STYLE_LEARNING
+  ORGANIZATION_MANAGEMENT
+}
+
+enum UserRole {
+  ADMIN
+  PROFESSOR
+  STUDENT
+}
+
+enum AssignmentType {
+  ESSAY
+  QUIZ
+  DISCUSSION
+  PROJECT
+  CASE_STUDY
+  OTHER
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+  RETURNED
+}
+
+enum SubscriptionType {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum SubscriptionTier {
+  FREE_TRIAL
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum GradingDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum FeedbackDepth {
+  LIGHT
+  MODERATE
+  DEEP
+  COMPREHENSIVE
+}
+
+enum AssessmentType {
+  ASSIGNMENT
+  PAPER
+  DISSERTATION
+  EXAM
+  QUIZ
+  PROJECT
+}
+
+enum ProfessorPersonality {
+  ENCOURAGING
+  CRITICAL
+  ANALYTICAL
+  SUPPORTIVE
+  DETAILED
+  CONCISE
+}
+
+enum CreditType {
+  PURCHASE
+  USAGE
+  ROLLOVER
+  BONUS
+  REFUND
+}

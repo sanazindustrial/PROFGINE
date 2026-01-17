@@ -1,0 +1,28 @@
+{
+  "externally_connectable": {
+    "matches": [
+      "https://profgini.com/*",
+      "https://api.profgini.com/*"
+    ]
+  },
+  "commands": {
+    "toggle-assistant": {
+      "suggested_key": {
+        "default": "Command+Shift+P"
+      },
+      "description": "Toggle ProfGini Assistant"
+    },
+    "quick-grade": {
+      "suggested_key": {
+        "default": "Command+Shift+G"
+      },
+      "description": "Quick Grade Assignment"
+    }
+  },
+  "safari_web_extension": {
+    "toolbar_item": {
+      "action": "popup",
+      "label": "ProfGini Assistant"
+    }
+  }
+}

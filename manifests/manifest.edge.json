@@ -1,0 +1,27 @@
+{
+  "minimum_edge_version": "88",
+  "key": "DEV_EDGE_KEY_PLACEHOLDER",
+  "externally_connectable": {
+    "matches": [
+      "https://profgini.com/*",
+      "https://api.profgini.com/*"
+    ]
+  },
+  "commands": {
+    "toggle-assistant": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P"
+      },
+      "description": "Toggle ProfGini Assistant"
+    },
+    "quick-grade": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G"
+      },
+      "description": "Quick Grade Assignment"
+    }
+  },
+  "edge_side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

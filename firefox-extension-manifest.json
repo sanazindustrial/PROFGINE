@@ -1,0 +1,62 @@
+{
+  "manifest_version": 2,
+  "name": "Professor GENIE LMS Assistant - Firefox",
+  "version": "1.0.0",
+  "description": "AI-powered grading assistant for educational platforms (Firefox)",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "https://classroom.google.com/*",
+    "https://canvas.instructure.com/*",
+    "https://blackboard.com/*",
+    "https://*.blackboard.com/*",
+    "https://d2l.com/*",
+    "https://*.d2l.com/*",
+    "http://localhost:3000/*",
+    "https://YOUR_DEPLOYED_APP.vercel.app/*"
+  ],
+
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Professor GENIE Assistant",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+
+  "content_scripts": [{
+    "matches": [
+      "https://classroom.google.com/*",
+      "https://canvas.instructure.com/*",
+      "https://blackboard.com/*",
+      "https://*.blackboard.com/*",
+      "https://d2l.com/*",
+      "https://*.d2l.com/*"
+    ],
+    "js": ["content-script.js"],
+    "css": ["content-styles.css"],
+    "run_at": "document_end"
+  }],
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+
+  "web_accessible_resources": [
+    "popup.html",
+    "content-styles.css",
+    "icons/*"
+  ],
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

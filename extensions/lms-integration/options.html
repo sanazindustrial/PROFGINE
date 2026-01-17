@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professor GENIE - LMS Domain Configuration</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 20px;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .logo {
+      width: 48px;
+      height: 48px;
+      margin-right: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    h1 {
+      margin: 0;
+      color: #333;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+      margin: 5px 0 0 0;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .section h2 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .domain-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .domain-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .add-domain-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    .add-domain-btn:hover {
+      background: #5a6fd8;
+    }
+    
+    .add-domain-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .domain-list {
+      margin-top: 15px;
+    }
+    
+    .domain-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .domain-name {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .remove-domain-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+    
+    .remove-domain-btn:hover {
+      background: #c82333;
+    }
+    
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .info-box h3 {
+      margin: 0 0 10px 0;
+      color: #1976d2;
+      font-size: 16px;
+    }
+    
+    .info-box p {
+      margin: 0;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .example-domains {
+      font-size: 13px;
+      color: #666;
+      margin-top: 10px;
+    }
+    
+    .status-message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      color: #666;
+      font-size: 13px;
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">PG</div>
+    <div>
+      <h1>Professor GENIE</h1>
+      <div class="subtitle">LMS Domain Configuration</div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h3>🔒 Domain Security Settings</h3>
+    <p>
+      Configure which LMS domains Professor GENIE can access. Only websites from approved domains 
+      will be able to use the extension features. This ensures your data stays secure and compliant 
+      with your institution's policies.
+    </p>
+  </div>
+
+  <div id="status-message" class="status-message hidden"></div>
+
+  <div class="section">
+    <h2>Add New LMS Domain</h2>
+    <div class="domain-input-group">
+      <input 
+        type="text" 
+        id="domain-input" 
+        class="domain-input" 
+        placeholder="Enter LMS domain (e.g., myschool.instructure.com)"
+        autocomplete="off"
+      >
+      <button id="add-domain" class="add-domain-btn">Add Domain</button>
+    </div>
+    <div class="example-domains">
+      <strong>Examples:</strong> myschool.instructure.com, lms.university.edu, moodle.college.org
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Approved Domains</h2>
+    <div id="domain-list" class="domain-list">
+      <!-- Domains will be loaded here -->
+    </div>
+    <div id="empty-state" class="empty-state hidden">
+      No domains configured. Add your LMS domain above to get started.
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Professor GENIE • Secure LMS Integration • <a href="https://profgenie.ai" target="_blank" rel="noopener">profgenie.ai</a></p>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

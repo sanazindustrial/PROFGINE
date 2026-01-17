@@ -1,0 +1,122 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.backup
+.env.*.local
+*.env
+
+# turbo
+.turbo
+
+.contentlayer
+
+# user Uploaded files
+tmp/
+
+# Cache directories
+.cache/
+.gradle/
+.docker/
+.npm/
+.yarn/
+
+# User cache and config
+.config/
+.console-ninja/
+.dbclient/
+.azure/
+.aws/
+.chocolatey/
+.cargo/
+.dotnet/
+
+# Large binary files
+*.dll
+*.exe
+*.dmg
+*.app
+*.pkg
+*.deb
+*.rpm
+
+# Windows system directories
+OneDrive/
+
+.vercel
+
+# Sensitive setup and admin scripts
+setup-admin*.js
+create-admin*.js
+create-owner-admin.js
+login-as-admin.js
+make-admin.js
+check-users.js
+check-all-users.js
+immediate-setup.js
+verify-admin*.js
+fix-users.js
+inspect-database.js
+
+# Test and debug files
+comprehensive-db-test.js
+final-database-test.js
+final-working-test.js
+absolute-final-test.js
+victory-test.js
+success-test.js
+test-*.js
+debug-*.js
+check-*.js
+
+# Database and migration files
+*.db
+*.sqlite
+admin-setup.sql
+run-migration.js
+
+# Security and sensitive data
+security-test-report.json
+*.pem
+*.key
+
+# Setup scripts
+setup-profgine-repo.ps1
+create-github-repo.ps1
+
+# Documentation to exclude (keeping essential ones)
+IMMEDIATE_*.md
+ADMIN_CONFIG_SYSTEM.md
+GOOGLE_OAUTH_FIX.md
+
+# Build artifacts
+build-output.txt
+build-full.txt
+b2.txt

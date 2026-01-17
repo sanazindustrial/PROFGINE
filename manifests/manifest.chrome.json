@@ -1,0 +1,42 @@
+{
+  "minimum_chrome_version": "88",
+  "key": "DEV_CHROME_KEY_PLACEHOLDER",
+  "externally_connectable": {
+    "matches": [
+      "https://profgenie.ai/*",
+      "https://api.profgenie.ai/*"
+    ]
+  },
+  "oauth2": {
+    "client_id": "CHROME_OAUTH_CLIENT_ID_PLACEHOLDER",
+    "scopes": ["openid", "email", "profile"]
+  },
+  "commands": {
+    "toggle-assistant": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
+      },
+      "description": "Toggle Professor GENIE Assistant"
+    },
+    "quick-grade": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "Quick Grade Assignment"
+    }
+  },
+  "host_permissions": [
+    "https://*.instructure.com/*",
+    "https://*.canvaslms.com/*",
+    "https://*.moodle.*/*",
+    "https://moodle.*/*",
+    "https://*.brightspace.com/*",
+    "https://*.d2l.com/*",
+    "https://*.blackboard.com/*",
+    "https://learn.*/*",
+    "https://profgenie.ai/*",
+    "https://api.profgenie.ai/*"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Professor GENIE",
+  "version": "1.0.0",
+  "description": "AI-powered grading assistant for educational platforms",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://*.instructure.com/*",
+    "https://*.canvaslms.com/*",
+    "https://*.moodle.*/*",
+    "https://moodle.*/*",
+    "https://*.brightspace.com/*",
+    "https://*.d2l.com/*",
+    "https://*.blackboard.com/*",
+    "https://learn.*/*",
+    "https://profgenie.ai/*",
+    "https://api.profgenie.ai/*"
+  ],
+  "content_scripts": [{
+    "matches": [
+      "https://*.instructure.com/*",
+      "https://*.canvaslms.com/*",
+      "https://*.brightspace.com/*",
+      "https://*.d2l.com/*",
+      "https://*.blackboard.com/*",
+      "https://learn.*/*",
+      "https://moodle.*/*",
+      "https://*.moodle.*/*"
+    ],
+    "js": ["contentScript.js"],
+    "run_at": "document_idle"
+  }],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  }
+}

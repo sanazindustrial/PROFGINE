@@ -1,0 +1,26 @@
+{
+  "minimum_opera_version": "74",
+  "key": "DEV_OPERA_KEY_PLACEHOLDER",
+  "externally_connectable": {
+    "matches": [
+      "https://profgini.com/*",
+      "https://api.profgini.com/*"
+    ]
+  },
+  "commands": {
+    "toggle-assistant": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
+      },
+      "description": "Toggle ProfGini Assistant"
+    },
+    "quick-grade": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "Quick Grade Assignment"
+    }
+  }
+}

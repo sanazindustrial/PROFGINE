@@ -1,0 +1,47 @@
+{
+  "manifest_version": 2,
+  "name": "ProfGini LMS Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered grading assistant for educational platforms",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "*://classroom.google.com/*",
+    "*://canvas.instructure.com/*",
+    "*://blackboard.com/*",
+    "*://*.blackboard.com/*",
+    "*://d2l.com/*",
+    "*://*.d2l.com/*",
+    "*://localhost:3000/*",
+    "*://YOUR_DEPLOYED_APP.vercel.app/*"
+  ],
+
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "ProfGini Assistant"
+  },
+
+  "content_scripts": [{
+    "matches": [
+      "*://classroom.google.com/*",
+      "*://canvas.instructure.com/*",
+      "*://blackboard.com/*",
+      "*://*.blackboard.com/*",
+      "*://d2l.com/*",
+      "*://*.d2l.com/*"
+    ],
+    "js": ["content-script.js"],
+    "css": ["content-styles.css"]
+  }],
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

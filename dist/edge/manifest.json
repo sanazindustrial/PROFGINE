@@ -1,0 +1,111 @@
+{
+  "manifest_version": 3,
+  "name": "Professor GENIE Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered teaching assistant for professors - streamline grading, generate discussion responses, and manage your courses efficiently.",
+  "author": "Professor GENIE Team",
+  "homepage_url": "https://profgenie.ai",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Professor GENIE Assistant",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.instructure.com/*",
+        "https://*.blackboard.com/*",
+        "https://*.brightspace.com/*",
+        "https://*.d2l.com/*",
+        "https://classroom.google.com/*",
+        "https://*.moodle.org/*",
+        "https://*.schoology.com/*",
+        "https://*.canvas.net/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "css": [
+        "content-script.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "contextMenus",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://api.profgenie.ai/*",
+    "https://profgenie.ai/*",
+    "https://*.instructure.com/*",
+    "https://*.canvaslms.com/*",
+    "https://*.blackboard.com/*",
+    "https://*.brightspace.com/*",
+    "https://*.d2l.com/*",
+    "https://classroom.google.com/*",
+    "https://*.moodle.*/*",
+    "https://moodle.*/*",
+    "https://*.schoology.com/*",
+    "https://learn.*/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "config.json"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "options_page": "options.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "minimum_edge_version": "88",
+  "key": "DEV_EDGE_KEY_PLACEHOLDER",
+  "externally_connectable": {
+    "matches": [
+      "https://profgini.com/*",
+      "https://api.profgini.com/*"
+    ]
+  },
+  "commands": {
+    "toggle-assistant": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P"
+      },
+      "description": "Toggle ProfGini Assistant"
+    },
+    "quick-grade": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G"
+      },
+      "description": "Quick Grade Assignment"
+    }
+  },
+  "edge_side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

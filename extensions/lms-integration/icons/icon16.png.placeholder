@@ -1,0 +1,29 @@
+<!-- Placeholder for icon16.png - GENIE LAMP THEME -->
+<!-- This file represents a 16x16 pixel PNG icon for Professor GENIE -->
+<!-- 
+UPDATED SPECIFICATIONS (Based on Genie Logo):
+- Size: 16x16 pixels
+- Format: PNG with transparent background
+- Design: Simple genie lamp silhouette in Professor GENIE cyan
+- Colors: Primary cyan (#00b4d8) - must be clearly visible at tiny size
+- Style: Minimalist lamp shape, clean lines, no text at this size
+- Requirements: Instantly recognizable as a genie lamp even at 16px
+-->
+
+<!-- DESIGN ELEMENTS FOR 16px:
+- Classic Aladdin-style lamp outline
+- Curved spout and handle
+- Simple base
+- Single cyan color (#00b4d8)
+- No gradients or effects (too small)
+- No text (unreadable at this size)
+-->
+
+<!-- To create the actual icon:
+1. Use design tool (Figma, Illustrator, GIMP)
+2. Create 16x16px canvas with transparent background  
+3. Design simple genie lamp silhouette in cyan (#00b4d8)
+4. Test visibility - must be clear at actual 16px size
+5. Export as PNG with transparency
+6. Replace this file with the actual icon16.png
+-->

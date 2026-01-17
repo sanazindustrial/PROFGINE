@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "ProfHelp Chrome Extension",
+  "version": "1.0.0",
+  "description": "AI-powered grading assistant for educational platforms",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "identity"
+  ],
+
+  "host_permissions": [
+    "https://classroom.google.com/*",
+    "https://canvas.instructure.com/*",
+    "https://blackboard.com/*",
+    "https://*.blackboard.com/*",
+    "https://d2l.com/*",
+    "https://*.d2l.com/*",
+    "http://localhost:3000/*",
+    "https://YOUR_DEPLOYED_APP.vercel.app/*"
+  ],
+
+  "oauth2": {
+    "client_id": "566060212460-t607528095hhq6gsruhpnd25j9vkigkk.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email"
+    ]
+  },
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [{
+    "matches": [
+      "https://classroom.google.com/*",
+      "https://canvas.instructure.com/*",
+      "https://blackboard.com/*",
+      "https://*.blackboard.com/*",
+      "https://d2l.com/*",
+      "https://*.d2l.com/*"
+    ],
+    "js": ["content.js"],
+    "css": ["styles.css"]
+  }],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ProfHelp Assistant"
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "web_accessible_resources": [{
+    "resources": ["icons/*", "styles.css"],
+    "matches": ["<all_urls>"]
+  }]
+}

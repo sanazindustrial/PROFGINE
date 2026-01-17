@@ -1,0 +1,299 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+    
+    /* Animation timing functions */
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 216 34% 17%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.6;
+  }
+  
+  /* Improved typography scale */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold leading-tight tracking-tight;
+    text-wrap: balance;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  p {
+    @apply leading-relaxed;
+    text-wrap: pretty;
+  }
+  
+  /* Enhanced focus states */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+  
+  /* Selection styles */
+  ::selection {
+    @apply bg-primary/20;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Loading states */
+  @keyframes skeleton-loading {
+    0% {
+      background-position-x: -200%;
+    }
+    100% {
+      background-position-x: calc(200% + 200px);
+    }
+  }
+  
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--muted)) 50%,
+      transparent
+    );
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+  }
+}
+
+@layer components {
+  /* Container improvements */
+  .container-narrow {
+    @apply container max-w-4xl;
+  }
+  
+  .container-wide {
+    @apply container max-w-7xl;
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+  
+  /* Button loading state */
+  .btn-loading {
+    @apply pointer-events-none opacity-70;
+  }
+  
+  /* Gradient text effects */
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
+  }
+  
+  /* Enhanced form elements */
+  .form-input {
+    @apply transition-colors duration-200 focus:ring-2 focus:ring-primary/20 focus:border-primary;
+  }
+  
+  /* Layout utilities */
+  .page-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .section-spacing {
+    @apply py-12 md:py-20 lg:py-24;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.6s var(--ease-out) forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.6s var(--ease-out) forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.4s var(--spring) forwards;
+  }
+}
+
+@layer utilities {
+  /* Custom spacing utilities */
+  .space-y-fluid > * + * {
+    @apply mt-4 md:mt-6 lg:mt-8;
+  }
+  
+  .space-x-fluid > * + * {
+    @apply ml-4 md:ml-6 lg:ml-8;
+  }
+  
+  /* Responsive text utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+  
+  /* Advanced grid utilities */
+  .grid-auto-fit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  .grid-auto-fill {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    @apply text-black bg-white;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+}
