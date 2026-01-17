@@ -24,6 +24,7 @@ Welcome to the Professor GENIE Platform documentation! This index helps you find
 
 | Document | Description |
 |----------|-------------|
+| [COURSE_STUDIO_DESIGN.md](COURSE_STUDIO_DESIGN.md) | AI-powered lecture creation and PowerPoint generation system |
 | [SUBSCRIPTION_TECHNICAL_BREAKDOWN.md](SUBSCRIPTION_TECHNICAL_BREAKDOWN.md) | Subscription system architecture |
 | [MULTI_TENANT_IMPLEMENTATION.md](MULTI_TENANT_IMPLEMENTATION.md) | Multi-tenant organization features |
 | [ADMIN_CONFIG_SYSTEM.md](ADMIN_CONFIG_SYSTEM.md) | Admin configuration management |
@@ -134,32 +135,36 @@ pnpm start
 ### By User Role
 
 **New Contributors**:
+
 1. Start with [README.md](README.md)
 2. Read [CONTRIBUTING.md](CONTRIBUTING.md)
 3. Review [LICENSE](LICENSE)
 4. Check [SECURITY.md](SECURITY.md)
 
 **Developers**:
+
 1. [README.md](README.md) - Setup instructions
 2. [.env.example](.env.example) - Environment variables
 3. Architecture docs (SUBSCRIPTION_TECHNICAL_BREAKDOWN.md, etc.)
 4. Component documentation in `/components`
 
 **Administrators**:
+
 1. [PRODUCTION_SETUP_CHECKLIST.md](PRODUCTION_SETUP_CHECKLIST.md)
 2. [ADMIN_CONFIG_SYSTEM.md](ADMIN_CONFIG_SYSTEM.md)
 3. Admin scripts in root directory
 
 **End Users**:
+
 1. [PROFGINI_EXTENSION_USER_GUIDE.md](PROFGINI_EXTENSION_USER_GUIDE.md)
 2. [PRICING_STRATEGY.md](PRICING_STRATEGY.md)
 3. In-app help and tutorials
 
 ## 📞 Support
 
-- **Repository**: https://github.com/sanazindustrial/PROFGINE
-- **Technical Support**: support@profgenie.com
-- **Commercial Licensing**: licensing@profgenie.com
+- **Repository**: <https://github.com/sanazindustrial/PROFGINE>
+- **Technical Support**: <support@profgenie.com>
+- **Commercial Licensing**: <licensing@profgenie.com>
 - **Issues**: [GitHub Issues](https://github.com/sanazindustrial/PROFGINE/issues)
 
 ## 🔄 Document Updates

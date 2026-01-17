@@ -41,34 +41,40 @@ Before contributing, ensure you have:
 1. **Fork the repository** on GitHub
 
 2. **Clone your fork**:
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/PROFGINE.git
    cd PROFGINE
    ```
 
 3. **Add upstream remote**:
+
    ```bash
    git remote add upstream https://github.com/sanazindustrial/PROFGINE.git
    ```
 
 4. **Install dependencies**:
+
    ```bash
    pnpm install
    ```
 
 5. **Set up environment variables**:
+
    ```bash
    cp .env.example .env.local
    # Configure your local environment variables
    ```
 
 6. **Run database migrations**:
+
    ```bash
    pnpm run prisma:generate
    pnpm run migration:postgres:local
    ```
 
 7. **Start the development server**:
+
    ```bash
    pnpm dev
    ```
@@ -78,6 +84,7 @@ Before contributing, ensure you have:
 ### Creating a New Feature or Fix
 
 1. **Sync with upstream**:
+
    ```bash
    git fetch upstream
    git checkout main
@@ -85,6 +92,7 @@ Before contributing, ensure you have:
    ```
 
 2. **Create a feature branch**:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -94,12 +102,14 @@ Before contributing, ensure you have:
 3. **Make your changes** following our coding standards
 
 4. **Test your changes**:
+
    ```bash
    pnpm build
    pnpm test  # if tests are available
    ```
 
 5. **Commit your changes**:
+
    ```bash
    git add .
    git commit -m "feat: add amazing feature"
@@ -119,6 +129,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore:` Maintenance tasks
 
 **Examples:**
+
 ```
 feat: add student dashboard with course overview
 fix: resolve authentication redirect loop
@@ -163,6 +174,7 @@ refactor: simplify AI provider fallback logic
 ## 🔍 Pull Request Process
 
 1. **Ensure your code builds**:
+
    ```bash
    pnpm build
    ```
@@ -170,6 +182,7 @@ refactor: simplify AI provider fallback logic
 2. **Update documentation** if needed
 
 3. **Push your branch**:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -229,6 +242,7 @@ Any other information
 ### Creating a Good Issue
 
 Include:
+
 - **Clear title** describing the problem
 - **Steps to reproduce** the issue
 - **Expected behavior** vs. actual behavior
@@ -309,7 +323,7 @@ We especially welcome contributions in these areas:
 
 - **GitHub Discussions**: Ask questions and share ideas
 - **Issues**: Report bugs and request features
-- **Email**: support@profgenie.com for technical support
+- **Email**: <support@profgenie.com> for technical support
 
 ### Community Guidelines
 
@@ -321,6 +335,7 @@ We especially welcome contributions in these areas:
 ## 🙏 Recognition
 
 All contributors will be:
+
 - Listed in our CONTRIBUTORS.md file
 - Credited in release notes
 - Given public recognition for significant contributions

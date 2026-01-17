@@ -28,7 +28,20 @@
 - Student enrollment and progress tracking
 - File upload support (Word docs, PDFs, text files)
 
-### 🎨 Modern UI/UX
+### � Course Studio Design
+
+- **AI-Powered Lecture Creation**: Generate comprehensive lecture content from textbooks and resources
+- **PowerPoint Generation**: Automatically create professional presentations based on:
+  - Textbook chapters and materials
+  - Course resources and documents
+  - Lecture notes and outlines
+  - Custom content structure
+- **Smart Content Extraction**: Parse and analyze educational materials
+- **Template Customization**: Multiple presentation templates and styles
+- **Interactive Elements**: Add quizzes, discussion points, and multimedia
+- **Export Options**: PowerPoint (PPTX), PDF, and Google Slides formats
+
+### �🎨 Modern UI/UX
 
 - Radix UI components with dark mode support
 - Responsive design for all devices
@@ -240,7 +253,7 @@ The project includes configuration files for various tools and libraries used:
 This project is licensed under the **Business Source License 1.1**.
 
 - ✅ **Free for non-production use** (development, testing, learning)
-- 💼 **Commercial/production use requires a license** - Contact: licensing@profgenie.com
+- 💼 **Commercial/production use requires a license** - Contact: <licensing@profgenie.com>
 - 📅 **Converts to Apache 2.0** on January 16, 2030 (becomes fully open source)
 - 👥 **Limited to 3 concurrent users** without commercial license
 
@@ -261,8 +274,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ## 📞 Support & Contact
 
 - **Repository**: [https://github.com/sanazindustrial/PROFGINE](https://github.com/sanazindustrial/PROFGINE)
-- **Commercial Licensing**: licensing@profgenie.com
-- **Technical Support**: support@profgenie.com
+- **Commercial Licensing**: <licensing@profgenie.com>
+- **Technical Support**: <support@profgenie.com>
 - **Documentation**: See `/docs` and individual `.md` files in the root directory
 
 ## 🎯 Roadmap
@@ -272,13 +285,19 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - [x] Subscription management with trial periods
 - [x] Chrome extension for LMS integration
 - [x] Dark mode support
+- [x] Course Studio Design with lecture creation
+- [x] AI-powered PowerPoint generation from textbooks
+- [ ] Real-time presentation preview editor
+- [ ] Voice narration generation for lectures
 - [ ] Mobile app (React Native)
 - [ ] Additional LMS integrations (Moodle, D2L)
 - [ ] Advanced analytics dashboard
 - [ ] Real-time collaboration features
+- [ ] Automatic image sourcing for presentations
 
 ## ⚠️ Important Notes
 
+- **Course Studio Design**: See [COURSE_STUDIO_DESIGN.md](COURSE_STUDIO_DESIGN.md) for lecture creation and PowerPoint generation
 - **Production Deployment**: See [PRODUCTION_SETUP_CHECKLIST.md](PRODUCTION_SETUP_CHECKLIST.md)
 - **Google OAuth Setup**: See [GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md)
 - **Stripe Integration**: See [STRIPE_SETUP_GUIDE.md](STRIPE_SETUP_GUIDE.md)
