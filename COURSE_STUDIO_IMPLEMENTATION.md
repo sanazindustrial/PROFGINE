@@ -9,20 +9,24 @@ The Course Studio Design feature is now implemented in the Professor GENIE appli
 ### 1. Database Schema (`prisma/schema.prisma`)
 
 Three new models:
+
 - **Presentation**: Stores presentation metadata
 - **PresentationSlide**: Individual slides with content
 - **PresentationSourceFile**: Source files used for generation
 
 Two new enums:
+
 - **PresentationSource**: TEXTBOOK, LECTURE_NOTES, RESEARCH_PAPER, WEB_CONTENT, MIXED
 - **PresentationStatus**: DRAFT, PROCESSING, COMPLETED, FAILED, EXPORTED
 
 ### 2. API Routes
 
 #### `/api/course-studio/generate` (POST)
+
 Generates a new presentation from provided sources and settings.
 
 **Request Body:**
+
 ```json
 {
   "courseId": "course_id",
@@ -48,6 +52,7 @@ Generates a new presentation from provided sources and settings.
 ```
 
 **Response:**
+
 ```json
 {
   "presentationId": "pres_123",
@@ -59,11 +64,13 @@ Generates a new presentation from provided sources and settings.
 ```
 
 #### `/api/course-studio/presentations/[courseId]` (GET)
+
 Lists all presentations for a specific course.
 
 ### 3. Service Layer (`lib/services/course-studio.ts`)
 
 **CourseStudioService** handles:
+
 - Content extraction from source files
 - AI-powered outline generation using multiAI
 - Slide content generation
@@ -73,7 +80,9 @@ Lists all presentations for a specific course.
 ### 4. UI Components
 
 #### `components/course-studio-design.tsx`
+
 Main UI component with:
+
 - Title and description input
 - Template selection (4 templates)
 - Settings configuration (slides, duration, difficulty)
@@ -83,7 +92,9 @@ Main UI component with:
 - Result display with download links
 
 #### `app/dashboard/courses/[courseId]/studio/page.tsx`
+
 Course Studio page with:
+
 - Main studio panel
 - Sidebar with recent presentations
 - Tips and features information
@@ -125,6 +136,7 @@ pnpm dev
 ## 📍 Access the Feature
 
 Navigate to:
+
 ```
 /dashboard/courses/[courseId]/studio
 ```
@@ -136,6 +148,7 @@ Or add a link in your course navigation to the studio page.
 ### Template Styles
 
 Currently supported:
+
 - `modern-minimalist` - Clean, contemporary design (default)
 - `academic-classic` - Traditional academic style
 - `corporate-professional` - Business-appropriate
@@ -144,6 +157,7 @@ Currently supported:
 ### AI Provider
 
 The service uses the multi-AI provider system (`@/adaptors/multi-ai.adaptor`), which automatically falls back through available providers:
+
 1. OpenAI GPT-4
 2. Anthropic Claude
 3. Google Gemini
@@ -197,6 +211,7 @@ Currently, the file upload is a placeholder. To implement:
    - Text: direct reading
 
 Example upload handler:
+
 ```typescript
 // app/api/course-studio/upload/route.ts
 import formidable from "formidable"
@@ -229,6 +244,7 @@ The `CourseStudioService.createPowerPoint()` method creates the PPTX structure b
 2. **Download endpoint** to serve files
 
 Example:
+
 ```typescript
 // Save to file system
 await pptx.writeFile({ fileName: `./public/downloads/${fileName}` })
@@ -325,16 +341,19 @@ Track these metrics:
 ## 🆘 Troubleshooting
 
 ### Issue: AI generation fails
+
 - Check AI provider API keys in environment
 - Verify multiAI adaptor is configured
 - Review error logs for specific provider errors
 
 ### Issue: PowerPoint export fails
+
 - Ensure pptxgenjs is installed
 - Check file system write permissions
 - Verify storage configuration
 
 ### Issue: File upload fails
+
 - Check file size limits
 - Verify storage service is accessible
 - Review formidable configuration
