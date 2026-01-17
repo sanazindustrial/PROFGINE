@@ -16,7 +16,8 @@ import {
     GraduationCap,
     Crown,
     Settings,
-    CreditCard
+    CreditCard,
+    Presentation
 } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -193,6 +194,12 @@ export default async function DashboardPage() {
                                     <Link href="/dashboard/courses/new">
                                         <BookOpen className="mr-2 size-4" />
                                         New Course
+                                    </Link>
+                                </Button>
+                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
+                                    <Link href="/dashboard/courses">
+                                        <Presentation className="mr-2 size-4" />
+                                        Course Studio
                                     </Link>
                                 </Button>
                                 <Button asChild variant="outline" size="sm" className="w-full justify-start">
