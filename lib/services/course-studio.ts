@@ -127,15 +127,24 @@ Format as JSON array with this structure:
 ]`
 
     try {
-      const response = await multiAI.generateText({
-        messages: [
-          { role: "system", content: "You are an expert educational content designer specializing in creating engaging lecture presentations." },
-          { role: "user", content: prompt },
-        ],
-        maxTokens: 4000,
-      })
+      // Use streamChat which is available in MultiAIAdapter
+      const result = await multiAI.streamChat([
+        { role: "system", content: "You are an expert educational content designer specializing in creating engaging lecture presentations." },
+        { role: "user", content: prompt },
+      ])
 
-      return response.text
+      // Read the stream to get the text
+      const reader = result.stream.getReader()
+      const decoder = new TextDecoder()
+      let fullText = ""
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        fullText += decoder.decode(value, { stream: true })
+      }
+
+      return fullText
     } catch (error) {
       console.error("Error generating outline:", error)
       return this.getFallbackOutline(settings.title, targetSlides)

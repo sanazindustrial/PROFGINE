@@ -20,7 +20,8 @@ import {
     Clock,
     MessageCircle,
     Zap,
-    Send
+    Send,
+    Layout
 } from "lucide-react"
 import Link from "next/link"
 
@@ -61,6 +62,16 @@ function CourseDesignStudioContent() {
             color: "green",
             href: "/dashboard/suggest-curriculum",
             estimatedTime: "8 min"
+        },
+        {
+            id: "sections",
+            title: "Build Course Sections",
+            description: "Add sections, files, assignments, links - unlimited flexibility",
+            icon: Layout,
+            color: "indigo",
+            href: courseId ? `/dashboard/courses/${courseId}/build-sections` : "/dashboard/courses",
+            estimatedTime: "15-30 min",
+            badge: "New"
         },
         {
             id: "assessments",
@@ -225,7 +236,8 @@ function CourseDesignStudioContent() {
                         blue: "border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:shadow-blue-200",
                         green: "border-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 hover:shadow-green-200",
                         purple: "border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/20 hover:shadow-purple-200",
-                        orange: "border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:shadow-orange-200"
+                        orange: "border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:shadow-orange-200",
+                        indigo: "border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:shadow-indigo-200"
                     }[feature.color]
 
                     return (
@@ -245,8 +257,13 @@ function CourseDesignStudioContent() {
                                     <CardTitle className="flex items-center gap-3">
                                         <Icon className={`text- size-8${feature.color}-600 ${isHovered ? 'scale-110' : ''} transition-transform`} />
                                         <div className="flex-1">
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between gap-2">
                                                 <span>{feature.title}</span>
+                                                {feature.badge && (
+                                                    <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                                        {feature.badge}
+                                                    </Badge>
+                                                )}
                                             </div>
                                             {isHovered && (
                                                 <div className="mt-1 flex items-center gap-1 text-xs font-normal text-muted-foreground">

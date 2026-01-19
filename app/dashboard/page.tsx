@@ -17,7 +17,7 @@ import {
     Crown,
     Settings,
     CreditCard,
-    Presentation
+    Monitor
 } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -198,7 +198,7 @@ export default async function DashboardPage() {
                                 </Button>
                                 <Button asChild variant="outline" size="sm" className="w-full justify-start">
                                     <Link href="/dashboard/courses">
-                                        <Presentation className="mr-2 size-4" />
+                                        <Monitor className="mr-2 size-4" />
                                         Course Studio
                                     </Link>
                                 </Button>

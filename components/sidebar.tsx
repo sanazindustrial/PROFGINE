@@ -14,7 +14,7 @@ import {
     Star,
     ArrowRight,
     User,
-    Presentation
+    Monitor
 } from "lucide-react"
 
 interface SidebarItem {
@@ -40,7 +40,7 @@ const navigationItems: SidebarItem[] = [
     {
         title: "Course Studio",
         href: "/dashboard/courses",
-        icon: Presentation,
+        icon: Monitor,
         description: "Create AI-powered presentations"
     },
     {

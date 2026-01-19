@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Upload, FileText, Presentation, Download } from "lucide-react"
+import { Loader2, Upload, FileText, Monitor, Download } from "lucide-react"
 
 interface CourseStudioDesignProps {
     courseId: string
@@ -214,7 +214,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                     {result && (
                         <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
                             <div className="flex items-center gap-2 text-green-800 font-medium">
-                                <Presentation className="h-5 w-5" />
+                                <Monitor className="h-5 w-5" />
                                 Presentation Generated Successfully!
                             </div>
                             <div className="text-sm text-green-700">
@@ -251,7 +251,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                             </>
                         ) : (
                             <>
-                                <Presentation className="mr-2 h-4 w-4" />
+                                <Monitor className="mr-2 h-4 w-4" />
                                 Generate PowerPoint Presentation
                             </>
                         )}
