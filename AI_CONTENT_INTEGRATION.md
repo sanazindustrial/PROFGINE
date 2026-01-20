@@ -1,11 +1,13 @@
 # AI-Designed Content Integration with Course Sections
 
 ## Overview
+
 This feature allows professors to seamlessly integrate AI-designed assignments, quizzes, and discussion topics from the Course Design Studio into flexible course sections. When sections are saved, the system automatically updates the course syllabus and resource listings.
 
 ## Key Features
 
 ### 1. Import AI-Designed Content
+
 - **Source**: Content created using the "Design Assessments & Assignments" tool in Course Design Studio
 - **Supported Types**:
   - Assignments (linked via `assignmentId`)
@@ -14,6 +16,7 @@ This feature allows professors to seamlessly integrate AI-designed assignments, 
 - **Import Dialog**: Visual selection interface showing all available content with metadata
 
 ### 2. Flexible Course Sections
+
 - **Unlimited Sections**: No limit on number of course sections/modules
 - **Variable Duration**: 8-16+ weeks course duration
 - **7 Content Types**:
@@ -26,6 +29,7 @@ This feature allows professors to seamlessly integrate AI-designed assignments, 
   7. DISCUSSION - Discussion prompts and topics
 
 ### 3. Auto-Updating Syllabus
+
 - **Automatic Generation**: Syllabus regenerates when sections are saved
 - **Comprehensive Format**: Includes:
   - Course schedule with weekly breakdown
@@ -41,6 +45,7 @@ This feature allows professors to seamlessly integrate AI-designed assignments, 
 ### Database Schema
 
 #### ModuleContent Model
+
 ```prisma
 model ModuleContent {
   id           String      @id @default(cuid())
@@ -62,6 +67,7 @@ model ModuleContent {
 ```
 
 #### Assignment Relation
+
 - **One-to-Many**: One Assignment can be linked to multiple ModuleContent items
 - **Cascade Behavior**: When assignment deleted, `assignmentId` set to null (doesn't delete module content)
 - **Metadata Preservation**: Assignment title, type, points, and due date automatically pulled when linked
@@ -69,9 +75,11 @@ model ModuleContent {
 ### API Endpoints
 
 #### POST /api/courses/[courseId]/sections
+
 **Purpose**: Save course sections and trigger syllabus update
 
 **Request Body**:
+
 ```json
 {
   "sections": [
@@ -101,6 +109,7 @@ model ModuleContent {
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -110,6 +119,7 @@ model ModuleContent {
 ```
 
 **Process Flow**:
+
 1. Validate user session and course ownership
 2. Start database transaction
 3. Update course duration
@@ -122,9 +132,11 @@ model ModuleContent {
 ### Component Architecture
 
 #### CourseSectionBuilder Component
+
 **File**: `components/course-section-builder.tsx`
 
 **Key Features**:
+
 - Drag-and-drop section ordering
 - Expandable/collapsible sections
 - Content type buttons (7 types)
@@ -133,6 +145,7 @@ model ModuleContent {
 - Loading states during save
 
 **Props**:
+
 ```typescript
 interface CourseSectionBuilderProps {
     courseId: string
@@ -144,6 +157,7 @@ interface CourseSectionBuilderProps {
 ```
 
 **State Management**:
+
 ```typescript
 const [sections, setSections] = useState<Section[]>([])
 const [selectedWeeks, setSelectedWeeks] = useState(16)
@@ -156,6 +170,7 @@ const [selectedSectionForImport, setSelectedSectionForImport] = useState<string 
 #### Import Functions
 
 **Import Existing Assignment**:
+
 ```typescript
 const importExistingAssignment = (sectionId: string, assignment: ExistingAssignment) => {
     const newContent: ModuleContent = {
@@ -172,6 +187,7 @@ const importExistingAssignment = (sectionId: string, assignment: ExistingAssignm
 ```
 
 **Import Existing Discussion**:
+
 ```typescript
 const importExistingDiscussion = (sectionId: string, discussion: ExistingDiscussion) => {
     const newContent: ModuleContent = {
@@ -189,11 +205,13 @@ const importExistingDiscussion = (sectionId: string, discussion: ExistingDiscuss
 **File**: `lib/services/syllabus-updater.ts`
 
 **Main Function**:
+
 ```typescript
 export async function updateCourseSyllabus(courseId: string): Promise<string>
 ```
 
 **Generates**:
+
 1. **Course Information** - Code, instructor, duration
 2. **Course Description** - Full description from course model
 3. **Learning Objectives** - Standard objectives for all courses
@@ -214,12 +232,14 @@ export async function updateCourseSyllabus(courseId: string): Promise<string>
 ## User Workflow
 
 ### Step 1: Design Assessments
+
 1. Navigate to **Course Design Studio**
 2. Click **Design Assessments & Assignments**
 3. Use AI to generate assignments, quizzes, or discussion topics
 4. Review and save to course
 
 ### Step 2: Build Course Sections
+
 1. Navigate to **Course Design Studio**
 2. Click **Build Course Sections** (New badge)
 3. Set course duration (8-16+ weeks)
@@ -231,12 +251,14 @@ export async function updateCourseSyllabus(courseId: string): Promise<string>
    - OR click **Import from Course** to add AI-designed content
 
 ### Step 3: Import AI Content
+
 1. Click **Import from Course** button
 2. View available assignments and discussions in dialog
 3. Click any item to add it to the current section
 4. Content is linked (not copied), preserving metadata
 
 ### Step 4: Save & Auto-Update
+
 1. Click **Save Course Structure**
 2. System saves all sections to database
 3. Syllabus automatically regenerates with:
@@ -249,17 +271,20 @@ export async function updateCourseSyllabus(courseId: string): Promise<string>
 ## Benefits
 
 ### For Professors
+
 - **Time Savings**: Reuse AI-designed content across sections
 - **Consistency**: Linked content maintains metadata integrity
 - **Flexibility**: Mix AI-designed and manual content
 - **Automation**: Syllabus updates automatically, no manual editing
 
 ### For Students
+
 - **Clear Structure**: Well-organized weekly breakdown
 - **Complete Information**: All assignments, due dates, and resources in one place
 - **Updated Syllabus**: Always reflects current course structure
 
 ### For Institutions
+
 - **Quality Assurance**: Standardized syllabus format
 - **AI Integration**: Leverages AI for content design while maintaining human oversight
 - **Scalability**: Easy to create and manage multiple course sections
@@ -340,23 +365,29 @@ export async function updateCourseSyllabus(courseId: string): Promise<string>
 ## Troubleshooting
 
 ### Import Dialog Empty
+
 **Issue**: No assignments or discussions show in import dialog
-**Solution**: 
+**Solution**:
+
 - Verify content was created in Course Design Studio
 - Check that content belongs to the same course
 - Ensure database includes relationships
 
 ### Save Fails
+
 **Issue**: Error when saving course sections
 **Solution**:
+
 - Check user has instructor role
 - Verify course ownership
 - Check browser console for detailed error
 - Ensure all required fields are filled
 
 ### Syllabus Not Updating
+
 **Issue**: Syllabus doesn't reflect new structure
 **Solution**:
+
 - Verify save operation completed successfully
 - Check server logs for syllabus generation errors
 - Ensure `updateCourseSyllabus` function is called after transaction

@@ -1,9 +1,9 @@
 export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
-  name: "MyTA | Your Personal AI TA",
+  name: "Professor GENIE Platform",
   description:
-    "A Personal AI TA to assist professors in answering discussion response questions, and grading.",
+    "AI-powered platform that helps professors streamline course management, generate discussion responses, and create engaging educational content.",
   mainNav: [
     {
       title: "Dicussion Response Generator",

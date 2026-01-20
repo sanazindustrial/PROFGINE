@@ -47,7 +47,7 @@ export default function DirectLoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-center text-2xl font-bold">Login to ProfGenie</CardTitle>
+                    <CardTitle className="text-center text-2xl font-bold">Login to Professor GENIE Platform</CardTitle>
                     <CardDescription className="text-center text-green-600">
                         ✅ Direct login system (Google OAuth disabled)
                     </CardDescription>
@@ -85,7 +85,7 @@ export default function DirectLoginPage() {
                             className="w-full"
                             disabled={loading}
                         >
-                            {loading ? "Signing in..." : "Sign in to ProfGenie"}
+                            {loading ? "Signing in..." : "Sign in to Professor GENIE Platform"}
                         </Button>
                     </form>
                     <div className="mt-6 text-center">
