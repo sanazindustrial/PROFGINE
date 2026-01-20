@@ -99,7 +99,7 @@ function CourseDesignStudioContent() {
         if (!agentQuestion.trim()) return
         setIsAgentLoading(true)
         setAgentResponse("")
-        
+
         try {
             const res = await fetch("/api/chat", {
                 method: "POST",
@@ -149,8 +149,8 @@ function CourseDesignStudioContent() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         className="mt-auto border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/20"
                         onClick={() => setShowAskAgent(!showAskAgent)}
                     >
@@ -179,7 +179,7 @@ function CourseDesignStudioContent() {
                             onChange={(e) => setAgentQuestion(e.target.value)}
                             className="min-h-[100px]"
                         />
-                        <Button 
+                        <Button
                             onClick={askAgent}
                             disabled={isAgentLoading || !agentQuestion.trim()}
                             className="w-full"
@@ -241,8 +241,8 @@ function CourseDesignStudioContent() {
                     }[feature.color]
 
                     return (
-                        <Link 
-                            key={feature.id} 
+                        <Link
+                            key={feature.id}
                             href={feature.href}
                             onMouseEnter={() => setHoveredCard(feature.id)}
                             onMouseLeave={() => setHoveredCard(null)}

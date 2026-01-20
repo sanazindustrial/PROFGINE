@@ -29,6 +29,22 @@ export default async function BuildCourseSectionsPage({
                 },
                 orderBy: { orderIndex: "asc" }
             },
+            assignments: {
+                select: {
+                    id: true,
+                    title: true,
+                    type: true,
+                    points: true,
+                    dueAt: true
+                },
+                orderBy: { createdAt: "desc" }
+            },
+            discussions: {
+                select: {
+                    id: true,
+                    title: true
+                }
+            },
             instructor: {
                 select: {
                     name: true,
@@ -87,11 +103,29 @@ export default async function BuildCourseSectionsPage({
                         <li><strong>Set duration</strong>: 8-16 weeks minimum (or longer, completely flexible)</li>
                         <li><strong>Add unlimited sections</strong>: No restrictions on how many sections you create</li>
                         <li><strong>Add multiple content types</strong>: Files, assignments, links, pages, videos, quizzes, discussions</li>
-                        <li><strong>Upload files</strong>: Support for PDF, DOCX, images, and more</li>
+                        <li><strong>Import AI-designed content</strong>: Use assignments and assessments from Design Studio</li>
+                        <li><strong>Auto-update syllabus</strong>: Changes automatically sync to your course syllabus</li>
                         <li><strong>Flexible organization</strong>: Assign to specific weeks or create custom sections</li>
                     </ul>
                 </AlertDescription>
             </Alert>
+
+            {/* Available AI Content */}
+            {(course.assignments.length > 0 || course.discussions.length > 0) && (
+                <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Available AI-Designed Content</CardTitle>
+                        <CardDescription>
+                            You have {course.assignments.length} assignment{course.assignments.length !== 1 ? 's' : ''} and {course.discussions.length} discussion{course.discussions.length !== 1 ? 's' : ''} ready to add to sections
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-sm text-muted-foreground">
+                            Click "Import from Course" in the section builder to add these items to your course structure
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Existing Sections Summary */}
             {course.modules.length > 0 && (
@@ -126,6 +160,8 @@ export default async function BuildCourseSectionsPage({
             <CourseSectionBuilder
                 courseId={course.id}
                 durationWeeks={course.durationWeeks || 16}
+                existingAssignments={course.assignments}
+                existingDiscussions={course.discussions}
             />
 
             {/* Tips Card */}

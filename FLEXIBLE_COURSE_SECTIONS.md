@@ -7,12 +7,14 @@ The flexible course sections feature allows professors to build comprehensive co
 ## ✨ Key Features
 
 ### 1. Flexible Course Duration
+
 - **8-16 weeks minimum** (quarter or semester)
 - **Extendable beyond 16 weeks** for year-long courses
 - **No hard limits** - completely customizable
 - Automatic week/semester labeling (8 weeks = 1 Quarter, 16 weeks = 1 Semester)
 
 ### 2. Unlimited Sections
+
 - Add as many sections as needed
 - No restrictions on section count
 - Organize by weeks or create custom topical sections
@@ -24,42 +26,49 @@ The flexible course sections feature allows professors to build comprehensive co
 Each section can contain unlimited items of these types:
 
 #### 📁 FILE
+
 - Upload any file type (PDF, DOCX, PPTX, images, etc.)
 - Automatic file size tracking
 - File type detection
 - URL-based or direct upload
 
 #### 📝 ASSIGNMENT
+
 - Title, description, instructions
 - Points/grading configuration
 - Due date scheduling
 - Can link to existing assignments
 
 #### 🔗 LINK
+
 - External website URLs
 - Resource links
 - Video embeds
 - Reading materials
 
 #### 📄 PAGE
+
 - Rich text content pages
 - HTML support
 - Reading materials
 - Course notes
 
 #### 🎥 VIDEO
+
 - Video file uploads
 - YouTube/Vimeo embeds
 - Lecture recordings
 - Tutorial videos
 
 #### ✏️ QUIZ
+
 - Quiz/test creation
 - Points configuration
 - Due date scheduling
 - Graded content
 
 #### 💬 DISCUSSION
+
 - Discussion topics
 - Forum threads
 - Reflection prompts
@@ -70,6 +79,7 @@ Each section can contain unlimited items of these types:
 ### Updated Models
 
 #### Course Model
+
 ```prisma
 model Course {
   durationWeeks  Int?      @default(16)  // Flexible: 8-16+ weeks
@@ -80,6 +90,7 @@ model Course {
 ```
 
 #### Enhanced Module Model
+
 ```prisma
 model Module {
   id           String          @id @default(cuid())
@@ -96,6 +107,7 @@ model Module {
 ```
 
 #### New ModuleContent Model
+
 ```prisma
 model ModuleContent {
   id           String      @id @default(cuid())
@@ -118,6 +130,7 @@ model ModuleContent {
 ```
 
 #### ContentType Enum
+
 ```prisma
 enum ContentType {
   FILE
@@ -133,9 +146,11 @@ enum ContentType {
 ## 🎨 UI Components
 
 ### CourseSectionBuilder Component
+
 **Location**: `components/course-section-builder.tsx`
 
 **Features**:
+
 - Visual section management
 - Drag-and-drop ordering (GripVertical icon)
 - Expandable/collapsible sections
@@ -146,6 +161,7 @@ enum ContentType {
 - Points and due date inputs
 
 **Props**:
+
 ```typescript
 interface CourseSectionBuilderProps {
   courseId?: string
@@ -155,9 +171,11 @@ interface CourseSectionBuilderProps {
 ```
 
 ### Build Sections Page
+
 **Location**: `app/dashboard/courses/[courseId]/build-sections/page.tsx`
 
 **Features**:
+
 - Course-specific section builder
 - Shows existing sections summary
 - Authentication check (instructor only)
@@ -168,16 +186,21 @@ interface CourseSectionBuilderProps {
 ## 🚀 Access Points
 
 ### 1. Course Design Studio
+
 Navigate to: `/dashboard/course-design-studio`
+
 - New "Build Course Sections" card with "New" badge
 - Click to access section builder (requires course selection)
 
 ### 2. Direct Course Link
+
 Navigate to: `/dashboard/courses/[courseId]/build-sections`
+
 - Directly build sections for specific course
 - Shows existing sections if any
 
 ### 3. Course Management
+
 From course detail page, add a "Build Sections" button
 
 ## 📋 Usage Flow
@@ -212,12 +235,14 @@ From course detail page, add a "Build Sections" button
 ## 🔧 Technical Implementation
 
 ### State Management
+
 ```typescript
 const [sections, setSections] = useState<CourseSection[]>([])
 const [selectedWeeks, setSelectedWeeks] = useState(16)
 ```
 
 ### Key Functions
+
 - `addSection()` - Add new section
 - `removeSection(id)` - Delete section
 - `updateSection(id, updates)` - Modify section
@@ -227,7 +252,9 @@ const [selectedWeeks, setSelectedWeeks] = useState(16)
 - `removeContent(sectionId, contentId)` - Delete content
 
 ### Content Icons
+
 Each content type has a unique icon:
+
 - FILE: FileUp
 - ASSIGNMENT: Clipboard
 - LINK: Link2
@@ -239,6 +266,7 @@ Each content type has a unique icon:
 ## 🎯 User Benefits
 
 ### For Professors
+
 - **Complete flexibility** - No restrictions on course structure
 - **Multiple content types** - All materials in one place
 - **Visual organization** - Easy to see course at a glance
@@ -246,6 +274,7 @@ Each content type has a unique icon:
 - **Reusable** - Copy structure between courses (future)
 
 ### For Students (Future)
+
 - Clear course roadmap
 - All materials organized by section
 - Required vs optional indicators
@@ -271,12 +300,14 @@ Each content type has a unique icon:
 ## 🚧 Future Enhancements
 
 ### Phase 2 (File Upload)
+
 - [ ] Direct file upload integration
 - [ ] Cloud storage (S3/Azure Blob)
 - [ ] File preview in browser
 - [ ] Drag-and-drop file upload
 
 ### Phase 3 (Advanced Features)
+
 - [ ] Template sections (reusable)
 - [ ] Import from other courses
 - [ ] Bulk operations (duplicate, move)
@@ -285,6 +316,7 @@ Each content type has a unique icon:
 - [ ] Auto-publish on date
 
 ### Phase 4 (Integration)
+
 - [ ] LMS sync (Canvas, Blackboard, Moodle)
 - [ ] Google Drive integration
 - [ ] OneDrive integration
@@ -293,6 +325,7 @@ Each content type has a unique icon:
 ## 📊 Database Migration
 
 Schema changes applied via `prisma db push`:
+
 - Added `durationWeeks`, `startDate`, `endDate` to Course
 - Updated Module with `description`, `sectionNo`, `orderIndex`, `isPublished`, `updatedAt`
 - Created ModuleContent table with all content types
@@ -340,6 +373,7 @@ Schema changes applied via `prisma db push`:
 ## 📞 Support
 
 For questions or issues:
+
 - Check this documentation
 - Review component code: `components/course-section-builder.tsx`
 - Test with: `/dashboard/courses/[courseId]/build-sections`
@@ -350,4 +384,4 @@ For questions or issues:
 **Version**: 1.0.0
 **Last Updated**: January 19, 2026
 **Feature**: Flexible Course Sections with Unlimited Content
-**Repository**: https://github.com/sanazindustrial/PROFGINE
+**Repository**: <https://github.com/sanazindustrial/PROFGINE>

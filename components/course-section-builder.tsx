@@ -20,8 +20,24 @@ import {
     GripVertical,
     ChevronDown,
     ChevronUp,
-    Calendar
+    Calendar,
+    Download,
+    Save,
+    Loader2
 } from "lucide-react"
+
+interface ExistingAssignment {
+    id: string
+    title: string
+    type: string
+    points: number
+    dueAt: Date | null
+}
+
+interface ExistingDiscussion {
+    id: string
+    title: string
+}
 
 interface ModuleContent {
     id: string
@@ -31,6 +47,7 @@ interface ModuleContent {
     content?: string
     fileUrl?: string
     linkUrl?: string
+    assignmentId?: string  // Link to existing assignment
     points?: number
     dueDate?: string
     isRequired: boolean
@@ -49,10 +66,18 @@ interface CourseSection {
 interface CourseSectionBuilderProps {
     courseId?: string
     durationWeeks?: number
+    existingAssignments?: ExistingAssignment[]
+    existingDiscussions?: ExistingDiscussion[]
     onSave?: (sections: CourseSection[]) => void
 }
 
-export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: CourseSectionBuilderProps) {
+export function CourseSectionBuilder({
+    courseId,
+    durationWeeks = 16,
+    existingAssignments = [],
+    existingDiscussions = [],
+    onSave
+}: CourseSectionBuilderProps) {
     const [sections, setSections] = useState<CourseSection[]>([
         {
             id: "1",
@@ -65,6 +90,9 @@ export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: C
     ])
 
     const [selectedWeeks, setSelectedWeeks] = useState(durationWeeks)
+    const [isSaving, setIsSaving] = useState(false)
+    const [showImportDialog, setShowImportDialog] = useState(false)
+    const [selectedSectionForImport, setSelectedSectionForImport] = useState<string | null>(null)
 
     const addSection = () => {
         const newSection: CourseSection = {
@@ -87,7 +115,7 @@ export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: C
     }
 
     const toggleSection = (id: string) => {
-        setSections(sections.map(s => 
+        setSections(sections.map(s =>
             s.id === id ? { ...s, isExpanded: !s.isExpanded } : s
         ))
     }
@@ -105,6 +133,43 @@ export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: C
                 ? { ...s, contents: [...s.contents, newContent] }
                 : s
         ))
+    }
+
+    const importExistingAssignment = (sectionId: string, assignment: ExistingAssignment) => {
+        const newContent: ModuleContent = {
+            id: Date.now().toString(),
+            type: "ASSIGNMENT",
+            title: assignment.title,
+            assignmentId: assignment.id,
+            points: assignment.points,
+            dueDate: assignment.dueAt ? new Date(assignment.dueAt).toISOString().split('T')[0] : undefined,
+            isRequired: true
+        }
+
+        setSections(sections.map(s =>
+            s.id === sectionId
+                ? { ...s, contents: [...s.contents, newContent] }
+                : s
+        ))
+        setShowImportDialog(false)
+        setSelectedSectionForImport(null)
+    }
+
+    const importExistingDiscussion = (sectionId: string, discussion: ExistingDiscussion) => {
+        const newContent: ModuleContent = {
+            id: Date.now().toString(),
+            type: "DISCUSSION",
+            title: discussion.title,
+            isRequired: true
+        }
+
+        setSections(sections.map(s =>
+            s.id === sectionId
+                ? { ...s, contents: [...s.contents, newContent] }
+                : s
+        ))
+        setShowImportDialog(false)
+        setSelectedSectionForImport(null)
     }
 
     const updateContent = (sectionId: string, contentId: string, updates: Partial<ModuleContent>) => {
@@ -140,9 +205,40 @@ export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: C
         }
     }
 
-    const handleSave = () => {
-        if (onSave) {
-            onSave(sections)
+    const handleSave = async () => {
+        if (!courseId) {
+            if (onSave) {
+                onSave(sections)
+            }
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            const response = await fetch(`/api/courses/${courseId}/sections`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sections,
+                    durationWeeks: selectedWeeks
+                })
+            })
+
+            if (!response.ok) {
+                throw new Error("Failed to save sections")
+            }
+
+            const result = await response.json()
+            alert("✅ Course sections saved successfully! Syllabus and resources have been updated.")
+
+            if (onSave) {
+                onSave(sections)
+            }
+        } catch (error) {
+            console.error("Error saving sections:", error)
+            alert("❌ Failed to save sections. Please try again.")
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -329,28 +425,46 @@ export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: C
                                     ))}
 
                                     {/* Add Content Buttons */}
-                                    <div className="flex flex-wrap gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "FILE")}>
-                                            <FileUp className="mr-2 size-3" /> File
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "ASSIGNMENT")}>
-                                            <Clipboard className="mr-2 size-3" /> Assignment
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "LINK")}>
-                                            <Link2 className="mr-2 size-3" /> Link
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "PAGE")}>
-                                            <FileText className="mr-2 size-3" /> Page
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "VIDEO")}>
-                                            <Video className="mr-2 size-3" /> Video
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "QUIZ")}>
-                                            <Clipboard className="mr-2 size-3" /> Quiz
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={() => addContent(section.id, "DISCUSSION")}>
-                                            <MessageSquare className="mr-2 size-3" /> Discussion
-                                        </Button>
+                                    <div className="space-y-2">
+                                        <div className="flex flex-wrap gap-2">
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "FILE")}>
+                                                <FileUp className="mr-2 size-3" /> File
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "ASSIGNMENT")}>
+                                                <Clipboard className="mr-2 size-3" /> Assignment
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "LINK")}>
+                                                <Link2 className="mr-2 size-3" /> Link
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "PAGE")}>
+                                                <FileText className="mr-2 size-3" /> Page
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "VIDEO")}>
+                                                <Video className="mr-2 size-3" /> Video
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "QUIZ")}>
+                                                <Clipboard className="mr-2 size-3" /> Quiz
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={() => addContent(section.id, "DISCUSSION")}>
+                                                <MessageSquare className="mr-2 size-3" /> Discussion
+                                            </Button>
+                                        </div>
+
+                                        {/* Import from Course */}
+                                        {(existingAssignments.length > 0 || existingDiscussions.length > 0) && (
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => {
+                                                    setSelectedSectionForImport(section.id)
+                                                    setShowImportDialog(true)
+                                                }}
+                                            >
+                                                <Download className="mr-2 size-3" />
+                                                Import from Course ({existingAssignments.length + existingDiscussions.length} items)
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>
@@ -372,10 +486,107 @@ export function CourseSectionBuilder({ courseId, durationWeeks = 16, onSave }: C
             {/* Save Button */}
             <div className="flex justify-end gap-3">
                 <Button variant="outline">Preview</Button>
-                <Button onClick={handleSave}>
-                    Save Course Structure
+                <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
+                        <>
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            <Save className="mr-2 size-4" />
+                            Save Course Structure
+                        </>
+                    )}
                 </Button>
             </div>
+
+            {/* Import Dialog */}
+            {showImportDialog && selectedSectionForImport && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowImportDialog(false)}>
+                    <Card className="max-h-[80vh] w-full max-w-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <CardHeader>
+                            <CardTitle className="flex items-center justify-between">
+                                <span>Import AI-Designed Content</span>
+                                <Button variant="ghost" size="sm" onClick={() => setShowImportDialog(false)}>
+                                    ✕
+                                </Button>
+                            </CardTitle>
+                            <CardDescription>
+                                Select assignments, quizzes, or discussions designed with AI to add to this section
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="max-h-[60vh] overflow-y-auto">
+                            {/* Assignments Section */}
+                            {existingAssignments.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="mb-3 font-semibold text-sm flex items-center">
+                                        <Clipboard className="mr-2 size-4" />
+                                        Assignments & Quizzes ({existingAssignments.length})
+                                    </h3>
+                                    <div className="space-y-2">
+                                        {existingAssignments.map((assignment) => (
+                                            <div
+                                                key={assignment.id}
+                                                className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent cursor-pointer"
+                                                onClick={() => {
+                                                    importExistingAssignment(selectedSectionForImport, assignment)
+                                                    setShowImportDialog(false)
+                                                }}
+                                            >
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{assignment.title}</div>
+                                                    <div className="text-muted-foreground text-xs">
+                                                        {assignment.type} • {assignment.points} points
+                                                        {assignment.dueAt && ` • Due: ${new Date(assignment.dueAt).toLocaleDateString()}`}
+                                                    </div>
+                                                </div>
+                                                <Download className="size-4 text-muted-foreground" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Discussions Section */}
+                            {existingDiscussions.length > 0 && (
+                                <div>
+                                    <h3 className="mb-3 font-semibold text-sm flex items-center">
+                                        <MessageSquare className="mr-2 size-4" />
+                                        Discussion Topics ({existingDiscussions.length})
+                                    </h3>
+                                    <div className="space-y-2">
+                                        {existingDiscussions.map((discussion) => (
+                                            <div
+                                                key={discussion.id}
+                                                className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent cursor-pointer"
+                                                onClick={() => {
+                                                    importExistingDiscussion(selectedSectionForImport, discussion)
+                                                    setShowImportDialog(false)
+                                                }}
+                                            >
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{discussion.title}</div>
+                                                    <div className="text-muted-foreground text-xs">
+                                                        Click to add to section
+                                                    </div>
+                                                </div>
+                                                <Download className="size-4 text-muted-foreground" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {existingAssignments.length === 0 && existingDiscussions.length === 0 && (
+                                <p className="text-center text-muted-foreground py-8">
+                                    No AI-designed content available yet. Create assignments or discussions using the Course Design Studio first.
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     )
 }

@@ -162,21 +162,23 @@ model ModuleContent {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   module       Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
 }
 
 model Assignment {
-  id           String         @id @default(cuid())
-  courseId     String
-  lmsId        String?
-  title        String
-  type         AssignmentType @default(OTHER)
-  instructions String?
-  points       Int            @default(100)
-  dueAt        DateTime?
-  createdAt    DateTime       @default(now())
-  course       Course         @relation(fields: [courseId], references: [id])
-  rubric       Rubric?
-  submissions  Submission[]
+  id             String          @id @default(cuid())
+  courseId       String
+  lmsId          String?
+  title          String
+  type           AssignmentType  @default(OTHER)
+  instructions   String?
+  points         Int             @default(100)
+  dueAt          DateTime?
+  createdAt      DateTime        @default(now())
+  course         Course          @relation(fields: [courseId], references: [id])
+  rubric         Rubric?
+  submissions    Submission[]
+  moduleContents ModuleContent[] // Reverse relation
 
   @@unique([courseId, lmsId], name: "courseId_lmsId")
 }
