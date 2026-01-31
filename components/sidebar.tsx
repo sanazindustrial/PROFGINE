@@ -50,22 +50,16 @@ const navigationItems: SidebarItem[] = [
         description: "LMS module access control"
     },
     {
-        title: "Enrollment",
+        title: "Student Enrollment",
         href: "/dashboard/enrollment",
         icon: Users,
-        description: "Student enrollment management"
+        description: "Enroll students in your courses"
     },
     {
         title: "Assignments",
         href: "/dashboard/assignments",
         icon: GraduationCap,
         description: "Assignment management system"
-    },
-    {
-        title: "Courses",
-        href: "/dashboard/courses",
-        icon: BookOpen,
-        description: "Manage your courses"
     },
     {
         title: "Discussion Generator",
@@ -89,13 +83,13 @@ export function Sidebar({ className }: SidebarProps) {
     const pathname = usePathname()
 
     return (
-        <div className={cn("w-64 pb-12", className)}>
-            <div className="space-y-4 py-4">
-                <div className="px-3 py-2">
-                    <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+        <div className={cn("w-full pb-12", className)}>
+            <div className="space-y-6 py-2">
+                <div className="px-2">
+                    <h2 className="mb-4 px-4 text-lg font-semibold tracking-tight">
                         Features
                     </h2>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                         {navigationItems.map((item) => {
                             const Icon = item.icon
                             return (
@@ -119,41 +113,41 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
 
                 {/* Quick Stats Card */}
-                <div className="px-3">
-                    <Card>
-                        <CardHeader className="pb-2">
+                <div className="px-2">
+                    <Card className="transition-shadow duration-200 hover:shadow-md">
+                        <CardHeader className="pb-3">
                             <CardTitle className="flex items-center text-sm font-medium">
-                                <Star className="mr-1 size-4 text-yellow-500" />
+                                <Star className="mr-2 size-4 text-yellow-500" />
                                 AI Providers
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pb-4">
-                            <p className="mb-2 text-xs text-muted-foreground">
+                            <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
                                 8 AI providers with automatic failover
                             </p>
-                            <div className="flex flex-wrap gap-1">
-                                <span className="inline-block rounded bg-blue-100 px-2 py-1 text-xs text-blue-700">OpenAI</span>
-                                <span className="inline-block rounded bg-purple-100 px-2 py-1 text-xs text-purple-700">Claude</span>
-                                <span className="inline-block rounded bg-green-100 px-2 py-1 text-xs text-green-700">Free</span>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="inline-block rounded-md bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">OpenAI</span>
+                                <span className="inline-block rounded-md bg-purple-100 px-2.5 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">Claude</span>
+                                <span className="inline-block rounded-md bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">Free</span>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Help Card */}
-                <div className="px-3">
-                    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 dark:border-blue-800 dark:from-blue-950/50 dark:to-indigo-950/50">
-                        <CardContent className="p-4">
-                            <div className="flex items-start space-x-2">
-                                <BookOpen className="mt-0.5 size-5 text-blue-600 dark:text-blue-400" />
-                                <div className="space-y-1">
+                <div className="px-2">
+                    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 transition-all duration-200 hover:shadow-md dark:border-blue-800 dark:from-blue-950/50 dark:to-indigo-950/50">
+                        <CardContent className="p-5">
+                            <div className="flex items-start space-x-3">
+                                <BookOpen className="mt-0.5 size-5 shrink-0 text-blue-600 dark:text-blue-400" />
+                                <div className="space-y-2">
                                     <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
                                         Need Help?
                                     </p>
-                                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                                    <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-300">
                                         Check our documentation for tips and best practices.
                                     </p>
-                                    <Button variant="link" className="h-auto p-0 text-xs text-blue-600 dark:text-blue-400" asChild>
+                                    <Button variant="link" className="h-auto p-0 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" asChild>
                                         <Link href="/docs">
                                             Learn More <ArrowRight className="ml-1 size-3" />
                                         </Link>

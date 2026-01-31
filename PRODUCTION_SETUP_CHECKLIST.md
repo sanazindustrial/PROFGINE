@@ -108,7 +108,7 @@ GEMINI_API_KEY="..."                               # For Gemini models
 
 ### Step 4: Setup Production Webhooks
 
-**Critical: Set up live webhook endpoint**
+#### Critical: Set up live webhook endpoint
 
 🚨 **CRITICAL: Use correct webhook endpoint**
 
@@ -125,7 +125,7 @@ GEMINI_API_KEY="..."                               # For Gemini models
 
 ### Step 5: Switch to Live Mode (After Deployment)
 
-**Important: Only do this AFTER successful deployment and testing**
+> **Important:** Only do this AFTER successful deployment and testing
 
 1. Stripe Dashboard → Toggle "View test data" OFF
 2. Replace all `sk_test_...` with `sk_live_...` keys

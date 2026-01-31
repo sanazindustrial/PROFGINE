@@ -118,7 +118,7 @@ export default function DocsPage() {
     return (
         <FeatureLayout
             title="Documentation"
-            description="Complete documentation for Professor GENIE platform"
+            description="Complete documentation for PROFGENIE platform"
         >
             <div className="space-y-8">
                 {/* Quick Links */}

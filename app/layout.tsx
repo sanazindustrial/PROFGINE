@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                 <div className="relative flex min-h-screen flex-col">
                   <SiteHeader />
                   <main className="flex-1">
-                    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="container mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
                       {children}
                     </div>
                   </main>

@@ -115,48 +115,48 @@ export default async function DashboardPage() {
     };
 
     return (
-        <div className="container mx-auto py-6">
-            <div className="grid gap-6 lg:grid-cols-4">
+        <div className="container mx-auto py-6 sm:py-8 lg:py-10">
+            <div className="grid gap-6 lg:grid-cols-4 lg:gap-8">
                 {/* Subscription Sidebar */}
                 <div className="lg:col-span-1">
-                    <div className="sticky top-6 space-y-4">
+                    <div className="sticky top-6 space-y-5">
                         {/* Current Plan Card */}
-                        <Card className="border-2">
-                            <CardHeader className="pb-3">
+                        <Card className="border-2 transition-shadow duration-200 hover:shadow-md">
+                            <CardHeader className="pb-4">
                                 <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg">Current Plan</CardTitle>
+                                    <CardTitle className="text-lg font-semibold">Current Plan</CardTitle>
                                     <Crown className="size-5 text-yellow-600" />
                                 </div>
                             </CardHeader>
-                            <CardContent className="space-y-3">
+                            <CardContent className="space-y-4">
                                 <div>
                                     <Badge
                                         variant={billingContext.tier === 'FREE_TRIAL' ? 'secondary' : 'default'}
-                                        className="text-sm"
+                                        className="text-sm font-medium"
                                     >
                                         {billingContext.tier}
                                     </Badge>
-                                    <p className="mt-1 text-sm text-muted-foreground">
+                                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                                         {billingContext.ownerType === 'ORG' ? 'Organization Plan' : 'Personal Plan'}
                                     </p>
                                 </div>
 
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between py-1">
                                         <span className="text-muted-foreground">Courses</span>
                                         <span className="font-medium">
                                             {currentUsage.courses}
                                             {billingContext.tier === 'FREE_TRIAL' && ' / 2'}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between py-1">
                                         <span className="text-muted-foreground">AI Grades</span>
                                         <span className="font-medium">
                                             {currentUsage.aiGrades}
                                             {billingContext.tier === 'FREE_TRIAL' && ' / 10'}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between">
+                                    <div className="flex justify-between py-1">
                                         <span className="text-muted-foreground">Students</span>
                                         <span className="font-medium">
                                             {currentUsage.students}
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 pt-2">
+                                <div className="space-y-2.5 pt-3">
                                     <Button asChild size="sm" className="w-full">
                                         <Link href="/dashboard/billing">
                                             <CreditCard className="mr-2 size-4" />
@@ -185,11 +185,11 @@ export default async function DashboardPage() {
                         </Card>
 
                         {/* Quick Actions */}
-                        <Card>
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-lg">Quick Actions</CardTitle>
+                        <Card className="transition-shadow duration-200 hover:shadow-md">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-2">
+                            <CardContent className="space-y-2.5">
                                 <Button asChild variant="outline" size="sm" className="w-full justify-start">
                                     <Link href="/dashboard/courses/new">
                                         <BookOpen className="mr-2 size-4" />

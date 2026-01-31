@@ -79,11 +79,14 @@ export default function CreateCourseForm({ userId, onCancel }: CreateCourseFormP
             }
 
             toast({
-                title: 'Course Created',
-                description: `Course "${formData.title}" has been created successfully.`
+                title: '✅ Course Created Successfully!',
+                description: `"${formData.title}" is ready. Redirecting to course page...`
             });
 
-            router.push(`/dashboard/courses/${data.course.id}`);
+            // Smooth redirect with delay for user feedback
+            setTimeout(() => {
+                router.push(`/dashboard/courses/${data.course.id}`);
+            }, 1000);
         } catch (error) {
             console.error('Error creating course:', error);
             toast({

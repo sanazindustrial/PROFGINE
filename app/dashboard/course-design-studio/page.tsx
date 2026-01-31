@@ -21,7 +21,8 @@ import {
     MessageCircle,
     Zap,
     Send,
-    Layout
+    Layout,
+    Monitor
 } from "lucide-react"
 import Link from "next/link"
 
@@ -62,6 +63,16 @@ function CourseDesignStudioContent() {
             color: "green",
             href: "/dashboard/suggest-curriculum",
             estimatedTime: "8 min"
+        },
+        {
+            id: "presentations",
+            title: "Create Presentations",
+            description: "Generate PowerPoint slides with lecture notes for each class",
+            icon: Monitor,
+            color: "pink",
+            href: courseId ? `/dashboard/courses/${courseId}/studio` : "/dashboard/courses",
+            estimatedTime: "10 min",
+            badge: "AI"
         },
         {
             id: "sections",
@@ -155,7 +166,7 @@ function CourseDesignStudioContent() {
                         onClick={() => setShowAskAgent(!showAskAgent)}
                     >
                         <MessageCircle className="mr-2 size-4" />
-                        Ask an Agent
+                        Ask Professor GENIE
                     </Button>
                 </div>
             </div>
@@ -166,10 +177,10 @@ function CourseDesignStudioContent() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <MessageCircle className="size-5 text-purple-600" />
-                            Ask an AI Agent
+                            Ask Professor GENIE
                         </CardTitle>
                         <CardDescription>
-                            Get instant help with course design questions
+                            Your AI teaching assistant for instant course design help
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

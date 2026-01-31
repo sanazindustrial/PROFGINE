@@ -1,9 +1,9 @@
 export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
-  name: "Professor GENIE Platform",
+  name: "ProfGENIE Platform",
   description:
-    "AI-powered platform that helps professors streamline course management, generate discussion responses, and create engaging educational content.",
+    "A grading tool and course design studio.",
   mainNav: [
     {
       title: "Dicussion Response Generator",

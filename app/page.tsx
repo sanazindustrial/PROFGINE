@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { getServerSession } from "next-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,15 +24,29 @@ export default async function IndexPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Hero Section */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* Hero Section with Logo */}
       <section className="relative px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl pb-32 pt-20 sm:pb-40 sm:pt-32">
+        <div className="mx-auto max-w-5xl pb-32 pt-20 sm:pb-40 sm:pt-32">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">
+            {/* Logo Standard for Marketing */}
+            <div className="mx-auto mb-8 flex justify-center">
+              <div className="relative h-48 w-full max-w-2xl sm:h-56 animate-float-slow">
+                <Image
+                  src="/icons/logo-standard.png"
+                  alt="PROFGENIE Platform - Empowering Smart Learning"
+                  fill
+                  style={{ objectFit: 'contain' }}
+                  priority
+                  className="drop-shadow-2xl"
+                />
+              </div>
+            </div>
+
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl animate-fade-in">
               The Future of Course Design & Grading is Here
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-300">
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-300 animate-slide-up">
               Professor GENIE is an AI-powered platform that helps professors streamline course
               creation, design insightful assignments, and grade more efficiently.
             </p>

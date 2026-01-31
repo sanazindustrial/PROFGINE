@@ -122,6 +122,6 @@ export async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // Protect all routes except public ones
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|icons).*)",
   ],
 };

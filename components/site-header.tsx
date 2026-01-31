@@ -31,13 +31,13 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <MainNav />
 
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none"></div>
 
-          <nav className="flex items-center space-x-2">
+          <nav className="flex items-center space-x-3">
             <ThemeToggle />
 
             {session ? (

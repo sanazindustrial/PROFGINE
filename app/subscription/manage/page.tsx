@@ -62,7 +62,7 @@ export default function ManageSubscription() {
 
     if (loading) {
         return (
-            <FeatureLayout title="Manage Subscription" description="Manage your ProfGini subscription">
+            <FeatureLayout title="Manage Subscription" description="Manage your PROFGENIE subscription">
                 <div className="flex h-64 items-center justify-center">
                     <div className="animate-pulse">Loading subscription details...</div>
                 </div>

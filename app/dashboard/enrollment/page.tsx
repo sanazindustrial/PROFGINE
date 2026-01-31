@@ -10,6 +10,21 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, UserPlus, Crown, Lock } from 'lucide-react';
 
+/**
+ * STUDENT ENROLLMENT PAGE (Professor Feature)
+ * 
+ * This is for PROFESSORS to enroll students in THEIR courses.
+ * 
+ * Key Differences:
+ * - Student Enrollment (this page): PROFESSORS enroll students in their courses
+ * - User Management (/admin/users): ADMIN manages all platform users
+ * 
+ * Access Control:
+ * - Available to professors with proper subscription/module access
+ * - Professors can only enroll students in courses they teach
+ * - Does NOT allow managing user roles or platform-wide users
+ */
+
 export default async function EnrollmentPage() {
     const session = await getServerSession(authOptions);
 
@@ -122,7 +137,7 @@ export default async function EnrollmentPage() {
                 <div>
                     <h1 className="text-3xl font-bold">Student Enrollment</h1>
                     <p className="text-muted-foreground">
-                        Manage student enrollments across your courses
+                        Enroll students in your courses (Professor Feature)
                     </p>
                 </div>
                 <div className="flex gap-2">

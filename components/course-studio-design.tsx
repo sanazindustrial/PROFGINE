@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Upload, FileText, Monitor, Download } from "lucide-react"
+import { Loader2, Upload, FileText, Monitor, Download, CheckCircle2 } from "lucide-react"
 
 interface CourseStudioDesignProps {
     courseId: string
@@ -25,6 +25,8 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
     const [isGenerating, setIsGenerating] = useState(false)
     const [result, setResult] = useState<any>(null)
     const [error, setError] = useState("")
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
+    const [isUploading, setIsUploading] = useState(false)
 
     const handleGenerate = async () => {
         if (!title.trim()) {
@@ -37,6 +39,29 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
         setResult(null)
 
         try {
+            // Upload files first if any
+            const uploadedFileUrls: string[] = []
+            if (uploadedFiles.length > 0) {
+                setIsUploading(true)
+                for (const file of uploadedFiles) {
+                    const formData = new FormData()
+                    formData.append("file", file)
+
+                    const uploadResponse = await fetch("/api/uploads", {
+                        method: "POST",
+                        body: formData,
+                    })
+
+                    if (uploadResponse.ok) {
+                        const uploadData = await uploadResponse.json()
+                        uploadedFileUrls.push(uploadData.fileUrl)
+                    } else {
+                        console.error(`Failed to upload ${file.name}`)
+                    }
+                }
+                setIsUploading(false)
+            }
+
             const response = await fetch("/api/course-studio/generate", {
                 method: "POST",
                 headers: {
@@ -45,7 +70,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                 body: JSON.stringify({
                     courseId,
                     title,
-                    sources: [], // File upload would populate this
+                    sources: uploadedFileUrls,
                     settings: {
                         description,
                         templateStyle,
@@ -66,10 +91,19 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
             }
 
             setResult(data)
+
+            // Clear uploaded files after successful generation
+            setUploadedFiles([])
+
+            // Smooth redirect to results page with appropriate delay for user to see success message
+            setTimeout(() => {
+                window.location.href = `/dashboard/courses/${courseId}/studio/results/${data.presentationId}`
+            }, 1500)
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred")
         } finally {
             setIsGenerating(false)
+            setIsUploading(false)
         }
     }
 
@@ -77,9 +111,9 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>🎬 Course Studio Design</CardTitle>
+                    <CardTitle>🎬 Professor GENIE Studio</CardTitle>
                     <CardDescription>
-                        Generate professional PowerPoint presentations from your textbooks, resources, and lecture notes
+                        Upload materials and generate PowerPoint presentations with lecture notes for each class session
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -189,18 +223,51 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                     </div>
 
                     {/* File Upload Section */}
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                        <p className="text-sm text-gray-600 mb-2">
-                            Upload source materials (optional)
-                        </p>
-                        <p className="text-xs text-gray-500 mb-3">
-                            Textbooks (PDF), Lecture Notes (Word, Text), Research Papers
-                        </p>
-                        <Button variant="outline" size="sm">
-                            <FileText className="mr-2 h-4 w-4" />
-                            Choose Files
-                        </Button>
+                    <div className="space-y-4">
+                        <Label>Upload Course Materials</Label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                            <p className="text-sm text-gray-600 mb-2 font-semibold">
+                                Upload Textbooks, Articles, and Reading Materials
+                            </p>
+                            <p className="text-xs text-gray-500 mb-3">
+                                Supported: PDF, DOCX, TXT, Markdown | Max 10MB per file
+                            </p>
+                            <Input
+                                type="file"
+                                multiple
+                                accept=".pdf,.doc,.docx,.txt,.md"
+                                onChange={(e) => {
+                                    const files = Array.from(e.target.files || [])
+                                    setUploadedFiles(prev => [...prev, ...files])
+                                }}
+                                className="max-w-xs mx-auto"
+                            />
+                        </div>
+
+                        {uploadedFiles.length > 0 && (
+                            <div className="space-y-2">
+                                <Label className="text-sm text-gray-600">Uploaded Files ({uploadedFiles.length})</Label>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                    {uploadedFiles.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="h-4 w-4 text-gray-500" />
+                                                <span className="truncate max-w-xs">{file.name}</span>
+                                                <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)}KB)</span>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== index))}
+                                            >
+                                                ✕
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Error Message */}
@@ -212,27 +279,20 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
 
                     {/* Result */}
                     {result && (
-                        <div className="bg-green-50 border border-green-200 p-4 rounded-lg space-y-3">
-                            <div className="flex items-center gap-2 text-green-800 font-medium">
-                                <Monitor className="h-5 w-5" />
-                                Presentation Generated Successfully!
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 p-5 rounded-lg space-y-3 shadow-md animate-in fade-in-50 duration-500">
+                            <div className="flex items-center gap-2 text-green-800 font-semibold text-lg">
+                                <CheckCircle2 className="h-6 w-6 text-green-600" />
+                                ✨ Presentation Generated Successfully!
                             </div>
-                            <div className="text-sm text-green-700">
-                                <p>Slide Count: {result.slideCount} slides</p>
-                                <p>Status: {result.status}</p>
+                            <div className="text-sm text-green-700 space-y-1">
+                                <p>✓ <strong>{result.slideCount} slides</strong> created</p>
+                                <p>✓ Lecture notes included for each slide</p>
+                                <p>✓ Based on your uploaded materials</p>
+                                <p>✓ Ready for download in multiple formats</p>
                             </div>
-                            <div className="flex gap-2">
-                                <Button size="sm" asChild>
-                                    <a href={result.downloadUrl} download>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download PPTX
-                                    </a>
-                                </Button>
-                                <Button size="sm" variant="outline" asChild>
-                                    <a href={result.previewUrl} target="_blank" rel="noopener noreferrer">
-                                        Preview
-                                    </a>
-                                </Button>
+                            <div className="flex items-center gap-2 text-sm text-green-600 font-medium animate-pulse">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Redirecting to results page...
                             </div>
                         </div>
                     )}
@@ -240,11 +300,16 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                     {/* Generate Button */}
                     <Button
                         onClick={handleGenerate}
-                        disabled={isGenerating || !title.trim()}
+                        disabled={isGenerating || isUploading || !title.trim()}
                         className="w-full"
                         size="lg"
                     >
-                        {isGenerating ? (
+                        {isUploading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Uploading Files ({uploadedFiles.length})...
+                            </>
+                        ) : isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Generating Presentation...

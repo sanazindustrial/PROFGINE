@@ -93,6 +93,8 @@ export function CourseSectionBuilder({
     const [isSaving, setIsSaving] = useState(false)
     const [showImportDialog, setShowImportDialog] = useState(false)
     const [selectedSectionForImport, setSelectedSectionForImport] = useState<string | null>(null)
+    const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null)
+    const [draggedContentInfo, setDraggedContentInfo] = useState<{ sectionId: string, contentId: string } | null>(null)
 
     const addSection = () => {
         const newSection: CourseSection = {
@@ -229,7 +231,9 @@ export function CourseSectionBuilder({
             }
 
             const result = await response.json()
-            alert("✅ Course sections saved successfully! Syllabus and resources have been updated.")
+
+            // Show detailed success message
+            alert(`✅ Course Structure Saved Successfully!\n\n• ${sections.length} section(s) saved\n• Syllabus updated\n• All content organized\n\nYour course is now ready for students!`)
 
             if (onSave) {
                 onSave(sections)
@@ -240,6 +244,86 @@ export function CourseSectionBuilder({
         } finally {
             setIsSaving(false)
         }
+    }
+
+    // Drag and Drop handlers for sections
+    const handleSectionDragStart = (e: React.DragEvent, sectionId: string) => {
+        setDraggedSectionId(sectionId)
+        e.dataTransfer.effectAllowed = "move"
+    }
+
+    const handleSectionDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+    }
+
+    const handleSectionDrop = (e: React.DragEvent, targetSectionId: string) => {
+        e.preventDefault()
+        if (!draggedSectionId || draggedSectionId === targetSectionId) return
+
+        const draggedIndex = sections.findIndex(s => s.id === draggedSectionId)
+        const targetIndex = sections.findIndex(s => s.id === targetSectionId)
+
+        if (draggedIndex === -1 || targetIndex === -1) return
+
+        const newSections = [...sections]
+        const [draggedSection] = newSections.splice(draggedIndex, 1)
+        newSections.splice(targetIndex, 0, draggedSection)
+
+        // Update section numbers
+        newSections.forEach((section, index) => {
+            section.sectionNo = index + 1
+            if (section.weekNo) {
+                section.weekNo = index + 1
+            }
+        })
+
+        setSections(newSections)
+        setDraggedSectionId(null)
+    }
+
+    // Drag and Drop handlers for content items
+    const handleContentDragStart = (e: React.DragEvent, sectionId: string, contentId: string) => {
+        setDraggedContentInfo({ sectionId, contentId })
+        e.dataTransfer.effectAllowed = "move"
+    }
+
+    const handleContentDragOver = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+    }
+
+    const handleContentDrop = (e: React.DragEvent, targetSectionId: string, targetContentId?: string) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (!draggedContentInfo) return
+
+        const { sectionId: sourceSectionId, contentId: sourceContentId } = draggedContentInfo
+
+        setSections(prevSections => {
+            const newSections = [...prevSections]
+            const sourceSection = newSections.find(s => s.id === sourceSectionId)
+            const targetSection = newSections.find(s => s.id === targetSectionId)
+
+            if (!sourceSection || !targetSection) return prevSections
+
+            const contentIndex = sourceSection.contents.findIndex(c => c.id === sourceContentId)
+            if (contentIndex === -1) return prevSections
+
+            const [draggedContent] = sourceSection.contents.splice(contentIndex, 1)
+
+            if (targetContentId) {
+                const targetIndex = targetSection.contents.findIndex(c => c.id === targetContentId)
+                targetSection.contents.splice(targetIndex, 0, draggedContent)
+            } else {
+                targetSection.contents.push(draggedContent)
+            }
+
+            return newSections
+        })
+
+        setDraggedContentInfo(null)
     }
 
     return (
@@ -283,13 +367,24 @@ export function CourseSectionBuilder({
 
             {/* Sections */}
             <div className="space-y-4">
+                <div className="mb-4 flex items-center gap-2 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4 text-sm text-blue-900 shadow-sm">
+                    <GripVertical className="size-5 text-blue-600" />
+                    <span>💡 <strong>Drag & Drop:</strong> Grab the <GripVertical className="inline size-4" /> icon to reorder sections and content items. Build your course exactly how you want!</span>
+                </div>
                 {sections.map((section, index) => (
-                    <Card key={section.id} className="border-l-4 border-l-blue-500">
-                        <CardHeader className="cursor-pointer" onClick={() => toggleSection(section.id)}>
+                    <Card
+                        key={section.id}
+                        className={`border-l-4 border-l-blue-500 transition-all ${draggedSectionId === section.id ? 'opacity-50' : ''}`}
+                        draggable
+                        onDragStart={(e) => handleSectionDragStart(e, section.id)}
+                        onDragOver={handleSectionDragOver}
+                        onDrop={(e) => handleSectionDrop(e, section.id)}
+                    >
+                        <CardHeader className="cursor-move" onClick={() => toggleSection(section.id)}>
                             <div className="flex items-start justify-between">
                                 <div className="flex-1 space-y-2">
                                     <div className="flex items-center gap-2">
-                                        <GripVertical className="size-4 text-muted-foreground" />
+                                        <GripVertical className="size-5 cursor-grab text-blue-600" />
                                         {section.isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                                         <Badge variant="outline">Section {section.sectionNo}</Badge>
                                     </div>
@@ -341,13 +436,25 @@ export function CourseSectionBuilder({
                                 </div>
 
                                 {/* Contents */}
-                                <div className="space-y-3">
+                                <div
+                                    className="space-y-3"
+                                    onDragOver={handleContentDragOver}
+                                    onDrop={(e) => handleContentDrop(e, section.id)}
+                                >
                                     <Label>Section Contents</Label>
                                     {section.contents.map(content => (
-                                        <Card key={content.id} className="border-dashed">
+                                        <Card
+                                            key={content.id}
+                                            className={`border-dashed transition-all ${draggedContentInfo?.contentId === content.id ? 'opacity-50' : ''}`}
+                                            draggable
+                                            onDragStart={(e) => handleContentDragStart(e, section.id, content.id)}
+                                            onDragOver={handleContentDragOver}
+                                            onDrop={(e) => handleContentDrop(e, section.id, content.id)}
+                                        >
                                             <CardContent className="space-y-3 pt-4">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-center gap-2">
+                                                        <GripVertical className="size-4 cursor-grab text-gray-400" />
                                                         {getContentIcon(content.type)}
                                                         <Badge variant="secondary">{content.type}</Badge>
                                                         {content.isRequired && <Badge variant="outline">Required</Badge>}
@@ -520,7 +627,7 @@ export function CourseSectionBuilder({
                             {/* Assignments Section */}
                             {existingAssignments.length > 0 && (
                                 <div className="mb-6">
-                                    <h3 className="mb-3 font-semibold text-sm flex items-center">
+                                    <h3 className="mb-3 flex items-center text-sm font-semibold">
                                         <Clipboard className="mr-2 size-4" />
                                         Assignments & Quizzes ({existingAssignments.length})
                                     </h3>
@@ -528,7 +635,7 @@ export function CourseSectionBuilder({
                                         {existingAssignments.map((assignment) => (
                                             <div
                                                 key={assignment.id}
-                                                className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent cursor-pointer"
+                                                className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-accent"
                                                 onClick={() => {
                                                     importExistingAssignment(selectedSectionForImport, assignment)
                                                     setShowImportDialog(false)
@@ -536,7 +643,7 @@ export function CourseSectionBuilder({
                                             >
                                                 <div className="flex-1">
                                                     <div className="font-medium">{assignment.title}</div>
-                                                    <div className="text-muted-foreground text-xs">
+                                                    <div className="text-xs text-muted-foreground">
                                                         {assignment.type} • {assignment.points} points
                                                         {assignment.dueAt && ` • Due: ${new Date(assignment.dueAt).toLocaleDateString()}`}
                                                     </div>
@@ -551,7 +658,7 @@ export function CourseSectionBuilder({
                             {/* Discussions Section */}
                             {existingDiscussions.length > 0 && (
                                 <div>
-                                    <h3 className="mb-3 font-semibold text-sm flex items-center">
+                                    <h3 className="mb-3 flex items-center text-sm font-semibold">
                                         <MessageSquare className="mr-2 size-4" />
                                         Discussion Topics ({existingDiscussions.length})
                                     </h3>
@@ -559,7 +666,7 @@ export function CourseSectionBuilder({
                                         {existingDiscussions.map((discussion) => (
                                             <div
                                                 key={discussion.id}
-                                                className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent cursor-pointer"
+                                                className="flex cursor-pointer items-center justify-between rounded-lg border p-3 hover:bg-accent"
                                                 onClick={() => {
                                                     importExistingDiscussion(selectedSectionForImport, discussion)
                                                     setShowImportDialog(false)
@@ -567,7 +674,7 @@ export function CourseSectionBuilder({
                                             >
                                                 <div className="flex-1">
                                                     <div className="font-medium">{discussion.title}</div>
-                                                    <div className="text-muted-foreground text-xs">
+                                                    <div className="text-xs text-muted-foreground">
                                                         Click to add to section
                                                     </div>
                                                 </div>
@@ -579,7 +686,7 @@ export function CourseSectionBuilder({
                             )}
 
                             {existingAssignments.length === 0 && existingDiscussions.length === 0 && (
-                                <p className="text-center text-muted-foreground py-8">
+                                <p className="py-8 text-center text-muted-foreground">
                                     No AI-designed content available yet. Create assignments or discussions using the Course Design Studio first.
                                 </p>
                             )}

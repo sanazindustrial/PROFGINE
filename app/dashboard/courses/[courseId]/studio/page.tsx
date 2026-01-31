@@ -2,6 +2,7 @@ import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { CourseStudioDesign } from "@/components/course-studio-design"
+import { Badge } from "@/components/ui/badge"
 
 export default async function CourseStudioPage({
     params,
@@ -37,11 +38,14 @@ export default async function CourseStudioPage({
     })
 
     return (
-        <div className="container mx-auto py-8 px-4">
+        <div className="container mx-auto py-8 px-4 animate-in fade-in-50 duration-500">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold mb-2">Course Studio Design</h1>
+                <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Course Studio Design</h1>
+                    <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
+                </div>
                 <p className="text-gray-600">
-                    Course: {course.title} {course.code ? `(${course.code})` : ""}
+                    Course: <span className="font-semibold">{course.title}</span> {course.code ? `(${course.code})` : ""}
                 </p>
             </div>
 
@@ -53,28 +57,51 @@ export default async function CourseStudioPage({
 
                 {/* Sidebar - Recent Presentations */}
                 <div className="space-y-4">
-                    <div className="bg-white rounded-lg border p-4">
-                        <h3 className="font-semibold mb-3">Recent Presentations</h3>
+                    <div className="bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow">
+                        <h3 className="font-semibold mb-3 flex items-center gap-2">
+                            📊 Recent Presentations
+                            <Badge variant="outline" className="text-xs">{presentations.length}</Badge>
+                        </h3>
                         {presentations.length === 0 ? (
-                            <p className="text-sm text-gray-500">No presentations yet</p>
+                            <div className="text-center py-8">
+                                <p className="text-sm text-gray-500 mb-2">No presentations yet</p>
+                                <p className="text-xs text-gray-400">Create your first one above!</p>
+                            </div>
                         ) : (
                             <div className="space-y-2">
                                 {presentations.map((pres) => (
                                     <div
                                         key={pres.id}
-                                        className="p-3 border rounded hover:bg-gray-50 cursor-pointer"
+                                        className="p-3 border rounded hover:bg-gray-50 cursor-pointer transition-colors hover:border-blue-300"
+                                        onClick={() => window.location.href = `/dashboard/courses/${params.courseId}/studio/results/${pres.id}`}
                                     >
                                         <div className="font-medium text-sm truncate">{pres.title}</div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {pres.slideCount} slides • {pres.status}
+                                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                            <span>{pres.slideCount} slides</span>
+                                            <span>•</span>
+                                            <Badge variant={pres.status === "COMPLETED" ? "default" : "secondary"} className="text-xs">
+                                                {pres.status}
+                                            </Badge>
                                         </div>
-                                        <div className="text-xs text-gray-400">
+                                        <div className="text-xs text-gray-400 mt-1">
                                             {new Date(pres.createdAt).toLocaleDateString()}
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 shadow-sm">
+                        <h3 className="font-semibold mb-2 flex items-center gap-2">
+                            💡 Quick Tips
+                        </h3>
+                        <ul className="text-sm space-y-2 text-gray-700">
+                            <li>✓ Upload course materials for better content</li>
+                            <li>✓ Choose template that matches your style</li>
+                            <li>✓ Include quizzes for interactive learning</li>
+                            <li>✓ Add discussions to boost engagement</li>
+                        </ul>
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

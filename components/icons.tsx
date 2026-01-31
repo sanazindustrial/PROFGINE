@@ -9,6 +9,7 @@ import {
   type Icon as LucideIcon,
 
 } from "lucide-react"
+import Image from "next/image"
 
 export type Icon = LucideIcon
 
@@ -19,8 +20,41 @@ export const Icons = {
   spinner: Loader2,
   play: Play,
   checkCircle: CheckCircle,
+  // Single logo for navigation
   logo: (props: LucideProps) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-book-marked"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /><polyline points="10 2 10 10 13 7 16 10 16 2" /></svg>
+    <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Image
+        src="/icons/single-logo.png"
+        alt="Professor GENIE"
+        fill
+        style={{ objectFit: 'contain' }}
+        priority
+      />
+    </div>
+  ),
+  // Logo 1 for footer and badges
+  logoBadge: (props: LucideProps) => (
+    <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Image
+        src="/icons/logo-1.png"
+        alt="PROFGENIE Platform"
+        fill
+        style={{ objectFit: 'contain' }}
+        priority
+      />
+    </div>
+  ),
+  // Logo standard for marketing
+  logoStandard: (props: LucideProps) => (
+    <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <Image
+        src="/icons/logo-standard.png"
+        alt="PROFGENIE Platform"
+        fill
+        style={{ objectFit: 'contain' }}
+        priority
+      />
+    </div>
   ),
   google: (props: LucideProps) => (
     <svg viewBox="0 0 24 24" {...(props as any)}>
