@@ -15,6 +15,7 @@ model User {
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   role                  UserRole              @default(STUDENT)
+  isOwner               Boolean               @default(false)
   emailVerified         DateTime?
   image                 String?
   password              String?
