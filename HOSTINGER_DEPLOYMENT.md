@@ -112,7 +112,7 @@ echo "Next: Upload your files to /var/www/profgenie"
 ```bash
 # On VPS
 cd /var/www/profgenie
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git .
+git clone https://github.com/sanazindustrial/PROFGINE.git .
 ```
 
 **Option C: Using SCP from Windows**

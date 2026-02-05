@@ -7,7 +7,7 @@ import { Prisma } from "@prisma/client"
 // POST /api/courses/[courseId]/sections - Save course sections and update syllabus
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ courseId: string }> }
+    { params }: { params: { courseId: string } }
 ) {
     try {
         // Authenticate user
@@ -16,7 +16,7 @@ export async function POST(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const { courseId } = await params
+        const { courseId } = params
         const body = await request.json()
         const { sections, durationWeeks } = body
 

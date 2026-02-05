@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: Promise<{ presentationId: string }> }
+    { params }: { params: { presentationId: string } }
 ) {
     try {
         const session = await requireSession()
@@ -12,7 +12,7 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const { presentationId } = await params
+        const { presentationId } = params
 
         // Verify user owns this presentation
         const presentation = await prisma.presentation.findFirst({
@@ -56,7 +56,7 @@ export async function DELETE(
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ presentationId: string }> }
+    { params }: { params: { presentationId: string } }
 ) {
     try {
         const session = await requireSession()
@@ -64,7 +64,7 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const { presentationId } = await params
+        const { presentationId } = params
 
         const presentation = await prisma.presentation.findFirst({
             where: {
