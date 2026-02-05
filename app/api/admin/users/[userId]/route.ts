@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         const session = await requireSession()
@@ -14,7 +14,7 @@ export async function DELETE(
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
         }
 
-        const userId = params.userId
+        const { userId } = await params
 
         // Prevent admin from deleting themselves
         if (userId === session.user.id) {
