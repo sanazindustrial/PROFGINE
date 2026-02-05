@@ -30,6 +30,8 @@ function CourseDesignStudioContent() {
     const searchParams = useSearchParams()
     const courseIdParam = searchParams.get('courseId')
     const courseId = courseIdParam && courseIdParam !== "undefined" && courseIdParam !== "null" ? courseIdParam : null
+    const [defaultCourseId, setDefaultCourseId] = useState<string | null>(null)
+    const [isCourseIdLoading, setIsCourseIdLoading] = useState(false)
     const [completedTools, setCompletedTools] = useState<string[]>([])
     const [hoveredCard, setHoveredCard] = useState<string | null>(null)
     const [difficultyLevel, setDifficultyLevel] = useState<string>("medium")
@@ -45,6 +47,29 @@ function CourseDesignStudioContent() {
             setCompletedTools(JSON.parse(saved))
         }
     }, [])
+
+    // Load latest course when no courseId is provided
+    useEffect(() => {
+        if (courseId) return
+
+        const loadCourses = async () => {
+            setIsCourseIdLoading(true)
+            try {
+                const res = await fetch("/api/courses")
+                const data = await res.json()
+                const latestCourseId = data?.courses?.[0]?.id ?? null
+                setDefaultCourseId(latestCourseId)
+            } catch (error) {
+                setDefaultCourseId(null)
+            } finally {
+                setIsCourseIdLoading(false)
+            }
+        }
+
+        loadCourses()
+    }, [courseId])
+
+    const effectiveCourseId = courseId || defaultCourseId
 
     const aiFeatures = [
         {
@@ -71,7 +96,7 @@ function CourseDesignStudioContent() {
             description: "Generate PowerPoint slides with lecture notes for each class",
             icon: Monitor,
             color: "pink",
-            href: courseId ? `/dashboard/courses/${courseId}/studio` : "/dashboard/courses",
+            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/studio` : "/dashboard/courses",
             estimatedTime: "10 min",
             badge: "AI"
         },
@@ -81,7 +106,7 @@ function CourseDesignStudioContent() {
             description: "Add sections, files, assignments, links - unlimited flexibility",
             icon: Layout,
             color: "indigo",
-            href: courseId ? `/dashboard/courses/${courseId}/build-sections` : "/dashboard/courses",
+            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/build-sections` : "/dashboard/courses",
             estimatedTime: "15-30 min",
             badge: "New"
         },
@@ -141,14 +166,19 @@ function CourseDesignStudioContent() {
                     <p className="text-muted-foreground">
                         Intelligent tools to design engaging and effective courses
                     </p>
-                    {courseId && (
+                    {effectiveCourseId && (
                         <Badge variant="secondary" className="mt-2">
-                            Editing Course ID: {courseId}
+                            Editing Course ID: {effectiveCourseId}
                         </Badge>
                     )}
-                    {!courseId && (
+                    {!effectiveCourseId && !isCourseIdLoading && (
                         <Badge variant="outline" className="mt-2">
                             Select a course to enable presentations
+                        </Badge>
+                    )}
+                    {!effectiveCourseId && isCourseIdLoading && (
+                        <Badge variant="outline" className="mt-2">
+                            Loading courses...
                         </Badge>
                     )}
                 </div>
