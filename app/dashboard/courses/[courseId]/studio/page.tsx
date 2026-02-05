@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { CourseStudioDesign } from "@/components/course-studio-design"
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@prisma/client"
+import { BarChart3, Lightbulb, Sparkles } from "lucide-react"
 
 export default async function CourseStudioPage({
     params,
@@ -59,7 +60,8 @@ export default async function CourseStudioPage({
                 <div className="space-y-4">
                     <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-4 hover:shadow-md transition-shadow">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                            📊 Recent Presentations
+                            <BarChart3 className="size-4" />
+                            Recent Presentations
                             <Badge variant="outline" className="text-xs">{presentations.length}</Badge>
                         </h3>
                         {presentations.length === 0 ? (
@@ -94,7 +96,8 @@ export default async function CourseStudioPage({
 
                     <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 shadow-sm">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
-                            💡 Quick Tips
+                            <Lightbulb className="size-4" />
+                            Quick Tips
                         </h3>
                         <ul className="text-sm space-y-2 text-gray-800 dark:text-gray-100">
                             <li>✓ Upload course materials for better content</li>
@@ -105,7 +108,10 @@ export default async function CourseStudioPage({
                     </div>
 
                     <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">💡 Tips</h4>
+                        <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                            <Lightbulb className="size-4" />
+                            Tips
+                        </h4>
                         <ul className="text-sm text-blue-900 dark:text-blue-100 space-y-1">
                             <li>• Upload textbook chapters for best results</li>
                             <li>• Include lecture notes for personalized content</li>
@@ -115,7 +121,10 @@ export default async function CourseStudioPage({
                     </div>
 
                     <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                        <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">✨ Features</h4>
+                        <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
+                            <Sparkles className="size-4" />
+                            Features
+                        </h4>
                         <ul className="text-sm text-green-900 dark:text-green-100 space-y-1">
                             <li>• AI-powered content generation</li>
                             <li>• Multiple professional templates</li>
