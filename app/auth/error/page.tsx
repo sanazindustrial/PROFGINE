@@ -1,11 +1,12 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 
-export default function AuthError() {
+function AuthErrorContent() {
     const searchParams = useSearchParams()
     const error = searchParams.get("error")
 
@@ -145,5 +146,22 @@ export default function AuthError() {
                 </Card>
             </div>
         </div>
+    )
+}
+
+export default function AuthError() {
+    return (
+        <Suspense
+            fallback={
+                <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+                    <div className="w-full max-w-md space-y-6 text-center">
+                        <div className="mx-auto size-12 animate-pulse rounded-full bg-gray-200" />
+                        <p className="text-sm text-gray-600">Loading error details...</p>
+                    </div>
+                </div>
+            }
+        >
+            <AuthErrorContent />
+        </Suspense>
     )
 }
