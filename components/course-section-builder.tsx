@@ -333,7 +333,7 @@ export function CourseSectionBuilder({
                 <CardHeader>
                     <CardTitle>Course Structure</CardTitle>
                     <CardDescription>
-                        Configure your course duration and build sections (no limitations)
+                        Configure your course duration and build sections (any number of weeks)
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -345,7 +345,7 @@ export function CourseSectionBuilder({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {Array.from({ length: 20 }, (_, i) => i + 8).map(week => (
+                                    {Array.from({ length: 52 }, (_, i) => i + 1).map(week => (
                                         <SelectItem key={week} value={week.toString()}>
                                             {week} weeks {week === 8 && "(1 Quarter)"} {week === 16 && "(1 Semester)"}
                                         </SelectItem>

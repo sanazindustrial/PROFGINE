@@ -12,9 +12,8 @@ export async function GET() {
   });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  // professors/admin: list courses they teach
   const courses = await prisma.course.findMany({
-    where: { instructorId: user.id },
+    where: user.role === UserRole.ADMIN ? undefined : { instructorId: user.id },
     orderBy: { createdAt: "desc" },
   });
 
