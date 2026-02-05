@@ -113,7 +113,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                 <CardHeader>
                     <CardTitle>🎬 Professor GENIE Studio</CardTitle>
                     <CardDescription>
-                        Upload materials and generate PowerPoint presentations with lecture notes for each class session
+                        Upload lecture notes and materials, then generate slide decks with speaker notes for each class session
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -227,11 +227,14 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                         <Label>Upload Course Materials</Label>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                             <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                            <p className="text-sm text-gray-600 mb-2 font-semibold">
-                                Upload Textbooks, Articles, and Reading Materials
+                            <p className="text-sm text-gray-800 mb-2 font-semibold">
+                                Upload lecture notes, readings, and outlines
                             </p>
-                            <p className="text-xs text-gray-500 mb-3">
+                            <p className="text-xs text-gray-700 mb-1">
                                 Supported: PDF, DOCX, TXT, Markdown | Max 10MB per file
+                            </p>
+                            <p className="text-xs text-gray-600 mb-3">
+                                Google Docs: export as PDF or DOCX before upload
                             </p>
                             <Input
                                 type="file"
@@ -322,7 +325,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                         )}
                     </Button>
 
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-gray-600 text-center">
                         Generation typically takes 1-3 minutes depending on content complexity
                     </p>
                 </CardContent>

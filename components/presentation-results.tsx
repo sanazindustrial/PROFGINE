@@ -199,7 +199,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                 Download Presentation
                             </CardTitle>
                             <CardDescription>
-                                Download in multiple formats for different platforms
+                                Download slides and access lecture notes embedded in speaker notes
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -260,6 +260,14 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                             </Button>
                                         </>
                                     )}
+                                    <Button variant="outline" className="w-full justify-start" disabled>
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Word (.docx) lecture notes (coming soon)
+                                    </Button>
+                                    <Button variant="outline" className="w-full justify-start" disabled>
+                                        <FileText className="mr-2 h-4 w-4" />
+                                        Google Docs lecture notes (coming soon)
+                                    </Button>
                                 </div>
                             </div>
 
@@ -296,6 +304,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                             {/* Format Info */}
                             <div className="pt-2 border-t">
                                 <p className="text-xs text-gray-600">
+                                    <strong>Lecture notes:</strong> Included in slide speaker notes (PPTX, PDF)<br />
                                     <strong>Windows:</strong> Use PowerPoint (Windows) format<br />
                                     <strong>Mac:</strong> Use Keynote or PowerPoint format<br />
                                     <strong>Google Slides:</strong> Download PPTX and upload to Google Drive<br />
