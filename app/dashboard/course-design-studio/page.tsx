@@ -28,7 +28,8 @@ import Link from "next/link"
 
 function CourseDesignStudioContent() {
     const searchParams = useSearchParams()
-    const courseId = searchParams.get('courseId')
+    const courseIdParam = searchParams.get('courseId')
+    const courseId = courseIdParam && courseIdParam !== "undefined" && courseIdParam !== "null" ? courseIdParam : null
     const [completedTools, setCompletedTools] = useState<string[]>([])
     const [hoveredCard, setHoveredCard] = useState<string | null>(null)
     const [difficultyLevel, setDifficultyLevel] = useState<string>("medium")
@@ -143,6 +144,11 @@ function CourseDesignStudioContent() {
                     {courseId && (
                         <Badge variant="secondary" className="mt-2">
                             Editing Course ID: {courseId}
+                        </Badge>
+                    )}
+                    {!courseId && (
+                        <Badge variant="outline" className="mt-2">
+                            Select a course to enable presentations
                         </Badge>
                     )}
                 </div>
