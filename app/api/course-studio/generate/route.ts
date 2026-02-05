@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { CourseStudioService } from "@/lib/services/course-studio"
 
-export const runtime = "edge"
+export const runtime = "nodejs"
 
 export async function POST(req: NextRequest) {
   try {
