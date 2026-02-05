@@ -32,7 +32,7 @@ export function TrialExpiredBanner({ remainingDays = 0, className = "" }: TrialE
               Upgrade now to keep all your data and continue using unlimited features.
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => router.push('/subscription/upgrade')}
             className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
           >
@@ -55,13 +55,13 @@ export function TrialExpiredBanner({ remainingDays = 0, className = "" }: TrialE
       <CardContent className="flex items-center justify-between">
         <div>
           <p className="text-red-700">
-            Your free trial has ended. Upgrade now to continue using ProfGini.
+            Your free trial has ended. Upgrade now to continue using ProfGenie.
           </p>
           <p className="text-sm text-red-600">
             Your data is safely stored and will be available immediately after upgrading.
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => router.push('/subscription/upgrade')}
           className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
         >

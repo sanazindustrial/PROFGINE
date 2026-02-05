@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                                         id="message"
                                         value={inviteForm.message}
                                         onChange={(e) => setInviteForm({ ...inviteForm, message: e.target.value })}
-                                        placeholder="Welcome to ProfGini! You've been invited to join as an administrator..."
+                                        placeholder="Welcome to ProfGenie! You've been invited to join as an administrator..."
                                         rows={3}
                                     />
                                 </div>

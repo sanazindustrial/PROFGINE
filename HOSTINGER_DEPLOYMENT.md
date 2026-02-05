@@ -384,6 +384,8 @@ Wait 5-30 minutes for DNS propagation.
 - [ ] Website accessible via HTTPS
 - [ ] Login working
 - [ ] AI features working
+- [ ] Health check result: <https://profgenie.ai> (HTTP 200)
+- [ ] Verify key endpoints: API health, auth, and dashboard
 
 ---
 

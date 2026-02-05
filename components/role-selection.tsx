@@ -53,7 +53,7 @@ export function RoleSelection({ onRoleSelectAction, isLoading = false }: RoleSel
             <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900">Choose Your Role</h2>
                 <p className="mt-2 text-gray-600">
-                    Select your role to customize your ProfGini experience
+                    Select your role to customize your ProfGenie experience
                 </p>
             </div>
 

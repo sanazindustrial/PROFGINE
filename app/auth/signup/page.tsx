@@ -493,7 +493,7 @@ export default function SignUp() {
                             <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6L23 9l-11-6zM18.82 9L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15 17 12.27v3.72z" />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900">ProfGini Platform</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">ProfGenie Platform</h1>
                     <p className="mt-2 text-gray-600">AI-Powered Course Management & Grading</p>
                 </div>
 

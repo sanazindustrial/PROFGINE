@@ -87,7 +87,7 @@ function AuthErrorContent() {
                             />
                         </svg>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900">ProfGini Platform</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">ProfGenie Platform</h1>
                 </div>
 
                 {/* Error Card */}
@@ -138,7 +138,7 @@ function AuthErrorContent() {
                         {/* Support */}
                         <div className="pt-4 text-center text-sm text-gray-600">
                             Still having issues?{" "}
-                            <a href="mailto:support@profgini.com" className="font-medium text-blue-600 hover:text-blue-500">
+                            <a href="mailto:support@profgenie.ai" className="font-medium text-blue-600 hover:text-blue-500">
                                 Contact Support
                             </a>
                         </div>
