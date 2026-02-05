@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, Info } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { UserRole } from "@prisma/client"
 
 export default async function BuildCourseSectionsPage({
     params,
@@ -18,6 +19,10 @@ export default async function BuildCourseSectionsPage({
 
     if (!session) {
         redirect("/auth/signin")
+    }
+
+    if (!params?.courseId) {
+        redirect("/dashboard/courses")
     }
 
     const course = await prisma.course.findUnique({
@@ -58,8 +63,8 @@ export default async function BuildCourseSectionsPage({
         redirect("/dashboard/courses")
     }
 
-    // Check if user is instructor
-    if (course.instructorId !== session.user.id) {
+    // Check if user is instructor or admin
+    if (session.user.role !== UserRole.ADMIN && course.instructorId !== session.user.id) {
         redirect("/dashboard/courses")
     }
 
