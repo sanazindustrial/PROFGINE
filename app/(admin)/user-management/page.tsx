@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma"
-import { Button, Link, Table, Text, Badge } from "@radix-ui/themes"
+import { Button, Link, Text, Badge } from "@radix-ui/themes"
 import { requireSession } from "@/lib/auth"
 import { UserRole } from "@prisma/client"
 import { redirect } from "next/navigation"
+import { OwnerUserManagementTable } from "@/components/owner-user-management-table"
 
 /**
  * USER MANAGEMENT - PLATFORM OWNERS
@@ -40,7 +41,10 @@ const OwnerUserManagement = async () => {
 
   // Fetch all users on the platform (professors, students, admins)
   const users = await prisma.user.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: {
+      userSubscription: true
+    }
   })
   // Remove invitation query since the model doesn't exist in schema
   const invitations: any[] = []
@@ -69,63 +73,38 @@ const OwnerUserManagement = async () => {
       </div>
 
       <section className="m-5">
-        <h2>
+        <h2 className="mb-4">
           <Text size="5">Current Users ({users.length})</Text>
         </h2>
-        <Table.Root variant="surface">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Role</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Owner</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Joined</Table.ColumnHeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {users.map((user: any) => (
-              <Table.Row key={user.id}>
-                <Table.Cell>
-                  {user.name || 'No name set'}
-                </Table.Cell>
-                <Table.Cell>{user.email}</Table.Cell>
-                <Table.Cell>
-                  {getRoleBadge(user.role)}
-                </Table.Cell>
-                <Table.Cell>
-                  {user.isOwner ? <Badge color="purple">Owner</Badge> : '-'}
-                </Table.Cell>
-                <Table.Cell>{new Date(user.createdAt).toLocaleDateString()}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
+        <OwnerUserManagementTable
+          currentUserId={session.user.id}
+          initialUsers={users.map((user: any) => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            isOwner: user.isOwner,
+            subscriptionType: user.subscriptionType,
+            subscriptionExpiresAt: user.subscriptionExpiresAt ? user.subscriptionExpiresAt.toISOString() : null,
+            trialExpiresAt: user.trialExpiresAt ? user.trialExpiresAt.toISOString() : null,
+            creditBalance: user.creditBalance ?? 0,
+            monthlyCredits: user.monthlyCredits ?? 0,
+            subscriptionTier: user.userSubscription?.tier ?? null,
+            subscriptionStatus: user.userSubscription?.status ?? null,
+            currentPeriodEnd: user.userSubscription?.currentPeriodEnd
+              ? user.userSubscription.currentPeriodEnd.toISOString()
+              : null,
+          }))}
+        />
       </section>
 
       <section className="m-5">
         <h2>
           <Text size="5">Pending Invitations ({invitations.length})</Text>
         </h2>
-        <Table.Root variant="surface">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Role</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Invited</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Expires</Table.ColumnHeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {invitations.map((invitation: any) => (
-              <Table.Row key={invitation.id}>
-                <Table.Cell>{invitation.email}</Table.Cell>
-                <Table.Cell>{getRoleBadge(invitation.role)}</Table.Cell>
-                <Table.Cell>{new Date(invitation.createdAt).toLocaleDateString()}</Table.Cell>
-                <Table.Cell>{new Date(invitation.validThrough).toLocaleDateString()}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
+        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-600">
+          Invitation management is available in the admin dashboard.
+        </div>
       </section>
     </section>
   )
