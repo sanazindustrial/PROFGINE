@@ -1,22 +1,13 @@
 "use client";
 
-import { signIn, getProviders } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/icons";
 
 export default function AdminLoginPage() {
-    const [providers, setProviders] = useState<any>(null);
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const loadProviders = async () => {
-            const res = await getProviders();
-            setProviders(res);
-        };
-        loadProviders();
-    }, []);
 
     const handleGoogleSignIn = async () => {
         setLoading(true);
@@ -47,24 +38,16 @@ export default function AdminLoginPage() {
                             <p className="text-sm text-blue-700">Use your Google account (sanazindustrial@gmail.com) to access admin features</p>
                         </div>
 
-                        {providers?.google ? (
-                            <Button
-                                onClick={handleGoogleSignIn}
-                                disabled={loading}
-                                variant="outline"
-                                className="h-12 w-full border-gray-300 hover:bg-gray-50"
-                                size="lg"
-                            >
-                                <Icons.google className="mr-2 size-4" />
-                                {loading ? "Signing in..." : "Sign in with Google"}
-                            </Button>
-                        ) : (
-                            <div className="rounded-md border border-yellow-200 bg-yellow-50 p-4">
-                                <p className="text-sm text-yellow-800">
-                                    Google authentication is not configured. Please contact the administrator.
-                                </p>
-                            </div>
-                        )}
+                        <Button
+                            onClick={handleGoogleSignIn}
+                            disabled={loading}
+                            variant="outline"
+                            className="h-12 w-full border-gray-300 hover:bg-gray-50"
+                            size="lg"
+                        >
+                            <Icons.google className="mr-2 size-4" />
+                            {loading ? "Signing in..." : "Sign in with Google"}
+                        </Button>
 
                         <div className="text-center text-sm text-gray-600">
                             <p>This will give you access to:</p>

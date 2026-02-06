@@ -4,6 +4,8 @@ import { getToken } from "next-auth/jwt";
 function isPublicPath(pathname: string) {
   return (
     pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/admin-login" ||
     pathname === "/auth/signin" ||
     pathname === "/auth/signup" ||
     pathname === "/auth/success" ||
