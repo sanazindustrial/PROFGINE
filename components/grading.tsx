@@ -263,14 +263,14 @@ export function Grading() {
         <CardContent className="flex items-center justify-between pt-6">
           <div>
             <p className="flex items-center gap-2 text-sm font-semibold">
-              💡 Quick Start Guide
+              Quick Start Guide
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Load sample data to test the grading assistant or press <kbd className="rounded border bg-white px-2 py-0.5 text-xs dark:bg-gray-800">Ctrl+Enter</kbd> to submit
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={loadSampleData} className="hover:bg-white dark:hover:bg-gray-800">
-            📝 Load Sample Data
+            Load Sample Data
           </Button>
         </CardContent>
       </Card>
@@ -279,7 +279,7 @@ export function Grading() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            ⚙️ Grading Settings
+            Grading Settings
           </CardTitle>
           <CardDescription>
             Configure how strict the grading should be and what type of assignment you&apos;re grading
@@ -293,14 +293,14 @@ export function Grading() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="essay">📝 Essay</SelectItem>
-                <SelectItem value="short-answer">💬 Short Answer</SelectItem>
-                <SelectItem value="discussion">💭 Discussion Post</SelectItem>
-                <SelectItem value="dissertation">🎓 Dissertation</SelectItem>
-                <SelectItem value="lab-report">🔬 Lab Report</SelectItem>
-                <SelectItem value="case-study">📊 Case Study</SelectItem>
-                <SelectItem value="presentation">🎤 Presentation</SelectItem>
-                <SelectItem value="code">💻 Code Assignment</SelectItem>
+                <SelectItem value="essay">Essay</SelectItem>
+                <SelectItem value="short-answer">Short Answer</SelectItem>
+                <SelectItem value="discussion">Discussion Post</SelectItem>
+                <SelectItem value="dissertation">Dissertation</SelectItem>
+                <SelectItem value="lab-report">Lab Report</SelectItem>
+                <SelectItem value="case-study">Case Study</SelectItem>
+                <SelectItem value="presentation">Presentation</SelectItem>
+                <SelectItem value="code">Code Assignment</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -311,9 +311,9 @@ export function Grading() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">🌱 Light - Encouraging</SelectItem>
-                <SelectItem value="medium">⚡ Medium - Balanced</SelectItem>
-                <SelectItem value="hard">🔥 Hard - Strict</SelectItem>
+                <SelectItem value="light">Light - Encouraging</SelectItem>
+                <SelectItem value="medium">Medium - Balanced</SelectItem>
+                <SelectItem value="hard">Hard - Strict</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -335,7 +335,7 @@ export function Grading() {
       <div className="space-y-8">
         <div className="space-y-2">
           <Label htmlFor="professor-profile" className="text-base font-semibold">
-            👤 Professor Background & Style
+            Professor Background & Style
           </Label>
           <p className="text-sm text-muted-foreground">
             Describe your grading style, tone, and preferences. Include examples of previous feedback you&apos;ve given.
@@ -358,13 +358,13 @@ export function Grading() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="rubric-prompt" className="text-base font-semibold">
-            📋 Grading Rubric
+            Grading Rubric
           </Label>
           <p className="text-sm text-muted-foreground">
             Type your grading criteria or upload a rubric file.
             <br />
             <span className="text-xs italic">
-              ✅ Accepted files: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT
+              Accepted files: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT
             </span>
           </p>
           <div className="mb-4">
@@ -387,7 +387,7 @@ export function Grading() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="assignment-prompt" className="text-base font-semibold">
-            📝 Assignment Instructions
+            Assignment Instructions
           </Label>
           <p className="text-sm text-muted-foreground">
             Provide the assignment details that students were asked to complete.
@@ -411,7 +411,7 @@ export function Grading() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="student-post" className="text-base font-semibold">
-            🎓 Student Submission
+            Student Submission
           </Label>
           <p className="text-sm text-muted-foreground">
             Paste the student&apos;s work or upload their submission file(s).
@@ -441,7 +441,7 @@ export function Grading() {
           size="lg"
           className="group relative min-w-[200px]"
         >
-          {isResponseLoading ? "Generating..." : "🤖 Generate Feedback"}
+          {isResponseLoading ? "Generating..." : "Generate Feedback"}
           {!isResponseLoading && messages.length === 0 && studentPost.trim() && (
             <span className="ml-2 text-xs opacity-0 transition-opacity group-hover:opacity-70">
               (Ctrl+Enter)
@@ -454,7 +454,7 @@ export function Grading() {
           variant="outline"
           size="lg"
         >
-          ✨ New Grading
+          New Grading
         </Button>
         <Spinner
           loading={isResponseLoading}
@@ -465,7 +465,7 @@ export function Grading() {
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="professor-response" className="text-base font-semibold">
-            ✅ AI-Generated Feedback
+            AI-Generated Feedback
           </Label>
           <p className="text-sm text-muted-foreground">
             Review and edit the generated feedback before sharing with students.
@@ -485,11 +485,11 @@ export function Grading() {
                 } as any,
               ])
             }
-            placeholder="📝 Your AI-generated feedback will appear here after clicking 'Generate Feedback'...&#10;&#10;The feedback will include:&#10;• Specific strengths in the student's work&#10;• Areas for improvement&#10;• Constructive suggestions&#10;• Grade or score based on your rubric"
+            placeholder="Your AI-generated feedback will appear here after clicking 'Generate Feedback'...&#10;&#10;The feedback will include:&#10;• Specific strengths in the student's work&#10;• Areas for improvement&#10;• Constructive suggestions&#10;• Grade or score based on your rubric"
           />
           {error && (
             <span className="flex items-center gap-2 text-sm text-red-500">
-              ⚠️ {error}
+              {error}
             </span>
           )}
         </div>

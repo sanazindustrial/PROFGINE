@@ -111,7 +111,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>🎬 Professor GENIE Studio</CardTitle>
+                    <CardTitle>Professor GENIE Studio</CardTitle>
                     <CardDescription>
                         Upload lecture notes and materials, then generate slide decks with speaker notes for each class session
                     </CardDescription>
@@ -285,7 +285,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                         <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 p-5 rounded-lg space-y-3 shadow-md animate-in fade-in-50 duration-500">
                             <div className="flex items-center gap-2 text-green-800 font-semibold text-lg">
                                 <CheckCircle2 className="h-6 w-6 text-green-600" />
-                                ✨ Presentation Generated Successfully!
+                                Presentation Generated Successfully!
                             </div>
                             <div className="text-sm text-green-700 space-y-1">
                                 <p>✓ <strong>{result.slideCount} slides</strong> created</p>

@@ -57,7 +57,7 @@ const OwnerUserManagement = async () => {
   return (
     <section className="m-5">
       <h2 className="flex justify-center p-4">
-        <Text size="5">👑 Platform Owner - All Users Management</Text>
+        <Text size="5">Platform Owner - All Users Management</Text>
       </h2>
 
       <div className="mb-5">
@@ -70,7 +70,7 @@ const OwnerUserManagement = async () => {
 
       <section className="m-5">
         <h2>
-          <Text size="5">📋 Current Users ({users.length})</Text>
+          <Text size="5">Current Users ({users.length})</Text>
         </h2>
         <Table.Root variant="surface">
           <Table.Header>
@@ -93,7 +93,7 @@ const OwnerUserManagement = async () => {
                   {getRoleBadge(user.role)}
                 </Table.Cell>
                 <Table.Cell>
-                  {user.isOwner ? <Badge color="purple">👑 Owner</Badge> : '-'}
+                  {user.isOwner ? <Badge color="purple">Owner</Badge> : '-'}
                 </Table.Cell>
                 <Table.Cell>{new Date(user.createdAt).toLocaleDateString()}</Table.Cell>
               </Table.Row>
@@ -104,7 +104,7 @@ const OwnerUserManagement = async () => {
 
       <section className="m-5">
         <h2>
-          <Text size="5">⏳ Pending Invitations ({invitations.length})</Text>
+          <Text size="5">Pending Invitations ({invitations.length})</Text>
         </h2>
         <Table.Root variant="surface">
           <Table.Header>

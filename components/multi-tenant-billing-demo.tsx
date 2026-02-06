@@ -171,21 +171,21 @@ export function MultiTenantBillingDemo() {
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="rounded border p-4">
-                            <h4 className="font-medium text-green-600">✅ Organization First</h4>
+                            <h4 className="font-medium text-green-600">Organization First</h4>
                             <p className="mt-2 text-sm text-muted-foreground">
                                 If you&apos;re in an organization with an active subscription, that plan takes precedence.
                             </p>
                         </div>
 
                         <div className="rounded border p-4">
-                            <h4 className="font-medium text-blue-600">✅ Individual Fallback</h4>
+                            <h4 className="font-medium text-blue-600">Individual Fallback</h4>
                             <p className="mt-2 text-sm text-muted-foreground">
                                 If no org subscription, your personal subscription is used.
                             </p>
                         </div>
 
                         <div className="rounded border p-4">
-                            <h4 className="font-medium text-gray-600">✅ Free Trial Default</h4>
+                            <h4 className="font-medium text-gray-600">Free Trial Default</h4>
                             <p className="mt-2 text-sm text-muted-foreground">
                                 No subscriptions? You get a free trial with basic limits.
                             </p>

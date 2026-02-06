@@ -233,7 +233,7 @@ export function CourseSectionBuilder({
             const result = await response.json()
 
             // Show detailed success message
-            alert(`✅ Course Structure Saved Successfully!\n\n• ${sections.length} section(s) saved\n• Syllabus updated\n• All content organized\n\nYour course is now ready for students!`)
+            alert(`Course Structure Saved Successfully.\n\n• ${sections.length} section(s) saved\n• Syllabus updated\n• All content organized\n\nYour course is now ready for students.`)
 
             if (onSave) {
                 onSave(sections)
@@ -369,7 +369,7 @@ export function CourseSectionBuilder({
             <div className="space-y-4">
                 <div className="mb-4 flex items-center gap-2 rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-4 text-sm text-blue-900 shadow-sm">
                     <GripVertical className="size-5 text-blue-600" />
-                    <span>💡 <strong>Drag & Drop:</strong> Grab the <GripVertical className="inline size-4" /> icon to reorder sections and content items. Build your course exactly how you want!</span>
+                    <span><strong>Drag & Drop:</strong> Grab the <GripVertical className="inline size-4" /> icon to reorder sections and content items. Build your course exactly how you want.</span>
                 </div>
                 {sections.map((section, index) => (
                     <Card

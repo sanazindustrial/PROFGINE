@@ -190,9 +190,9 @@ function CourseDesignStudioContent() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="light">🌱 Light - Introductory</SelectItem>
-                                <SelectItem value="medium">⚡ Medium - Standard</SelectItem>
-                                <SelectItem value="hard">🔥 Hard - Advanced</SelectItem>
+                                <SelectItem value="light">Light - Introductory</SelectItem>
+                                <SelectItem value="medium">Medium - Standard</SelectItem>
+                                <SelectItem value="hard">Hard - Advanced</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -233,7 +233,7 @@ function CourseDesignStudioContent() {
                         >
                             {isAgentLoading ? (
                                 <>
-                                    <span className="mr-2 animate-spin">⏳</span>
+                                    <span className="mr-2 animate-spin">Loading...</span>
                                     Thinking...
                                 </>
                             ) : (
@@ -260,14 +260,14 @@ function CourseDesignStudioContent() {
                 <Card className="border-green-200 bg-gradient-to-r from-green-50 to-blue-50 dark:border-green-900 dark:from-green-950/20 dark:to-blue-950/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
-                            🎯 Course Design Progress
+                            Course Design Progress
                             <Badge variant="secondary">{completedTools.length}/{aiFeatures.length} Complete</Badge>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Progress value={progress} className="h-2" />
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            {progress === 100 ? "✨ All tools completed! Your course is ready." : `Keep going! ${aiFeatures.length - completedTools.length} tools remaining.`}
+                        <p className="mt-2 text-muted-foreground text-sm">
+                            {progress === 100 ? "All tools completed. Your course is ready." : `Keep going! ${aiFeatures.length - completedTools.length} tools remaining.`}
                         </p>
                     </CardContent>
                 </Card>
@@ -346,10 +346,10 @@ function CourseDesignStudioContent() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-3 text-sm text-muted-foreground">
-                        <p>✨ Each tool uses advanced AI to help you create professional course materials</p>
-                        <p>📝 Click any card above to start generating content</p>
-                        <p>💾 Save and export your work at any time</p>
-                        <p>🔄 Iterate and refine with AI suggestions</p>
+                        <p>Each tool uses advanced AI to help you create professional course materials</p>
+                        <p>Click any card above to start generating content</p>
+                        <p>Save and export your work at any time</p>
+                        <p>Iterate and refine with AI suggestions</p>
                     </div>
                 </CardContent>
             </Card>

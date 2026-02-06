@@ -79,7 +79,7 @@ export default function CreateCourseForm({ userId, onCancel }: CreateCourseFormP
             }
 
             toast({
-                title: '✅ Course Created Successfully!',
+                title: 'Course Created Successfully!',
                 description: `"${formData.title}" is ready. Redirecting to course page...`
             });
 

@@ -55,7 +55,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
 
             if (response.ok) {
                 // Show success message before redirect
-                alert("✅ Presentation deleted successfully!")
+                alert("Presentation deleted successfully.")
                 setTimeout(() => {
                     window.location.href = `/dashboard/courses/${course.id}/studio`
                 }, 500)
@@ -429,7 +429,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                     {/* Tips */}
                     <Card className="bg-blue-50 border-blue-200">
                         <CardHeader>
-                            <CardTitle className="text-base text-blue-900">💡 Tips</CardTitle>
+                            <CardTitle className="text-base text-blue-900">Tips</CardTitle>
                         </CardHeader>
                         <CardContent className="text-sm text-blue-800 space-y-2">
                             <p>• Review and customize slides before class</p>
@@ -442,7 +442,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                     {/* Next Steps */}
                     <Card className="bg-green-50 border-green-200">
                         <CardHeader>
-                            <CardTitle className="text-base text-green-900">✨ Next Steps</CardTitle>
+                            <CardTitle className="text-base text-green-900">Next Steps</CardTitle>
                         </CardHeader>
                         <CardContent className="text-sm text-green-800 space-y-2">
                             <p>• Add presentation to course sections</p>
