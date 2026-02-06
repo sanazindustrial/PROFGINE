@@ -4,9 +4,9 @@ import { requireSession } from "@/lib/auth";
 import { SubscriptionStatus, SubscriptionTier, SubscriptionType, UserRole } from "@prisma/client";
 
 interface RouteParams {
-    params: {
+    params: Promise<{
         userId: string;
-    };
+    }>;
 }
 
 async function requireOwnerAdmin() {
@@ -29,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ error: "Owner admin access required" }, { status: 403 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
     const body = await req.json();
 
     const updates: any = {};
@@ -105,7 +105,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ error: "Owner admin access required" }, { status: 403 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
 
     if (adminUser.id === userId) {
         return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
