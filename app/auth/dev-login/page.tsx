@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function DevLoginPage() {
-    const [email, setEmail] = useState("sanazindustrial@gmail.com");
-    const [name, setName] = useState("Sanaz Industrial");
+    const [email, setEmail] = useState("");
+    const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        if (process.env.NODE_ENV === "production") {
+            router.replace("/auth/signin");
+        }
+    }, [router]);
 
     const handleDevLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,6 +49,10 @@ export default function DevLoginPage() {
             setLoading(false);
         }
     };
+
+    if (process.env.NODE_ENV === "production") {
+        return null;
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

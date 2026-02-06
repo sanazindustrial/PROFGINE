@@ -176,22 +176,6 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
                   );
                 }}
               >
-                            <label className="text-sm">
-                              Subscription Period End
-                              <TextField.Root
-                                type="date"
-                                value={user.currentPeriodEnd ? user.currentPeriodEnd.slice(0, 10) : ""}
-                                onChange={(event) =>
-                                  setUsers((prev) =>
-                                    prev.map((row) =>
-                                      row.id === user.id
-                                        ? { ...row, currentPeriodEnd: event.target.value ? new Date(event.target.value).toISOString() : null }
-                                        : row
-                                    )
-                                  )
-                                }
-                              />
-                            </label>
                 <Select.Trigger />
                 <Select.Content>
                   {subscriptionStatuses.map((status) => (
@@ -201,6 +185,23 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
                   ))}
                 </Select.Content>
               </Select.Root>
+            </label>
+
+            <label className="text-sm">
+              Subscription Period End
+              <TextField.Root
+                type="date"
+                value={user.currentPeriodEnd ? user.currentPeriodEnd.slice(0, 10) : ""}
+                onChange={(event) =>
+                  setUsers((prev) =>
+                    prev.map((row) =>
+                      row.id === user.id
+                        ? { ...row, currentPeriodEnd: event.target.value ? new Date(event.target.value).toISOString() : null }
+                        : row
+                    )
+                  )
+                }
+              />
             </label>
 
             <label className="text-sm">
