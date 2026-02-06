@@ -2,6 +2,7 @@ import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { PresentationResults } from "@/components/presentation-results"
+import { UserRole } from "@prisma/client"
 
 export default async function PresentationResultsPage({
     params,
@@ -15,10 +16,9 @@ export default async function PresentationResultsPage({
 
     // Verify user has access to this course
     const course = await prisma.course.findFirst({
-        where: {
-            id: params.courseId,
-            instructorId: session.user.id,
-        },
+        where: session.user.role === UserRole.ADMIN
+            ? { id: params.courseId }
+            : { id: params.courseId, instructorId: session.user.id },
     })
 
     if (!course) {
@@ -27,11 +27,27 @@ export default async function PresentationResultsPage({
 
     // Get the presentation details
     const presentation = await prisma.presentation.findFirst({
-        where: {
-            id: params.presentationId,
-            courseId: params.courseId,
-            userId: session.user.id,
-        },
+        where: session.user.role === UserRole.ADMIN
+            ? { id: params.presentationId, courseId: params.courseId }
+            : {
+                id: params.presentationId,
+                courseId: params.courseId,
+                OR: [
+                    { userId: session.user.id },
+                    { course: { instructorId: session.user.id } }
+                ]
+            },
+        include: {
+            slides: {
+                select: {
+                    id: true,
+                    slideNumber: true,
+                    title: true,
+                    notes: true
+                },
+                orderBy: { slideNumber: "asc" }
+            }
+        }
     })
 
     if (!presentation) {

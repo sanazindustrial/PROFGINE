@@ -121,7 +121,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                 <Alert className="border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                     <AlertDescription className="text-green-900 font-medium">
-                        🎉 Your presentation has been generated successfully! Download it below in your preferred format or create a new one.
+                        Your presentation has been generated successfully. Download it below or create a new one.
                     </AlertDescription>
                 </Alert>
             )}
@@ -131,7 +131,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                 <Alert className="border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50 shadow-sm">
                     <Clock className="h-5 w-5 text-yellow-600 animate-spin" />
                     <AlertDescription className="text-yellow-900 font-medium">
-                        ⏳ Your presentation is being generated... This usually takes 2-3 minutes. Refresh the page to check status.
+                        Your presentation is being generated. This usually takes 2-3 minutes. Refresh the page to check status.
                     </AlertDescription>
                 </Alert>
             )}
@@ -154,6 +154,35 @@ export function PresentationResults({ presentation, course }: PresentationResult
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Lecture Notes */}
+                    {presentation.slides && presentation.slides.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <FileText className="h-5 w-5" />
+                                    Lecture Notes (Speaker Notes)
+                                </CardTitle>
+                                <CardDescription>
+                                    Notes generated for each slide. Use these as your lecture script.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {presentation.slides.map((slide: any) => (
+                                    <div key={slide.id} className="rounded-lg border border-gray-200 p-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm font-semibold">
+                                                Slide {slide.slideNumber}: {slide.title || "Untitled"}
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                                            {slide.notes || "No notes provided."}
+                                        </div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Presentation Details Card */}
                     <Card>
                         <CardHeader>

@@ -67,12 +67,26 @@ export async function GET(
         const { presentationId } = await params
 
         const presentation = await prisma.presentation.findFirst({
-            where: {
-                id: presentationId,
-                userId: session.user.id
-            },
+            where: session.user.role === "ADMIN"
+                ? { id: presentationId }
+                : {
+                    id: presentationId,
+                    OR: [
+                        { userId: session.user.id },
+                        { course: { instructorId: session.user.id } }
+                    ]
+                },
             include: {
-                course: true
+                course: true,
+                slides: {
+                    select: {
+                        id: true,
+                        slideNumber: true,
+                        title: true,
+                        notes: true
+                    },
+                    orderBy: { slideNumber: "asc" }
+                }
             }
         })
 
