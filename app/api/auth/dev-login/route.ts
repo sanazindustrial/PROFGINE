@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   try {
     const { email, name } = await request.json();
 
