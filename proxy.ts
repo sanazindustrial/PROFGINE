@@ -11,7 +11,6 @@ function isPublicPath(pathname: string) {
     pathname === "/auth/success" ||
     pathname === "/subscription/upgrade" ||
     pathname === "/trial-dashboard" ||
-    pathname === "/dashboard" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/debug/") ||
     pathname.startsWith("/test/") ||
