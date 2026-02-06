@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -31,6 +31,8 @@ function CourseDesignStudioContent() {
     const courseIdParam = searchParams.get('courseId')
     const courseId = courseIdParam && courseIdParam !== "undefined" && courseIdParam !== "null" ? courseIdParam : null
     const [defaultCourseId, setDefaultCourseId] = useState<string | null>(null)
+    const [currentCourseTitle, setCurrentCourseTitle] = useState<string | null>(null)
+    const [currentCourseCode, setCurrentCourseCode] = useState<string | null>(null)
     const [isCourseIdLoading, setIsCourseIdLoading] = useState(false)
     const [completedTools, setCompletedTools] = useState<string[]>([])
     const [hoveredCard, setHoveredCard] = useState<string | null>(null)
@@ -39,6 +41,7 @@ function CourseDesignStudioContent() {
     const [agentQuestion, setAgentQuestion] = useState("")
     const [agentResponse, setAgentResponse] = useState("")
     const [isAgentLoading, setIsAgentLoading] = useState(false)
+    const router = useRouter()
 
     // Load completed tools from localStorage
     useEffect(() => {
@@ -50,17 +53,29 @@ function CourseDesignStudioContent() {
 
     // Load latest course when no courseId is provided
     useEffect(() => {
-        if (courseId) return
-
         const loadCourses = async () => {
             setIsCourseIdLoading(true)
             try {
                 const res = await fetch("/api/courses")
                 const data = await res.json()
-                const latestCourseId = data?.courses?.[0]?.id ?? null
-                setDefaultCourseId(latestCourseId)
+                const courses = data?.courses ?? []
+                const latestCourse = courses[0] ?? null
+
+                if (!courseId && latestCourse?.id) {
+                    setDefaultCourseId(latestCourse.id)
+                    setCurrentCourseTitle(latestCourse.title ?? null)
+                    setCurrentCourseCode(latestCourse.code ?? null)
+                }
+
+                if (courseId) {
+                    const activeCourse = courses.find((course: any) => course.id === courseId)
+                    setCurrentCourseTitle(activeCourse?.title ?? null)
+                    setCurrentCourseCode(activeCourse?.code ?? null)
+                }
             } catch (error) {
-                setDefaultCourseId(null)
+                if (!courseId) {
+                    setDefaultCourseId(null)
+                }
             } finally {
                 setIsCourseIdLoading(false)
             }
@@ -96,9 +111,21 @@ function CourseDesignStudioContent() {
             description: "Generate PowerPoint slides with lecture notes for each class",
             icon: Monitor,
             color: "pink",
-            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/studio` : "/dashboard/courses",
+            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/studio` : null,
             estimatedTime: "10 min",
-            badge: "AI"
+            badge: "AI",
+            requiresCourse: true
+        },
+        {
+            id: "lecture-notes",
+            title: "Create Lecture Notes",
+            description: "Build lecture notes per session with structured content",
+            icon: FileText,
+            color: "orange",
+            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/lecture-notes` : null,
+            estimatedTime: "8-12 min",
+            badge: "New",
+            requiresCourse: true
         },
         {
             id: "sections",
@@ -106,9 +133,10 @@ function CourseDesignStudioContent() {
             description: "Add sections, files, assignments, links - unlimited flexibility",
             icon: Layout,
             color: "indigo",
-            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/build-sections` : "/dashboard/courses",
+            href: effectiveCourseId ? `/dashboard/courses/${effectiveCourseId}/build-sections` : null,
             estimatedTime: "15-30 min",
-            badge: "New"
+            badge: "New",
+            requiresCourse: true
         },
         {
             id: "assessments",
@@ -168,7 +196,8 @@ function CourseDesignStudioContent() {
                     </p>
                     {effectiveCourseId && (
                         <Badge variant="secondary" className="mt-2">
-                            Editing Course ID: {effectiveCourseId}
+                            Editing Course: {currentCourseTitle || "Selected Course"}
+                            {currentCourseCode ? ` (${currentCourseCode})` : ""}
                         </Badge>
                     )}
                     {!effectiveCourseId && !isCourseIdLoading && (
@@ -184,7 +213,7 @@ function CourseDesignStudioContent() {
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">Difficulty Level</label>
+                        <label className="text-muted-foreground text-xs font-medium">Difficulty Level</label>
                         <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
                             <SelectTrigger className="w-full sm:w-[180px]">
                                 <SelectValue />
@@ -266,8 +295,10 @@ function CourseDesignStudioContent() {
                     </CardHeader>
                     <CardContent>
                         <Progress value={progress} className="h-2" />
-                        <p className="mt-2 text-muted-foreground text-sm">
-                            {progress === 100 ? "All tools completed. Your course is ready." : `Keep going! ${aiFeatures.length - completedTools.length} tools remaining.`}
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            {progress === 100
+                                ? "All tools completed. Your course is ready."
+                                : `Keep going! ${aiFeatures.length - completedTools.length} tools remaining.`}
                         </p>
                     </CardContent>
                 </Card>
@@ -279,6 +310,7 @@ function CourseDesignStudioContent() {
                     const Icon = feature.icon
                     const isCompleted = completedTools.includes(feature.id)
                     const isHovered = hoveredCard === feature.id
+                    const isDisabled = feature.requiresCourse && !effectiveCourseId
                     const colorClasses = {
                         blue: "border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 hover:shadow-blue-200",
                         green: "border-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 hover:shadow-green-200",
@@ -286,52 +318,67 @@ function CourseDesignStudioContent() {
                         orange: "border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:shadow-orange-200",
                         indigo: "border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:shadow-indigo-200"
                     }[feature.color]
+                    const card = (
+                        <Card className={`border-l-4 ${colorClasses} relative h-full transition-all hover:shadow-lg ${isHovered ? 'scale-[1.02]' : ''} ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}>
+                            {isCompleted && (
+                                <div className="absolute -right-2 -top-2 rounded-full bg-green-500 p-1 text-white">
+                                    <CheckCircle2 className="size-4" />
+                                </div>
+                            )}
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-3">
+                                    <Icon className={`text- size-8${feature.color}-600 ${isHovered ? 'scale-110' : ''} transition-transform`} />
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span>{feature.title}</span>
+                                            {feature.badge && (
+                                                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                                    {feature.badge}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {isHovered && (
+                                            <div className="mt-1 flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                                                <Clock className="size-3" />
+                                                <span>{feature.estimatedTime}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardTitle>
+                                <CardDescription className="text-base">
+                                    {feature.description}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button
+                                    className="w-full"
+                                    variant={isCompleted ? "secondary" : "outline"}
+                                    disabled={isDisabled}
+                                    onClick={(event) => {
+                                        if (isDisabled) {
+                                            event.preventDefault()
+                                            return
+                                        }
+                                        if (feature.href) {
+                                            router.push(feature.href)
+                                        }
+                                    }}
+                                >
+                                    {isDisabled ? "Select Course First" : isCompleted ? "View Again" : "Open Tool"}
+                                    <ArrowRight className="ml-2 size-4" />
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )
 
                     return (
-                        <Link
+                        <div
                             key={feature.id}
-                            href={feature.href}
                             onMouseEnter={() => setHoveredCard(feature.id)}
                             onMouseLeave={() => setHoveredCard(null)}
                         >
-                            <Card className={`border-l-4 ${colorClasses} relative h-full cursor-pointer transition-all hover:shadow-lg ${isHovered ? 'scale-[1.02]' : ''}`}>
-                                {isCompleted && (
-                                    <div className="absolute -right-2 -top-2 rounded-full bg-green-500 p-1 text-white">
-                                        <CheckCircle2 className="size-4" />
-                                    </div>
-                                )}
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-3">
-                                        <Icon className={`text- size-8${feature.color}-600 ${isHovered ? 'scale-110' : ''} transition-transform`} />
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span>{feature.title}</span>
-                                                {feature.badge && (
-                                                    <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                                        {feature.badge}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                            {isHovered && (
-                                                <div className="mt-1 flex items-center gap-1 text-xs font-normal text-muted-foreground">
-                                                    <Clock className="size-3" />
-                                                    <span>{feature.estimatedTime}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardTitle>
-                                    <CardDescription className="text-base">
-                                        {feature.description}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <Button className="w-full" variant={isCompleted ? "secondary" : "outline"}>
-                                        {isCompleted ? "View Again" : "Open Tool"}
-                                        <ArrowRight className="ml-2 size-4" />
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </Link>
+                            {isDisabled ? card : <Link href={feature.href || "#"}>{card}</Link>}
+                        </div>
                     )
                 })}
             </div>

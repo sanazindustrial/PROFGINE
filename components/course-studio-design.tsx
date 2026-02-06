@@ -11,9 +11,21 @@ import { Loader2, Upload, FileText, Monitor, Download, CheckCircle2 } from "luci
 
 interface CourseStudioDesignProps {
     courseId: string
+    headerTitle?: string
+    headerDescription?: string
+    enableSectionNumber?: boolean
+    includeSectionInTitle?: boolean
+    sectionLabel?: string
 }
 
-export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
+export function CourseStudioDesign({
+    courseId,
+    headerTitle = "Professor GENIE Studio",
+    headerDescription = "Upload lecture notes and materials, then generate slide decks with speaker notes for each class session",
+    enableSectionNumber = false,
+    includeSectionInTitle = false,
+    sectionLabel = "Section / Week Number"
+}: CourseStudioDesignProps) {
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
     const [templateStyle, setTemplateStyle] = useState("modern-minimalist")
@@ -22,6 +34,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
     const [difficultyLevel, setDifficultyLevel] = useState("intermediate")
     const [includeQuizzes, setIncludeQuizzes] = useState(true)
     const [includeDiscussions, setIncludeDiscussions] = useState(true)
+    const [sectionNumber, setSectionNumber] = useState("1")
     const [isGenerating, setIsGenerating] = useState(false)
     const [result, setResult] = useState<any>(null)
     const [error, setError] = useState("")
@@ -37,6 +50,10 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
         setIsGenerating(true)
         setError("")
         setResult(null)
+
+        const finalTitle = includeSectionInTitle && sectionNumber
+            ? `Week ${sectionNumber}: ${title.trim()}`
+            : title.trim()
 
         try {
             // Upload files first if any
@@ -69,7 +86,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                 },
                 body: JSON.stringify({
                     courseId,
-                    title,
+                    title: finalTitle,
                     sources: uploadedFileUrls,
                     settings: {
                         description,
@@ -80,6 +97,7 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                         includeQuizzes,
                         includeDiscussions,
                         sourceType: "MIXED",
+                        sectionNumber: enableSectionNumber ? parseInt(sectionNumber) : undefined,
                     },
                 }),
             })
@@ -111,9 +129,9 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Professor GENIE Studio</CardTitle>
+                    <CardTitle>{headerTitle}</CardTitle>
                     <CardDescription>
-                        Upload lecture notes and materials, then generate slide decks with speaker notes for each class session
+                        {headerDescription}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -139,6 +157,24 @@ export function CourseStudioDesign({ courseId }: CourseStudioDesignProps) {
                             rows={3}
                         />
                     </div>
+
+                    {enableSectionNumber && (
+                        <div className="space-y-2">
+                            <Label htmlFor="sectionNumber">{sectionLabel}</Label>
+                            <Select value={sectionNumber} onValueChange={setSectionNumber}>
+                                <SelectTrigger id="sectionNumber">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 52 }, (_, i) => i + 1).map((week) => (
+                                        <SelectItem key={week} value={week.toString()}>
+                                            {week}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     {/* Template Style */}
                     <div className="space-y-2">

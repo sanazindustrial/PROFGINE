@@ -144,7 +144,7 @@ export function Grading() {
     })
 
     let content = getMessageContent(messageChunks)
-    
+
     // Add grading context
     const gradingContext = `\n\n[GRADING SETTINGS]\nAssignment Type: ${assignmentType}\nStrictness Level: ${gradingLevel}\n${customGradingPrompt ? `Custom Instructions: ${customGradingPrompt}\n` : ''}\nPlease adjust your feedback tone and depth according to these settings.`
     content += gradingContext

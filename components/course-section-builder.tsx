@@ -424,7 +424,7 @@ export function CourseSectionBuilder({
 
                                 {/* Week Number */}
                                 <div className="space-y-2">
-                                    <Label>Week Number (Optional)</Label>
+                                    <Label>Section / Week Number (1-52)</Label>
                                     <Input
                                         type="number"
                                         value={section.weekNo || ""}

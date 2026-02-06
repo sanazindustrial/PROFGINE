@@ -23,6 +23,7 @@ interface PresentationSettings {
     difficultyLevel?: string
     includeQuizzes?: boolean
     includeDiscussions?: boolean
+    sectionNumber?: number
 }
 
 interface SlideContent {
@@ -94,6 +95,7 @@ export class CourseStudioService {
         const prompt = `You are an expert educational content designer. Create a detailed lecture outline for a presentation.
 
 Title: ${settings.title}
+    ${settings.sectionNumber ? `Section/Week: ${settings.sectionNumber}` : ""}
 Target Slides: ${targetSlides}
 Duration: ${duration} minutes
 Difficulty: ${settings.difficultyLevel || "intermediate"}

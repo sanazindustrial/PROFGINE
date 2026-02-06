@@ -14,13 +14,13 @@ export function MultiTenantBillingDemo() {
     const handleUserCheckout = async (tier: 'FREE' | 'BASIC' | 'PREMIUM' | 'ENTERPRISE') => {
         try {
             setError(null);
-            
+
             if (tier === 'FREE') {
                 // Handle FREE tier - possibly redirect to signup or show a message
                 alert('FREE tier is available at signup. No payment required.');
                 return;
             }
-            
+
             await checkout({ tier: tier as 'BASIC' | 'PREMIUM' | 'ENTERPRISE', ownerType: 'USER' });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Checkout failed');

@@ -105,7 +105,7 @@ export default async function BuildCourseSectionsPage({
                 <AlertDescription>
                     Build your course section by section based on your course plan. You can:
                     <ul className="mt-2 list-inside list-disc space-y-1">
-                        <li><strong>Set duration</strong>: 8-16 weeks minimum (or longer, completely flexible)</li>
+                        <li><strong>Set duration</strong>: 1-52 weeks (completely flexible)</li>
                         <li><strong>Add unlimited sections</strong>: No restrictions on how many sections you create</li>
                         <li><strong>Add multiple content types</strong>: Files, assignments, links, pages, videos, quizzes, discussions</li>
                         <li><strong>Import AI-designed content</strong>: Use assignments and assessments from Design Studio</li>
