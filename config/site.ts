@@ -1,7 +1,7 @@
 export type SiteConfig = typeof siteConfig
 
 export const siteConfig = {
-  name: "ProfGENIE Platform",
+  name: "ProfGenie Platform",
   description:
     "A grading tool and course design studio.",
   mainNav: [

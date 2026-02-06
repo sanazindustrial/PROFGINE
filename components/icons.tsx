@@ -37,7 +37,7 @@ export const Icons = {
     <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
       <Image
         src="/icons/logo-1.png"
-        alt="PROFGENIE Platform"
+        alt="ProfGenie Platform"
         fill
         style={{ objectFit: 'contain' }}
         priority
@@ -49,7 +49,7 @@ export const Icons = {
     <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
       <Image
         src="/icons/logo-standard.png"
-        alt="PROFGENIE Platform"
+        alt="ProfGenie Platform"
         fill
         style={{ objectFit: 'contain' }}
         priority

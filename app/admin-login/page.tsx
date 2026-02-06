@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-center text-2xl font-bold">Login to PROFGENIE Platform</CardTitle>
+                    <CardTitle className="text-center text-2xl font-bold">Login to ProfGenie Platform</CardTitle>
                     <CardDescription className="text-center">
                         Sign in with your Google account to access admin features
                     </CardDescription>

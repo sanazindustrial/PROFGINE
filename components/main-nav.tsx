@@ -18,7 +18,7 @@ export function MainNav() {
       <Link
         href={session ? "/dashboard/course-design-studio" : "/"}
         className="flex items-center space-x-3 group"
-        title="PROFGENIE - AI-Powered Education Platform"
+        title="ProfGenie - AI-Powered Education Platform"
       >
         <div className="relative size-12 shrink-0 transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-110 animate-float">
           <Icons.logo className="size-12" />

@@ -17,7 +17,7 @@ export function MarketingBanner({ className = "" }: MarketingBannerProps) {
                         <div className="relative h-20 w-full max-w-md animate-float sm:h-24">
                             <Image
                                 src="/icons/logo-standard.png"
-                                alt="PROFGENIE Platform"
+                                alt="ProfGenie Platform"
                                 fill
                                 style={{ objectFit: 'contain' }}
                                 className="drop-shadow-lg"

@@ -34,7 +34,7 @@ export default async function IndexPage() {
               <div className="relative h-48 w-full max-w-2xl sm:h-56 animate-float-slow">
                 <Image
                   src="/icons/logo-standard.png"
-                  alt="PROFGENIE Platform - Empowering Smart Learning"
+                  alt="ProfGenie Platform - Empowering Smart Learning"
                   fill
                   style={{ objectFit: 'contain' }}
                   priority

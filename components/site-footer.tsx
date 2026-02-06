@@ -12,7 +12,7 @@ export function SiteFooter() {
                             <div className="relative h-32 w-32 transition-transform hover:scale-105">
                                 <Image
                                     src="/icons/logo-1.png"
-                                    alt="PROFGENIE Platform"
+                                    alt="ProfGenie Platform"
                                     fill
                                     style={{ objectFit: 'contain' }}
                                     className="drop-shadow-lg"
@@ -65,7 +65,7 @@ export function SiteFooter() {
 
                 {/* Copyright */}
                 <div className="mt-12 border-t pt-8 text-center text-sm text-muted-foreground">
-                    <p>Copyright © 2026 PROFGENIE Platform. All rights reserved.</p>
+                    <p>Copyright © 2026 ProfGenie Platform. All rights reserved.</p>
                 </div>
             </div>
         </footer>
