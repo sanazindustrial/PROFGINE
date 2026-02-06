@@ -319,7 +319,13 @@ function CourseDesignStudioContent() {
                         indigo: "border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:shadow-indigo-200"
                     }[feature.color]
                     const card = (
-                        <Card className={`border-l-4 ${colorClasses} relative h-full transition-all hover:shadow-lg ${isHovered ? 'scale-[1.02]' : ''} ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}>
+                        <Card
+                            className={`border-l-4 ${colorClasses} relative h-full transition-all hover:shadow-lg ${isHovered ? 'scale-[1.02]' : ''} ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                            onClick={() => {
+                                if (isDisabled) return
+                                if (feature.href) router.push(feature.href)
+                            }}
+                        >
                             {isCompleted && (
                                 <div className="absolute -right-2 -top-2 rounded-full bg-green-500 p-1 text-white">
                                     <CheckCircle2 className="size-4" />
@@ -377,7 +383,7 @@ function CourseDesignStudioContent() {
                             onMouseEnter={() => setHoveredCard(feature.id)}
                             onMouseLeave={() => setHoveredCard(null)}
                         >
-                            {isDisabled ? card : <Link href={feature.href || "#"}>{card}</Link>}
+                            {card}
                         </div>
                     )
                 })}
