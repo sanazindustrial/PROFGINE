@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { CourseStudioDesign } from "@/components/course-studio-design"
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@prisma/client"
-import { BarChart3, Lightbulb, Sparkles } from "lucide-react"
+import { BarChart3, Lightbulb, Star } from "lucide-react"
 
 export default async function CourseStudioPage({
     params,
@@ -122,7 +122,7 @@ export default async function CourseStudioPage({
 
                     <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
                         <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
-                            <Sparkles className="size-4" />
+                            <Star className="size-4" />
                             Features
                         </h4>
                         <ul className="text-sm text-green-900 dark:text-green-100 space-y-1">
