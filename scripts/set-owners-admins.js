@@ -11,6 +11,10 @@ const emails = [
   "sanazindustrial@gmail.com",
 ];
 
+const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+const creditBalance = 10000;
+const monthlyCredits = 10000;
+
 async function main() {
   const results = [];
 
@@ -21,19 +25,56 @@ async function main() {
       },
       update: {
         role: "ADMIN",
-        isOwner: true
+        isOwner: true,
+        subscriptionType: "PREMIUM",
+        subscriptionExpiresAt: oneYearFromNow,
+        trialExpiresAt: null,
+        creditBalance,
+        monthlyCredits
       },
       create: {
         email,
         role: "ADMIN",
         isOwner: true,
+        subscriptionType: "PREMIUM",
+        subscriptionExpiresAt: oneYearFromNow,
+        trialExpiresAt: null,
+        creditBalance,
+        monthlyCredits
       },
       select: {
+        id: true,
         email: true,
         role: true,
-        isOwner: true
+        isOwner: true,
+        subscriptionType: true,
+        subscriptionExpiresAt: true,
+        creditBalance: true,
+        monthlyCredits: true
       },
     });
+
+    await prisma.userSubscription.upsert({
+      where: {
+        userId: user.id
+      },
+      create: {
+        user: {
+          connect: {
+            id: user.id
+          }
+        },
+        tier: "ENTERPRISE",
+        status: "ACTIVE",
+        currentPeriodEnd: oneYearFromNow
+      },
+      update: {
+        tier: "ENTERPRISE",
+        status: "ACTIVE",
+        currentPeriodEnd: oneYearFromNow
+      }
+    });
+
     results.push(user);
   }
 
