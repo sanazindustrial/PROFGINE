@@ -5,26 +5,37 @@ import { UserRole } from "@prisma/client"
 import { redirect } from "next/navigation"
 
 /**
- * USER MANAGEMENT - ADMIN USERS
+ * USER MANAGEMENT - PLATFORM OWNERS
  * 
- * This page is for ADMIN users.
- * Admin users can view and manage:
+ * This page is for PLATFORM OWNERS ONLY (ADMIN role + isOwner flag).
+ * Platform owners can view and manage:
  * - All professors
  * - All students  
  * - All administrators
  * 
  * Access Control:
- * - Only users with role === "ADMIN" can access
+ * - Only users with role === "ADMIN" AND isOwner === true can access
+ * - Regular admins (without isOwner flag) are denied access
  * - Non-admin users are denied access
  */
 
 const OwnerUserManagement = async () => {
-  // Restrict access to admins only
+  // Restrict access to platform owners only (ADMIN role + isOwner flag)
   const session = await requireSession();
 
-  // Check if user is ADMIN
+  // Check if user is both ADMIN and OWNER
   if (session.user.role !== UserRole.ADMIN) {
     redirect('/dashboard');
+  }
+
+  // Fetch user from database to check isOwner flag
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isOwner: true }
+  });
+
+  if (!currentUser?.isOwner) {
+    redirect('/dashboard'); // Regular admins cannot access
   }
 
   // Fetch all users on the platform (professors, students, admins)
@@ -46,7 +57,7 @@ const OwnerUserManagement = async () => {
   return (
     <section className="m-5">
       <h2 className="flex justify-center p-4">
-        <Text size="5">Admin - All Users Management</Text>
+        <Text size="5">Platform Owner - All Users Management</Text>
       </h2>
 
       <div className="mb-5">
@@ -67,6 +78,7 @@ const OwnerUserManagement = async () => {
               <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Role</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Owner</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Joined</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
@@ -79,6 +91,9 @@ const OwnerUserManagement = async () => {
                 <Table.Cell>{user.email}</Table.Cell>
                 <Table.Cell>
                   {getRoleBadge(user.role)}
+                </Table.Cell>
+                <Table.Cell>
+                  {user.isOwner ? <Badge color="purple">Owner</Badge> : '-'}
                 </Table.Cell>
                 <Table.Cell>{new Date(user.createdAt).toLocaleDateString()}</Table.Cell>
               </Table.Row>
