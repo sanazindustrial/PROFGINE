@@ -1,9 +1,66 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server"
+import { multiAI } from "@/adaptors/multi-ai.adaptor"
+import { ChatMessage } from "@/types/ai.types"
 
-export const runtime = 'edge'
+export const runtime = "edge"
 
-export async function POST(request: Request) {
-    return NextResponse.json({ 
-        error: 'Chat service temporarily disabled during build' 
-    }, { status: 503 })
+const DISCUSSION_SYSTEM_PROMPT =
+    "You are Professor GENIE, an AI assistant for educators. Provide clear, concise, helpful responses with a professional academic tone."
+
+const GRADING_SYSTEM_PROMPT =
+    "You are an AI grading assistant. Provide structured, fair, and actionable feedback aligned with the rubric and assignment context."
+
+const readStreamToString = async (stream: ReadableStream<Uint8Array>) => {
+    const reader = stream.getReader()
+    const decoder = new TextDecoder()
+    let result = ""
+
+    while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        if (value) result += decoder.decode(value, { stream: true })
+    }
+
+    result += decoder.decode()
+    return result
+}
+
+const withSystemPrompt = (messages: ChatMessage[]): ChatMessage[] => {
+    if (!messages?.length) return []
+
+    const hasSystem = messages.some((message) => message.role === "system")
+    if (hasSystem) return messages
+
+    const useGradingPrompt = messages[0]?.content?.includes("myTArequestType:")
+    const systemContent = useGradingPrompt ? GRADING_SYSTEM_PROMPT : DISCUSSION_SYSTEM_PROMPT
+    const systemMessage: ChatMessage = { role: "system", content: systemContent }
+
+    return [systemMessage, ...messages]
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json()
+        const rawMessages = (body?.messages || []) as ChatMessage[]
+
+        if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
+            return NextResponse.json({ error: "Messages are required" }, { status: 400 })
+        }
+
+        const messages = withSystemPrompt(rawMessages)
+        const start = Date.now()
+
+        const { stream, provider, cost } = await multiAI.streamChat(messages)
+        const content = await readStreamToString(stream)
+
+        return NextResponse.json({
+            content,
+            provider,
+            cost,
+            durationMs: Date.now() - start,
+        })
+    } catch (error) {
+        console.error("Chat route error:", error)
+        return NextResponse.json({ error: "Chat failed" }, { status: 500 })
+    }
 }

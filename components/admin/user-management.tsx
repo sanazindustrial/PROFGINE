@@ -117,11 +117,11 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
     const getRoleIcon = (role: string) => {
         switch (role) {
             case "ADMIN":
-                return <Shield className="h-4 w-4" />
+                return <Shield className="size-4" />
             case "PROFESSOR":
-                return <GraduationCap className="h-4 w-4" />
+                return <GraduationCap className="size-4" />
             case "STUDENT":
-                return <UserCircle className="h-4 w-4" />
+                return <UserCircle className="size-4" />
             default:
                 return null
         }
@@ -134,7 +134,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <Users className="size-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.totalUsers}</div>
@@ -143,7 +143,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Admins</CardTitle>
-                        <Shield className="h-4 w-4 text-purple-600" />
+                        <Shield className="size-4 text-purple-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.admins}</div>
@@ -152,7 +152,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Professors</CardTitle>
-                        <GraduationCap className="h-4 w-4 text-blue-600" />
+                        <GraduationCap className="size-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.professors}</div>
@@ -161,7 +161,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Students</CardTitle>
-                        <UserCircle className="h-4 w-4 text-green-600" />
+                        <UserCircle className="size-4 text-green-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.students}</div>
@@ -170,7 +170,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Active Subs</CardTitle>
-                        <Crown className="h-4 w-4 text-yellow-600" />
+                        <Crown className="size-4 text-yellow-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
@@ -187,7 +187,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                         </div>
                         <div className="flex gap-2">
                             <div className="relative flex-1 md:flex-initial">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                                <Search className="absolute left-2.5 top-2.5 size-4 text-gray-500" />
                                 <Input
                                     placeholder="Search users..."
                                     value={searchTerm}
@@ -244,7 +244,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                             <TableBody>
                                 {filteredUsers.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                                             No users found
                                         </TableCell>
                                     </TableRow>
@@ -276,7 +276,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" size="icon">
-                                                            <MoreVertical className="h-4 w-4" />
+                                                            <MoreVertical className="size-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
@@ -286,21 +286,21 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                                                             onClick={() => handleRoleChange(user.id, "ADMIN")}
                                                             disabled={user.role === "ADMIN"}
                                                         >
-                                                            <Shield className="mr-2 h-4 w-4" />
+                                                            <Shield className="mr-2 size-4" />
                                                             Make Admin
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
                                                             onClick={() => handleRoleChange(user.id, "PROFESSOR")}
                                                             disabled={user.role === "PROFESSOR"}
                                                         >
-                                                            <GraduationCap className="mr-2 h-4 w-4" />
+                                                            <GraduationCap className="mr-2 size-4" />
                                                             Make Professor
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
                                                             onClick={() => handleRoleChange(user.id, "STUDENT")}
                                                             disabled={user.role === "STUDENT"}
                                                         >
-                                                            <UserCircle className="mr-2 h-4 w-4" />
+                                                            <UserCircle className="mr-2 size-4" />
                                                             Make Student
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
@@ -308,7 +308,7 @@ export function UserManagement({ users: initialUsers, stats }: UserManagementPro
                                                             onClick={() => handleDeleteUser(user.id)}
                                                             className="text-red-600"
                                                         >
-                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <Trash2 className="mr-2 size-4" />
                                                             Delete User
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>

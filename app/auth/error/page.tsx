@@ -111,8 +111,8 @@ function AuthErrorContent() {
                         {/* Troubleshooting Tips */}
                         {error === "OAuthCallback" && (
                             <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
-                                <p className="text-sm font-medium text-blue-800 mb-2">Troubleshooting Tips:</p>
-                                <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+                                <p className="mb-2 text-sm font-medium text-blue-800">Troubleshooting Tips:</p>
+                                <ul className="list-inside list-disc space-y-1 text-sm text-blue-700">
                                     <li>Clear your browser cookies and try again</li>
                                     <li>Make sure cookies are enabled in your browser</li>
                                     <li>Try using an incognito/private browsing window</li>

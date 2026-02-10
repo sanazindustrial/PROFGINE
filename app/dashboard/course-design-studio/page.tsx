@@ -213,7 +213,7 @@ function CourseDesignStudioContent() {
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
                     <div className="space-y-1">
-                        <label className="text-muted-foreground text-xs font-medium">Difficulty Level</label>
+                        <label className="text-xs font-medium text-muted-foreground">Difficulty Level</label>
                         <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
                             <SelectTrigger className="w-full sm:w-[180px]">
                                 <SelectValue />
@@ -320,7 +320,7 @@ function CourseDesignStudioContent() {
                     }[feature.color]
                     const card = (
                         <Card
-                            className={`border-l-4 ${colorClasses} relative h-full transition-all hover:shadow-lg ${isHovered ? 'scale-[1.02]' : ''} ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
+                            className={`border-l-4 ${colorClasses} relative h-full transition-all hover:shadow-lg ${isHovered ? 'scale-[1.02]' : ''} ${isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                             onClick={() => {
                                 if (isDisabled) return
                                 if (feature.href) router.push(feature.href)

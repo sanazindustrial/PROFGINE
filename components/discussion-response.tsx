@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { useChat } from "@ai-sdk/react"
 // @ts-ignore
 import mixpanel from "mixpanel-browser"
 
@@ -9,41 +8,31 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, RefreshCw, Star, User, FileText, MessageSquare, Wand2 } from "lucide-react"
+import { Copy, RefreshCw, Star, User, FileText, MessageSquare, Wand2, Key } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
+import { useUserAISettings, getChatEndpoint } from "@/hooks/use-user-ai"
+
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+}
 
 export function DiscussionResponse() {
-  const [input, setInput] = useState("")
+  const [messages, setMessages] = useState<Message[]>([])
   const [isResponseLoading, setIsResponseLoading] = useState(false)
-
-  // Use the no-risk patch approach since the SDK version has limited props
-  const chat = useChat({
-    onFinish: () => {
-      setInput("")
-      setIsResponseLoading(false)
-    },
-  })
-
-  const {
-    messages,
-    setMessages,
-    stop,
-  } = chat
-
-  // Try to access properties with fallback - wrapped in useCallback to fix dependency issue
-  const handleSubmit = useCallback((event?: React.FormEvent) => {
-    const submitFn = (chat as any).handleSubmit;
-    if (submitFn) {
-      return submitFn(event);
-    }
-  }, [chat])
+  const [error, setError] = useState<string | null>(null)
+  const [aiProvider, setAiProvider] = useState<string>("")
   const [professorProfile, setProfessorProfile] = useState("")
   const [discussionPrompt, setDiscussionPrompt] = useState("")
   const [studentPost, setStudentPost] = useState("")
   const [refineInstructions, setRefineInstructions] = useState("")
   const [showRefinement, setShowRefinement] = useState(false)
+
+  // Check if user has custom AI settings
+  const userAI = useUserAISettings()
 
   mixpanel.init("2cd410fcd850fc63e1d196976acaff87", {
     debug: process.env.NODE_ENV !== "production",
@@ -75,16 +64,7 @@ export function DiscussionResponse() {
     localStorage.setItem("discussionPrompt", discussionPrompt)
   }, [discussionPrompt])
 
-  useEffect(() => {
-    if (input) {
-      setIsResponseLoading(true)
-      handleSubmit({
-        preventDefault: () => { },
-      } as React.FormEvent)
-    }
-  }, [input, handleSubmit])
-
-  const generateResponse = () => {
+  const generateResponse = useCallback(async () => {
     if (!professorProfile.trim() || !discussionPrompt.trim() || !studentPost.trim()) {
       toast({
         title: "Missing Information",
@@ -95,10 +75,12 @@ export function DiscussionResponse() {
     }
 
     mixpanel.track("Response Generated")
-    stop()
     setMessages([])
     setShowRefinement(false)
-    setInput(
+    setIsResponseLoading(true)
+    setError(null)
+
+    const content =
       "Professor Writing Style and Background: \n" +
       professorProfile +
       "\n" +
@@ -109,10 +91,38 @@ export function DiscussionResponse() {
       studentPost +
       "\n" +
       "Professor's Response to Above Student:"
-    )
-  }
 
-  const refineResponse = () => {
+    try {
+      const endpoint = getChatEndpoint(userAI.isEnabled)
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content }]
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Failed to generate response")
+
+      setMessages([
+        { role: "user", content, id: "0" },
+        { role: "assistant", content: data.content || data.message || "", id: "1" }
+      ])
+      setAiProvider(data.provider || "")
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to generate response")
+      toast({
+        title: "Error",
+        description: e?.message ?? "Failed to generate response",
+        variant: "destructive",
+      })
+    } finally {
+      setIsResponseLoading(false)
+    }
+  }, [professorProfile, discussionPrompt, studentPost, userAI.isEnabled])
+
+  const refineResponse = useCallback(async () => {
     if (!messages[1] || !refineInstructions.trim()) {
       toast({
         title: "Cannot Refine",
@@ -123,9 +133,10 @@ export function DiscussionResponse() {
     }
 
     mixpanel.track("Response Refined")
-    stop()
-    setMessages([])
-    setInput(
+    setIsResponseLoading(true)
+    setError(null)
+
+    const content =
       "Professor Writing Style and Background: \n" +
       professorProfile +
       "\n" +
@@ -136,17 +147,46 @@ export function DiscussionResponse() {
       studentPost +
       "\n" +
       "Proposed Professor's Response to Above Student: \n" +
-      (messages[1] as any).content +
+      messages[1].content +
       "\n" +
       "Instructions for Refinement: \n" +
       refineInstructions +
       "\n" +
       "Refined Professor's Response to Above Student:"
-    )
-  }
+
+    try {
+      const endpoint = getChatEndpoint(userAI.isEnabled)
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content }]
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Failed to refine response")
+
+      setMessages([
+        { role: "user", content, id: "0" },
+        { role: "assistant", content: data.content || data.message || "", id: "1" }
+      ])
+      setAiProvider(data.provider || "")
+      setRefineInstructions("") // Clear refinement instructions after success
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to refine response")
+      toast({
+        title: "Error",
+        description: e?.message ?? "Failed to refine response",
+        variant: "destructive",
+      })
+    } finally {
+      setIsResponseLoading(false)
+    }
+  }, [messages, refineInstructions, professorProfile, discussionPrompt, studentPost, userAI.isEnabled])
 
   const copyResponse = async () => {
-    if (!(messages[1] as any)?.content) {
+    if (!messages[1]?.content) {
       toast({
         title: "No Response to Copy",
         description: "Please generate a response first.",
@@ -156,7 +196,7 @@ export function DiscussionResponse() {
     }
 
     try {
-      await navigator.clipboard.writeText((messages[1] as any).content)
+      await navigator.clipboard.writeText(messages[1].content)
       mixpanel.track("Response Copied")
       toast({
         title: "Copied!",
@@ -278,6 +318,11 @@ export function DiscussionResponse() {
               <div className="flex items-center gap-2">
                 <Star className="size-5 text-blue-600" />
                 <CardTitle>AI Generated Response</CardTitle>
+                {aiProvider && (
+                  <Badge variant="outline" className="ml-2">
+                    {aiProvider}
+                  </Badge>
+                )}
               </div>
               {messages[1] && (
                 <Button
@@ -311,16 +356,16 @@ export function DiscussionResponse() {
             ) : (
               <Textarea
                 className="min-h-[150px] resize-none border-dashed"
-                value={(messages[1] as any)?.content || ""}
+                value={messages[1]?.content || ""}
                 onChange={(e) =>
                   setMessages([
                     messages[0],
                     {
-                      ...(messages[1] as any),
+                      ...messages[1],
                       content: e.target.value,
                       role: "assistant",
                       id: "1",
-                    } as any,
+                    },
                   ])
                 }
                 placeholder="AI response will appear here..."

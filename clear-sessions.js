@@ -29,7 +29,8 @@ async function clearUserSessions() {
 
     console.log("\n🎯 User Status After Update:");
     console.log("📧 versorabusiness@gmail.com");
-    console.log("   Role: PROFESSOR ✅");
+    console.log("   Role: ADMIN ✅");
+    console.log("   Owner: TRUE ✅");
     console.log("   Subscription: PREMIUM ✅");
     console.log("   Status: ACTIVE ✅");
     console.log("   Sessions: Cleared ✅");

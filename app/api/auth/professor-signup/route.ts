@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { UserRole, SubscriptionType, FeatureType } from "@prisma/client"
+import bcrypt from "bcryptjs"
+import { isAllowedUniversityEmail } from "@/lib/user-management"
 
 const professorSignupSchema = z.object({
     name: z.string().min(1),
@@ -31,15 +31,21 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Hash password (you should implement proper password hashing)
-        // const hashedPassword = await bcrypt.hash(password, 12)
+        if (!isAllowedUniversityEmail(email)) {
+            return NextResponse.json(
+                { error: "Only university email addresses are allowed" },
+                { status: 403 }
+            )
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12)
 
         // Create professor with subscription
         const professor = await prisma.user.create({
             data: {
                 name,
                 email,
-                password, // Use hashedPassword in production
+                password: hashedPassword,
                 role: UserRole.PROFESSOR,
                 subscriptionType: subscriptionPlan as SubscriptionType,
                 trialStartedAt: new Date(),

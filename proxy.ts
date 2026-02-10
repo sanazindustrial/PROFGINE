@@ -9,6 +9,9 @@ function isPublicPath(pathname: string) {
     pathname === "/auth/signin" ||
     pathname === "/auth/signup" ||
     pathname === "/auth/success" ||
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
+    pathname.startsWith("/google") && pathname.endsWith(".html") ||
     pathname === "/subscription/upgrade" ||
     pathname === "/trial-dashboard" ||
     pathname.startsWith("/auth/") ||
@@ -22,11 +25,30 @@ function isPublicPath(pathname: string) {
 
 function isAdminRoute(pathname: string) {
   return (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/admin-dashboard") ||
     pathname.startsWith("/user-management") ||
     pathname.startsWith("/subscription-management") ||
     pathname.startsWith("/invite-user") ||
-    pathname.startsWith("/ai-management")
+    pathname.startsWith("/ai-management") ||
+    pathname.startsWith("/admin-settings") ||
+    pathname.startsWith("/api-config") ||
+    pathname.startsWith("/database-health") ||
+    pathname.startsWith("/environment") ||
+    pathname.startsWith("/security") ||
+    pathname.startsWith("/tools")
   );
+}
+
+function getRoleDashboardPath(token: any) {
+  if (token?.role === "ADMIN") {
+    return token?.isOwner ? "/user-management" : "/admin-dashboard";
+  }
+
+  if (token?.role === "PROFESSOR") return "/dashboard";
+  if (token?.role === "STUDENT") return "/dashboard";
+
+  return "/dashboard";
 }
 
 function handleSubscriptionRedirect(req: NextRequest, token: any) {
@@ -65,8 +87,9 @@ function handleDashboardRedirect(req: NextRequest, token: any) {
 
   // Admin users
   if (token?.role === "ADMIN") {
-    if (pathname === "/user-management") return NextResponse.next();
-    return NextResponse.redirect(new URL("/user-management", req.url));
+    const adminDestination = getRoleDashboardPath(token);
+    if (pathname === adminDestination) return NextResponse.next();
+    return NextResponse.redirect(new URL(adminDestination, req.url));
   }
 
   return handleSubscriptionRedirect(req, token);
@@ -91,9 +114,17 @@ export async function proxy(req: NextRequest) {
     hasSessionCookie: !!sessionCookie,
     tokenEmail: token?.email,
     userRole: token?.role,
+    invalidSession: (token as any)?.invalidSession,
     subscriptionType: token?.subscriptionType,
     trialExpiresAt: token?.trialExpiresAt,
   });
+
+  if ((token as any)?.invalidSession) {
+    const response = NextResponse.redirect(new URL("/auth/signin", req.url));
+    response.cookies.delete("next-auth.session-token");
+    response.cookies.delete("__Secure-next-auth.session-token");
+    return response;
+  }
 
   // Public paths are always allowed
   if (isPublicPath(pathname)) {
@@ -102,6 +133,14 @@ export async function proxy(req: NextRequest) {
       return handleDashboardRedirect(req, token);
     }
     return NextResponse.next();
+  }
+
+  // Role-based redirect when hitting /dashboard
+  if (pathname === "/dashboard" && token?.role === "ADMIN") {
+    const adminDestination = getRoleDashboardPath(token);
+    if (pathname !== adminDestination) {
+      return NextResponse.redirect(new URL(adminDestination, req.url));
+    }
   }
 
   // Admin routes: require ADMIN

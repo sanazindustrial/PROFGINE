@@ -22,36 +22,36 @@ export const Icons = {
   checkCircle: CheckCircle,
   // Single logo for navigation
   logo: (props: LucideProps) => (
-    <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div className={`relative size-full ${props.className || ''}`}>
       <Image
         src="/icons/single-logo.png"
         alt="Professor GENIE"
         fill
-        style={{ objectFit: 'contain' }}
+        className="object-contain"
         priority
       />
     </div>
   ),
   // Logo 1 for footer and badges
   logoBadge: (props: LucideProps) => (
-    <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div className={`relative size-full ${props.className || ''}`}>
       <Image
         src="/icons/logo-1.png"
         alt="ProfGenie Platform"
         fill
-        style={{ objectFit: 'contain' }}
+        className="object-contain"
         priority
       />
     </div>
   ),
   // Logo standard for marketing
   logoStandard: (props: LucideProps) => (
-    <div className={props.className} style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div className={`relative size-full ${props.className || ''}`}>
       <Image
         src="/icons/logo-standard.png"
         alt="ProfGenie Platform"
         fill
-        style={{ objectFit: 'contain' }}
+        className="object-contain"
         priority
       />
     </div>

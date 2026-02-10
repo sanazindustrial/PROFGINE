@@ -13,7 +13,7 @@ export default function AdminLoginPage() {
         setLoading(true);
         try {
             await signIn("google", {
-                callbackUrl: "/user-management"  // Redirect to admin panel after login
+                callbackUrl: "/auth/success"
             });
         } catch (error) {
             console.error("Sign in error:", error);
@@ -35,7 +35,7 @@ export default function AdminLoginPage() {
                     <div className="space-y-4">
                         <div className="rounded-lg border bg-blue-50 p-4">
                             <h3 className="font-semibold text-blue-900">Admin Access:</h3>
-                            <p className="text-sm text-blue-700">Use your Google account (sanazindustrial@gmail.com) to access admin features</p>
+                            <p className="text-sm text-blue-700">Use an invited admin Google account to access admin features</p>
                         </div>
 
                         <Button

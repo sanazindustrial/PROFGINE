@@ -7,8 +7,6 @@ import {
   BookOpen,
   GraduationCap,
   MessageSquare,
-  Zap,
-  Users,
   ArrowRight,
   CheckCircle,
   Star
@@ -24,14 +22,14 @@ export default async function IndexPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <div className="min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       {/* Hero Section with Logo */}
       <section className="relative px-6 lg:px-8">
         <div className="mx-auto max-w-5xl pb-32 pt-20 sm:pb-40 sm:pt-32">
           <div className="text-center">
             {/* Logo Standard for Marketing */}
             <div className="mx-auto mb-8 flex justify-center">
-              <div className="relative h-48 w-full max-w-2xl sm:h-56 animate-float-slow">
+              <div className="animate-float-slow relative h-48 w-full max-w-2xl sm:h-56">
                 <Image
                   src="/icons/logo-standard.png"
                   alt="ProfGenie Platform - Empowering Smart Learning"
@@ -43,10 +41,10 @@ export default async function IndexPage() {
               </div>
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl animate-fade-in">
+            <h1 className="animate-fade-in text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">
               The Future of Course Design & Grading is Here
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-300 animate-slide-up">
+            <p className="animate-slide-up mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-300">
               Professor GENIE is an AI-powered platform that helps professors streamline course
               creation, design insightful assignments, and grade more efficiently.
             </p>

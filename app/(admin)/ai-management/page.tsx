@@ -36,6 +36,8 @@ export default function AIAdaptorManagement() {
     const [testResults, setTestResults] = useState<{ [key: string]: string }>({})
     const [preferredOrder, setPreferredOrder] = useState<string[]>([])
     const [claudeEnabled, setClaudeEnabled] = useState(false)
+    const [dbTestStatus, setDbTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle")
+    const [dbTestMessage, setDbTestMessage] = useState<string | null>(null)
 
     useEffect(() => {
         fetchProviderStatus()
@@ -166,6 +168,67 @@ export default function AIAdaptorManagement() {
         }
     }
 
+    const removeFromRotation = async (providerName: string) => {
+        try {
+            const newOrder = preferredOrder.filter((name) => name !== providerName)
+            const response = await fetch('/api/ai/configure', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'reorder',
+                    preferredOrder: newOrder
+                })
+            })
+
+            if (response.ok) {
+                setPreferredOrder(newOrder)
+            }
+        } catch (error) {
+            console.error('Failed to remove provider from rotation:', error)
+        }
+    }
+
+    const addToRotation = async (providerName: string) => {
+        try {
+            const newOrder = [...preferredOrder, providerName]
+            const response = await fetch('/api/ai/configure', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'reorder',
+                    preferredOrder: newOrder
+                })
+            })
+
+            if (response.ok) {
+                setPreferredOrder(newOrder)
+            }
+        } catch (error) {
+            console.error('Failed to add provider to rotation:', error)
+        }
+    }
+
+    const testDatabaseConnection = async () => {
+        setDbTestStatus("testing")
+        setDbTestMessage(null)
+
+        try {
+            const response = await fetch('/api/test/db?action=connection')
+            const result = await response.json()
+            if (!response.ok || result?.success === false) {
+                setDbTestStatus("error")
+                setDbTestMessage(result?.error || "Database connection failed")
+                return
+            }
+
+            setDbTestStatus("success")
+            setDbTestMessage(result?.message || "Database connection successful")
+        } catch (error) {
+            setDbTestStatus("error")
+            setDbTestMessage("Database connection failed")
+        }
+    }
+
     const getProviderIcon = (providerName: string) => {
         const icons: { [key: string]: JSX.Element } = {
             openai: <Cpu className="size-5" />,
@@ -237,8 +300,8 @@ export default function AIAdaptorManagement() {
                         Claude Haiku 4.5 for All Clients
                     </CardTitle>
                     <CardDescription>
-                        {claudeEnabled 
-                            ? "✅ Claude is currently enabled and available to all users" 
+                        {claudeEnabled
+                            ? "✅ Claude is currently enabled and available to all users"
                             : "⚠️ Claude is not enabled. Enable it to provide the best AI experience"}
                     </CardDescription>
                 </CardHeader>
@@ -248,7 +311,7 @@ export default function AIAdaptorManagement() {
                         <p className="text-sm text-muted-foreground">Fast, reliable, and cost-effective AI responses</p>
                     </div>
                     {!claudeEnabled && (
-                        <Button 
+                        <Button
                             onClick={enableClaudeForAllClients}
                             className="bg-green-600 hover:bg-green-700"
                             size="lg"
@@ -267,10 +330,11 @@ export default function AIAdaptorManagement() {
             </Card>
 
             <Tabs defaultValue="providers" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="providers">AI Providers</TabsTrigger>
                     <TabsTrigger value="configuration">Configuration</TabsTrigger>
                     <TabsTrigger value="testing">Testing & Logs</TabsTrigger>
+                    <TabsTrigger value="system">System Tests</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="providers" className="space-y-4">
@@ -327,6 +391,13 @@ export default function AIAdaptorManagement() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => removeFromRotation(provider.name)}
+                                                >
+                                                    Remove
+                                                </Button>
+                                                <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => testProvider(provider.name)}
@@ -344,8 +415,8 @@ export default function AIAdaptorManagement() {
 
                                         {testResults[provider.name] && (
                                             <div className={`rounded p-2 text-sm ${testResults[provider.name] === 'success' ? 'bg-green-100 text-green-800' :
-                                                    testResults[provider.name] === 'testing...' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-red-100 text-red-800'
+                                                testResults[provider.name] === 'testing...' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-red-100 text-red-800'
                                                 }`}>
                                                 Test Result: {testResults[provider.name]}
                                             </div>
@@ -355,6 +426,40 @@ export default function AIAdaptorManagement() {
                             )
                         })}
                     </div>
+
+                    {providers.filter((provider) => !preferredOrder.includes(provider.name)).length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Available Providers (Not in Rotation)</CardTitle>
+                                <CardDescription>Add providers back into the priority order</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                {providers
+                                    .filter((provider) => !preferredOrder.includes(provider.name))
+                                    .map((provider) => (
+                                        <div key={provider.name} className="flex items-center justify-between rounded-lg border p-3">
+                                            <div className="flex items-center gap-3">
+                                                {getProviderIcon(provider.name)}
+                                                <div>
+                                                    <div className="font-medium capitalize">{provider.name}</div>
+                                                    <div className="text-xs text-muted-foreground">{provider.description || ""}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {getStatusBadge(provider)}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => addToRotation(provider.name)}
+                                                >
+                                                    Add
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                            </CardContent>
+                        </Card>
+                    )}
                 </TabsContent>
 
                 <TabsContent value="configuration" className="space-y-4">
@@ -405,8 +510,8 @@ PERPLEXITY_API_KEY=your_perplexity_key_here            # Research AI with web ac
                                         <div className="flex items-center gap-2">
                                             {testResults[provider.name] && (
                                                 <span className={`text-sm ${testResults[provider.name] === 'success' ? 'text-green-600' :
-                                                        testResults[provider.name] === 'testing...' ? 'text-blue-600' :
-                                                            'text-red-600'
+                                                    testResults[provider.name] === 'testing...' ? 'text-blue-600' :
+                                                        'text-red-600'
                                                     }`}>
                                                     {testResults[provider.name]}
                                                 </span>
@@ -427,6 +532,69 @@ PERPLEXITY_API_KEY=your_perplexity_key_here            # Research AI with web ac
                                     </div>
                                 ))}
                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="system" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Database Connection</CardTitle>
+                            <CardDescription>Verify the app can connect to PostgreSQL</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Button onClick={testDatabaseConnection} variant="outline" disabled={dbTestStatus === "testing"}>
+                                    {dbTestStatus === "testing" ? (
+                                        <RefreshCw className="mr-2 size-4 animate-spin" />
+                                    ) : (
+                                        <Settings className="mr-2 size-4" />
+                                    )}
+                                    Test Database
+                                </Button>
+                                {dbTestStatus !== "idle" && (
+                                    <Badge
+                                        variant={dbTestStatus === "success" ? "default" : "destructive"}
+                                        className={dbTestStatus === "success" ? "bg-green-500" : ""}
+                                    >
+                                        {dbTestStatus === "testing" ? "Testing" : dbTestStatus === "success" ? "Connected" : "Failed"}
+                                    </Badge>
+                                )}
+                            </div>
+                            {dbTestMessage && (
+                                <div className={`rounded p-2 text-sm ${dbTestStatus === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                    {dbTestMessage}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>OpenAI Connectivity</CardTitle>
+                            <CardDescription>Quick check for OpenAI availability and credentials</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-wrap items-center gap-3">
+                            <Button
+                                onClick={() => testProvider("openai")}
+                                variant="outline"
+                                disabled={testResults["openai"] === "testing..."}
+                            >
+                                {testResults["openai"] === "testing..." ? (
+                                    <RefreshCw className="mr-2 size-4 animate-spin" />
+                                ) : (
+                                    <Cpu className="mr-2 size-4" />
+                                )}
+                                Test OpenAI
+                            </Button>
+                            {testResults["openai"] && (
+                                <Badge
+                                    variant={testResults["openai"] === "success" ? "default" : "destructive"}
+                                    className={testResults["openai"] === "success" ? "bg-green-500" : ""}
+                                >
+                                    {testResults["openai"]}
+                                </Badge>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>

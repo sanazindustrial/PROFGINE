@@ -20,6 +20,24 @@ type UserRow = {
   currentPeriodEnd: string | null;
 };
 
+type CreditDetails = {
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    creditBalance: number;
+    monthlyCredits: number;
+  };
+  monthlyUsage: { feature: string | null; used: number }[];
+  recentTransactions: {
+    id: string;
+    amount: number;
+    type: string;
+    description: string | null;
+    createdAt: string;
+  }[];
+};
+
 const subscriptionTypes = ["FREE", "BASIC", "PREMIUM"] as const;
 const subscriptionTiers = ["FREE_TRIAL", "BASIC", "PREMIUM", "ENTERPRISE"] as const;
 const subscriptionStatuses = ["ACTIVE", "TRIALING", "PAST_DUE", "CANCELED", "INCOMPLETE"] as const;
@@ -34,6 +52,25 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [loadingCredits, setLoadingCredits] = useState<string | null>(null);
+  const [creditDetails, setCreditDetails] = useState<Record<string, CreditDetails | null>>({});
+
+  const applyRolePreset = async (userId: string, preset: "OWNER" | "ADMIN" | "PROFESSOR" | "STUDENT") => {
+    const nextRole: UserRole = preset === "OWNER" || preset === "ADMIN" ? UserRole.ADMIN : (preset as UserRole);
+    const nextIsOwner = preset === "OWNER";
+
+    setUsers((prev) =>
+      prev.map((row) =>
+        row.id === userId ? { ...row, role: nextRole, isOwner: nextIsOwner } : row
+      )
+    );
+
+    await updateUser(userId, {
+      role: nextRole,
+      isOwner: nextIsOwner,
+    });
+  };
 
   const updateUser = async (userId: string, updates: Partial<UserRow> & {
     subscriptionTier?: SubscriptionTier;
@@ -75,6 +112,27 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
     }
   };
 
+  const loadCreditDetails = async (userId: string) => {
+    if (creditDetails[userId]) {
+      setExpandedUserId(expandedUserId === userId ? null : userId);
+      return;
+    }
+
+    setLoadingCredits(userId);
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/credits`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error?.error || "Failed to load credits");
+      }
+      const data = await response.json();
+      setCreditDetails((prev) => ({ ...prev, [userId]: data }));
+      setExpandedUserId(userId);
+    } finally {
+      setLoadingCredits(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {users.map((user) => (
@@ -91,6 +149,43 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <label className="text-sm md:col-span-3">
+              Quick Role Switch
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() => applyRolePreset(user.id, "OWNER")}
+                  disabled={savingUserId === user.id}
+                >
+                  Set Owner
+                </Button>
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() => applyRolePreset(user.id, "ADMIN")}
+                  disabled={savingUserId === user.id}
+                >
+                  Set Admin
+                </Button>
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() => applyRolePreset(user.id, "PROFESSOR")}
+                  disabled={savingUserId === user.id}
+                >
+                  Set Professor
+                </Button>
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() => applyRolePreset(user.id, "STUDENT")}
+                  disabled={savingUserId === user.id}
+                >
+                  Set Student
+                </Button>
+              </div>
+            </label>
             <label className="text-sm">
               Role
               <Select.Root
@@ -273,6 +368,17 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
               {savingUserId === user.id ? "Saving..." : "Save Changes"}
             </Button>
             <Button
+              variant="soft"
+              onClick={() => loadCreditDetails(user.id)}
+              disabled={loadingCredits === user.id}
+            >
+              {loadingCredits === user.id
+                ? "Loading Credits..."
+                : expandedUserId === user.id
+                  ? "Hide Credits"
+                  : "View Credits"}
+            </Button>
+            <Button
               color="red"
               variant="soft"
               disabled={deletingUserId === user.id || user.id === currentUserId}
@@ -281,6 +387,58 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
               {deletingUserId === user.id ? "Deleting..." : "Delete User"}
             </Button>
           </div>
+
+          {expandedUserId === user.id && creditDetails[user.id] && (
+            <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="text-sm font-semibold">Credit Overview</div>
+              <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div>
+                  <div className="text-xs text-gray-500">Available Credits</div>
+                  <div className="text-base font-semibold">{creditDetails[user.id]!.user.creditBalance}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Monthly Credits</div>
+                  <div className="text-base font-semibold">{creditDetails[user.id]!.user.monthlyCredits}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Monthly Usage</div>
+                  <div className="text-sm text-gray-700">
+                    {creditDetails[user.id]!.monthlyUsage.length === 0
+                      ? "No usage logged"
+                      : creditDetails[user.id]!.monthlyUsage.map((usage) => (
+                        <div key={usage.feature || "unknown"}>
+                          {usage.feature || "Uncategorized"}: {usage.used}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="text-sm font-semibold">Recent Transactions</div>
+                <div className="mt-2 space-y-2 text-sm">
+                  {creditDetails[user.id]!.recentTransactions.length === 0 ? (
+                    <div className="text-gray-500">No transactions recorded.</div>
+                  ) : (
+                    creditDetails[user.id]!.recentTransactions.map((tx) => (
+                      <div key={tx.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2">
+                        <div>
+                          <div className="font-medium">{tx.type}</div>
+                          <div className="text-xs text-gray-500">{tx.description || "No description"}</div>
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {tx.amount > 0 ? "+" : ""}{tx.amount}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(tx.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>

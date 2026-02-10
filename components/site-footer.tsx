@@ -9,7 +9,7 @@ export function SiteFooter() {
                     {/* Logo 1 - Badge */}
                     <div className="flex flex-col items-center md:items-start">
                         <Link href="/" className="mb-4 block">
-                            <div className="relative h-32 w-32 transition-transform hover:scale-105">
+                            <div className="relative size-32 transition-transform hover:scale-105">
                                 <Image
                                     src="/icons/logo-1.png"
                                     alt="ProfGenie Platform"
@@ -28,16 +28,16 @@ export function SiteFooter() {
                     <div className="flex flex-col items-center md:items-start">
                         <h3 className="mb-4 font-semibold text-foreground">Quick Links</h3>
                         <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-                            <Link href="/dashboard/course-design-studio" className="hover:text-foreground transition-colors">
+                            <Link href="/dashboard/course-design-studio" className="transition-colors hover:text-foreground">
                                 Course Design Studio
                             </Link>
-                            <Link href="/discussion" className="hover:text-foreground transition-colors">
+                            <Link href="/discussion" className="transition-colors hover:text-foreground">
                                 Discussion Generator
                             </Link>
-                            <Link href="/grade" className="hover:text-foreground transition-colors">
+                            <Link href="/grade" className="transition-colors hover:text-foreground">
                                 Grading Assistant
                             </Link>
-                            <Link href="/help" className="hover:text-foreground transition-colors">
+                            <Link href="/help" className="transition-colors hover:text-foreground">
                                 Help Center
                             </Link>
                         </div>
@@ -47,16 +47,16 @@ export function SiteFooter() {
                     <div className="flex flex-col items-center md:items-start">
                         <h3 className="mb-4 font-semibold text-foreground">Resources</h3>
                         <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-                            <a href="/docs" className="hover:text-foreground transition-colors">
+                            <a href="/docs" className="transition-colors hover:text-foreground">
                                 Documentation
                             </a>
-                            <a href="/privacy" className="hover:text-foreground transition-colors">
+                            <a href="/privacy" className="transition-colors hover:text-foreground">
                                 Privacy Policy
                             </a>
-                            <a href="/terms" className="hover:text-foreground transition-colors">
+                            <a href="/terms" className="transition-colors hover:text-foreground">
                                 Terms of Service
                             </a>
-                            <a href="/contact" className="hover:text-foreground transition-colors">
+                            <a href="/contact" className="transition-colors hover:text-foreground">
                                 Contact Us
                             </a>
                         </div>

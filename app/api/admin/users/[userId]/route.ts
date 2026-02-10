@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { SubscriptionStatus, SubscriptionTier, SubscriptionType, UserRole } from "@prisma/client";
+import { CreditType, SubscriptionStatus, SubscriptionTier, SubscriptionType, UserRole } from "@prisma/client";
 
 interface RouteParams {
     params: Promise<{
@@ -31,6 +31,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     const { userId } = await params;
     const body = await req.json();
+
+    const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { creditBalance: true, monthlyCredits: true },
+    });
 
     const updates: any = {};
 
@@ -67,6 +72,20 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
             monthlyCredits: true,
         },
     });
+
+    if (existingUser && typeof body.creditBalance === "number") {
+        const delta = body.creditBalance - existingUser.creditBalance;
+        if (delta !== 0) {
+            await prisma.creditTransaction.create({
+                data: {
+                    userId,
+                    amount: delta,
+                    type: delta > 0 ? CreditType.BONUS : CreditType.USAGE,
+                    description: `Admin adjustment by ${adminUser.id}`,
+                },
+            });
+        }
+    }
 
     if (body.subscriptionTier || body.subscriptionStatus || body.currentPeriodEnd || body.currentPeriodEnd === null) {
         const tier = Object.values(SubscriptionTier).includes(body.subscriptionTier)

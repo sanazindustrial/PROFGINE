@@ -107,7 +107,7 @@ echo "Next: Upload your files to /var/www/profgenie"
    - All config files (package.json, next.config.mjs, etc.)
    - `backups/` folder with your database backup
 
-**Option B: Using Git**
+#### Option B: Using Git
 
 ```bash
 # On VPS
@@ -115,7 +115,7 @@ cd /var/www/profgenie
 git clone https://github.com/sanazindustrial/PROFGINE.git .
 ```
 
-**Option C: Using SCP from Windows**
+#### Option C: Using SCP from Windows
 
 ```powershell
 # From your local machine

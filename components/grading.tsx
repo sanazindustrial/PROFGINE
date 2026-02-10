@@ -21,6 +21,7 @@ import { FileUploader } from "@/components/file-uploader.component"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { useUserAISettings } from "@/hooks/use-user-ai"
 
 export function Grading() {
   // Replace useChat with simple fetch-based approach
@@ -28,6 +29,7 @@ export function Grading() {
   const [error, setError] = useState<string | null>(null)
   const [messages, setMessages] = useState<Array<{ role: string; content: string; id: string }>>([])
   const [isResponseLoading, setIsResponseLoading] = useState(false)
+  const [aiProvider, setAiProvider] = useState<string>("")
   const [professorProfile, setProfessorProfile] = useState("")
   const [rubricPrompt, setRubricPrompt] = useState("")
   const [assignmentPrompt, setAssignmentPrompt] = useState("")
@@ -37,6 +39,9 @@ export function Grading() {
   const [gradingLevel, setGradingLevel] = useState<string>("medium")
   const [assignmentType, setAssignmentType] = useState<string>("essay")
   const [customGradingPrompt, setCustomGradingPrompt] = useState("")
+
+  // Check if user has custom AI settings
+  const userAI = useUserAISettings()
 
   const rubricInputRef = useRef<HTMLInputElement>(null)
   const assignmentInputRef = useRef<HTMLInputElement>(null)
@@ -151,11 +156,12 @@ export function Grading() {
 
     try {
       const payload = {
-        messages: [{ role: "user", content }],
-        ...(Object.keys(uploadedFiles).length > 0 ? { data: uploadedFiles } : {})
+        messages: [{ role: "user", content }]
       }
 
-      const res = await fetch("/api/assistant", {
+      // Use user's custom AI endpoint if enabled, otherwise platform default
+      const endpoint = userAI.isEnabled ? "/api/chat/user" : "/api/grading"
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -169,13 +175,14 @@ export function Grading() {
         { role: "user", content, id: "0" },
         { role: "assistant", content: data.content || data.message || "", id: "1" }
       ])
+      setAiProvider(data.provider || "")
     } catch (e: any) {
       setError(e?.message ?? "Grading failed")
     } finally {
       setIsLoading(false)
       setIsResponseLoading(false)
     }
-  }, [assignmentPrompt, assignmentType, customGradingPrompt, gradingLevel, professorProfile, rubricPrompt, studentPost, uploadedFiles])
+  }, [assignmentPrompt, assignmentType, customGradingPrompt, gradingLevel, professorProfile, rubricPrompt, studentPost, uploadedFiles, userAI.isEnabled])
 
   const onSubmitRefinementHandler = async () => {
     if (!messages[1]) {
@@ -196,7 +203,9 @@ export function Grading() {
         ]
       }
 
-      const res = await fetch("/api/assistant", {
+      // Use user's custom AI endpoint if enabled, otherwise platform default
+      const endpoint = userAI.isEnabled ? "/api/chat/user" : "/api/grading"
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -211,6 +220,7 @@ export function Grading() {
         { role: "user", content: refineInstructions, id: String(messages.length) },
         { role: "assistant", content: data.content || data.message || "", id: String(messages.length + 1) }
       ])
+      setAiProvider(data.provider || "")
     } catch (e: any) {
       setError(e?.message ?? "Refinement failed")
     } finally {
@@ -464,9 +474,16 @@ export function Grading() {
       </div>
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="professor-response" className="text-base font-semibold">
-            AI-Generated Feedback
-          </Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="professor-response" className="text-base font-semibold">
+              AI-Generated Feedback
+            </Label>
+            {aiProvider && (
+              <Badge variant="outline" className="text-xs">
+                {aiProvider}
+              </Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             Review and edit the generated feedback before sharing with students.
           </p>

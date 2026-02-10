@@ -1,15 +1,22 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, FileText, Users, Lightbulb, Settings, CheckCircle, AlertCircle } from "lucide-react"
+import { Upload, FileText, Users, Lightbulb, Settings, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+
+interface SystemSettings {
+    ENABLE_AI_GRADING: boolean
+    ENABLE_LMS_INTEGRATIONS: boolean
+    ENABLE_BULK_OPERATIONS: boolean
+    ENABLE_EMAIL_NOTIFICATIONS: boolean
+}
 
 export default function AdminDashboard() {
     const [inviteForm, setInviteForm] = useState({
@@ -18,6 +25,60 @@ export default function AdminDashboard() {
         message: ""
     })
     const [isLoading, setIsLoading] = useState(false)
+
+    // System settings state
+    const [systemSettings, setSystemSettings] = useState<SystemSettings>({
+        ENABLE_AI_GRADING: true,
+        ENABLE_LMS_INTEGRATIONS: true,
+        ENABLE_BULK_OPERATIONS: true,
+        ENABLE_EMAIL_NOTIFICATIONS: true
+    })
+    const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+    const [isSavingSettings, setIsSavingSettings] = useState(false)
+    const [settingsMessage, setSettingsMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+    // Load system settings on mount
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const response = await fetch("/api/admin/system-settings")
+                if (response.ok) {
+                    const data = await response.json()
+                    setSystemSettings(data.settings)
+                }
+            } catch (error) {
+                console.error("Failed to load system settings:", error)
+            } finally {
+                setIsLoadingSettings(false)
+            }
+        }
+        loadSettings()
+    }, [])
+
+    // Save system settings
+    const handleSaveSettings = async () => {
+        setIsSavingSettings(true)
+        setSettingsMessage(null)
+
+        try {
+            const response = await fetch("/api/admin/system-settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ settings: systemSettings })
+            })
+
+            if (response.ok) {
+                setSettingsMessage({ type: 'success', text: 'System settings saved successfully!' })
+            } else {
+                const error = await response.json()
+                setSettingsMessage({ type: 'error', text: error.error || 'Failed to save settings' })
+            }
+        } catch (error) {
+            setSettingsMessage({ type: 'error', text: 'Failed to save settings' })
+        } finally {
+            setIsSavingSettings(false)
+        }
+    }
 
     const handleAdminInvite = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -242,43 +303,91 @@ export default function AdminDashboard() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <Label className="text-sm font-medium">AI-Assisted Grading</Label>
-                                        <p className="text-sm text-muted-foreground">Enable AI feedback generation for all professors</p>
-                                    </div>
-                                    <Switch />
+                            {isLoadingSettings ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <Loader2 className="size-6 animate-spin text-gray-400" />
+                                    <span className="ml-2 text-gray-500">Loading settings...</span>
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <Label className="text-sm font-medium">AI-Assisted Grading</Label>
+                                                <p className="text-sm text-muted-foreground">Enable AI feedback generation for all professors</p>
+                                            </div>
+                                            <Switch
+                                                checked={systemSettings.ENABLE_AI_GRADING}
+                                                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, ENABLE_AI_GRADING: checked }))}
+                                            />
+                                        </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <Label className="text-sm font-medium">LMS Integrations</Label>
-                                        <p className="text-sm text-muted-foreground">Allow professors to connect external learning management systems</p>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <Label className="text-sm font-medium">LMS Integrations</Label>
+                                                <p className="text-sm text-muted-foreground">Allow professors to connect external learning management systems</p>
+                                            </div>
+                                            <Switch
+                                                checked={systemSettings.ENABLE_LMS_INTEGRATIONS}
+                                                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, ENABLE_LMS_INTEGRATIONS: checked }))}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <Label className="text-sm font-medium">Bulk Operations</Label>
+                                                <p className="text-sm text-muted-foreground">Enable mass student enrollment and batch grading</p>
+                                            </div>
+                                            <Switch
+                                                checked={systemSettings.ENABLE_BULK_OPERATIONS}
+                                                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, ENABLE_BULK_OPERATIONS: checked }))}
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <Label className="text-sm font-medium">Email Notifications</Label>
+                                                <p className="text-sm text-muted-foreground">Send automatic emails for grades, enrollments, and system updates</p>
+                                            </div>
+                                            <Switch
+                                                checked={systemSettings.ENABLE_EMAIL_NOTIFICATIONS}
+                                                onCheckedChange={(checked) => setSystemSettings(prev => ({ ...prev, ENABLE_EMAIL_NOTIFICATIONS: checked }))}
+                                            />
+                                        </div>
                                     </div>
-                                    <Switch />
-                                </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <Label className="text-sm font-medium">Bulk Operations</Label>
-                                        <p className="text-sm text-muted-foreground">Enable mass student enrollment and batch grading</p>
+                                    {settingsMessage && (
+                                        <div className={`flex items-center gap-2 rounded-md border p-3 ${settingsMessage.type === 'success'
+                                                ? 'border-green-200 bg-green-50 text-green-700'
+                                                : 'border-red-200 bg-red-50 text-red-700'
+                                            }`}>
+                                            {settingsMessage.type === 'success' ? (
+                                                <CheckCircle className="size-4" />
+                                            ) : (
+                                                <AlertCircle className="size-4" />
+                                            )}
+                                            <span className="text-sm">{settingsMessage.text}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="border-t pt-4">
+                                        <Button
+                                            className="w-full"
+                                            onClick={handleSaveSettings}
+                                            disabled={isSavingSettings}
+                                        >
+                                            {isSavingSettings ? (
+                                                <>
+                                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                                    Saving...
+                                                </>
+                                            ) : (
+                                                'Save System Settings'
+                                            )}
+                                        </Button>
                                     </div>
-                                    <Switch />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <Label className="text-sm font-medium">Email Notifications</Label>
-                                        <p className="text-sm text-muted-foreground">Send automatic emails for grades, enrollments, and system updates</p>
-                                    </div>
-                                    <Switch />
-                                </div>
-                            </div>
-
-                            <div className="border-t pt-4">
-                                <Button className="w-full">Save System Settings</Button>
-                            </div>
+                                </>
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>

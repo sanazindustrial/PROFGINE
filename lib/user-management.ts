@@ -1,6 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 
+export function getAllowedEmailDomains(): string[] {
+    const raw = process.env.ALLOWED_EMAIL_DOMAINS || process.env.ALLOWED_UNIVERSITY_DOMAINS || "";
+    const domains = raw
+        .split(",")
+        .map((domain) => domain.trim().toLowerCase())
+        .filter(Boolean);
+
+    return domains.length > 0 ? domains : [".edu"];
+}
+
+export function isAllowedUniversityEmail(email: string): boolean {
+    const domain = email.split("@")[1]?.toLowerCase();
+    if (!domain) return false;
+
+    return getAllowedEmailDomains().some((allowed) => {
+        if (allowed.startsWith(".")) {
+            return domain.endsWith(allowed);
+        }
+
+        return domain === allowed || domain.endsWith(`.${allowed}`);
+    });
+}
+
 /**
  * Utility functions for user role management
  */
@@ -69,28 +92,11 @@ export async function createUserWithRole(email: string, name?: string, role: Use
 export function determineRoleFromEmail(email: string): UserRole {
     // Custom logic to determine role based on email domain or patterns
 
-    // Example rules:
-    if (email.endsWith('@admin.yourdomain.com')) {
-        return UserRole.ADMIN;
+    if (isAllowedUniversityEmail(email)) {
+        return UserRole.PROFESSOR;
     }
 
-    if (email.endsWith('@student.yourdomain.com') || email.endsWith('.edu')) {
-        return UserRole.STUDENT;
-    }
-
-    // Check for specific admin emails
-    const adminEmails = [
-        'admin@example.com',
-        'versora@profgini-platform.com'
-        // Add your admin emails here
-    ];
-
-    if (adminEmails.includes(email.toLowerCase())) {
-        return UserRole.ADMIN;
-    }
-
-    // Default role for professors/instructors
-    return UserRole.PROFESSOR;
+    return UserRole.STUDENT;
 }
 
 export async function getAllUsers() {

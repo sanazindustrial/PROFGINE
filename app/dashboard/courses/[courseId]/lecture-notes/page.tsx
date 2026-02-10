@@ -27,10 +27,10 @@ export default async function LectureNotesPage({
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 animate-in fade-in-50 duration-500">
+        <div className="container mx-auto px-4 py-8 duration-500 animate-in fade-in-50">
             <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                <div className="mb-2 flex items-center gap-3">
+                    <h1 className="bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-3xl font-bold text-transparent">
                         Lecture Notes Studio
                     </h1>
                     <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
@@ -41,7 +41,7 @@ export default async function LectureNotesPage({
             </div>
 
             <div className="space-y-6">
-                <div className="flex items-center gap-2 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/20 px-4 py-3 text-sm text-orange-900 dark:text-orange-100">
+                <div className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900 dark:border-orange-900 dark:bg-orange-950/20 dark:text-orange-100">
                     <FileText className="size-4" />
                     Create lecture notes for each section (1-52). Select the section number and generate structured notes.
                 </div>

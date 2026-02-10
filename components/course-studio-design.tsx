@@ -193,7 +193,7 @@ export function CourseStudioDesign({
                     </div>
 
                     {/* Settings Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="space-y-2">
                             <Label htmlFor="slides">Target Slides</Label>
                             <Input
@@ -237,21 +237,21 @@ export function CourseStudioDesign({
                     <div className="space-y-3">
                         <Label>Interactive Elements</Label>
                         <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex cursor-pointer items-center gap-2">
                                 <input
                                     type="checkbox"
                                     checked={includeQuizzes}
                                     onChange={(e) => setIncludeQuizzes(e.target.checked)}
-                                    className="w-4 h-4"
+                                    className="size-4"
                                 />
                                 <span className="text-sm">Include Quiz Questions</span>
                             </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
+                            <label className="flex cursor-pointer items-center gap-2">
                                 <input
                                     type="checkbox"
                                     checked={includeDiscussions}
                                     onChange={(e) => setIncludeDiscussions(e.target.checked)}
-                                    className="w-4 h-4"
+                                    className="size-4"
                                 />
                                 <span className="text-sm">Include Discussion Prompts</span>
                             </label>
@@ -261,15 +261,15 @@ export function CourseStudioDesign({
                     {/* File Upload Section */}
                     <div className="space-y-4">
                         <Label>Upload Course Materials</Label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                            <p className="text-sm text-gray-800 mb-2 font-semibold">
+                        <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center transition-colors hover:border-purple-400">
+                            <Upload className="mx-auto mb-3 size-12 text-gray-400" />
+                            <p className="mb-2 text-sm font-semibold text-gray-800">
                                 Upload lecture notes, readings, and outlines
                             </p>
-                            <p className="text-xs text-gray-700 mb-1">
+                            <p className="mb-1 text-xs text-gray-700">
                                 Supported: PDF, DOCX, TXT, Markdown | Max 10MB per file
                             </p>
-                            <p className="text-xs text-gray-600 mb-3">
+                            <p className="mb-3 text-xs text-gray-600">
                                 Google Docs: export as PDF or DOCX before upload
                             </p>
                             <Input
@@ -280,19 +280,19 @@ export function CourseStudioDesign({
                                     const files = Array.from(e.target.files || [])
                                     setUploadedFiles(prev => [...prev, ...files])
                                 }}
-                                className="max-w-xs mx-auto"
+                                className="mx-auto max-w-xs"
                             />
                         </div>
 
                         {uploadedFiles.length > 0 && (
                             <div className="space-y-2">
                                 <Label className="text-sm text-gray-600">Uploaded Files ({uploadedFiles.length})</Label>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                <div className="max-h-32 space-y-1 overflow-y-auto">
                                     {uploadedFiles.map((file, index) => (
-                                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
+                                        <div key={index} className="flex items-center justify-between rounded bg-gray-50 p-2 text-sm">
                                             <div className="flex items-center gap-2">
-                                                <FileText className="h-4 w-4 text-gray-500" />
-                                                <span className="truncate max-w-xs">{file.name}</span>
+                                                <FileText className="size-4 text-gray-500" />
+                                                <span className="max-w-xs truncate">{file.name}</span>
                                                 <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)}KB)</span>
                                             </div>
                                             <Button
@@ -311,26 +311,26 @@ export function CourseStudioDesign({
 
                     {/* Error Message */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+                        <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-800">
                             {error}
                         </div>
                     )}
 
                     {/* Result */}
                     {result && (
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 p-5 rounded-lg space-y-3 shadow-md animate-in fade-in-50 duration-500">
-                            <div className="flex items-center gap-2 text-green-800 font-semibold text-lg">
-                                <CheckCircle2 className="h-6 w-6 text-green-600" />
+                        <div className="space-y-3 rounded-lg border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5 shadow-md duration-500 animate-in fade-in-50">
+                            <div className="flex items-center gap-2 text-lg font-semibold text-green-800">
+                                <CheckCircle2 className="size-6 text-green-600" />
                                 Presentation Generated Successfully!
                             </div>
-                            <div className="text-sm text-green-700 space-y-1">
+                            <div className="space-y-1 text-sm text-green-700">
                                 <p>✓ <strong>{result.slideCount} slides</strong> created</p>
                                 <p>✓ Lecture notes included for each slide</p>
                                 <p>✓ Based on your uploaded materials</p>
                                 <p>✓ Ready for download in multiple formats</p>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-green-600 font-medium animate-pulse">
-                                <Loader2 className="h-4 w-4 animate-spin" />
+                            <div className="flex animate-pulse items-center gap-2 text-sm font-medium text-green-600">
+                                <Loader2 className="size-4 animate-spin" />
                                 Redirecting to results page...
                             </div>
                         </div>
@@ -345,23 +345,23 @@ export function CourseStudioDesign({
                     >
                         {isUploading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 size-4 animate-spin" />
                                 Uploading Files ({uploadedFiles.length})...
                             </>
                         ) : isGenerating ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <Loader2 className="mr-2 size-4 animate-spin" />
                                 Generating Presentation...
                             </>
                         ) : (
                             <>
-                                <Monitor className="mr-2 h-4 w-4" />
+                                <Monitor className="mr-2 size-4" />
                                 Generate PowerPoint Presentation
                             </>
                         )}
                     </Button>
 
-                    <p className="text-xs text-gray-600 text-center">
+                    <p className="text-center text-xs text-gray-600">
                         Generation typically takes 1-3 minutes depending on content complexity
                     </p>
                 </CardContent>

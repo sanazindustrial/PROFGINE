@@ -17,7 +17,7 @@ export async function GET() {
             step2: "Find OAuth client: " + (clientId ? clientId.substring(0, 20) + "..." : "NOT_SET"),
             step3: "Add redirect URI exactly: " + `${nextAuthUrl || 'http://localhost:3000'}/api/auth/callback/google`,
             step4: "Ensure OAuth consent screen is configured for external users",
-            step5: "Add test user: sanazindustrial@gmail.com if in testing mode"
+            step5: "Add your test user email if the app is in testing mode"
         }
     })
 }

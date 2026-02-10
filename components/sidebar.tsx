@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +15,9 @@ import {
     Star,
     ArrowRight,
     User,
-    Monitor
+    Monitor,
+    CreditCard,
+    Key
 } from "lucide-react"
 
 interface SidebarItem {
@@ -27,7 +30,7 @@ interface SidebarItem {
 const navigationItems: SidebarItem[] = [
     {
         title: "Profile",
-        href: "/profile",
+        href: "/dashboard/profile",
         icon: User,
         description: "Your account settings"
     },
@@ -72,6 +75,33 @@ const navigationItems: SidebarItem[] = [
         href: "/grade",
         icon: GraduationCap,
         description: "Smart grading and feedback"
+    },
+    {
+        title: "AI Settings",
+        href: "/dashboard/settings/ai",
+        icon: Key,
+        description: "Configure your own AI API keys"
+    }
+]
+
+const ownerItems: SidebarItem[] = [
+    {
+        title: "Owner User Management",
+        href: "/user-management",
+        icon: Users,
+        description: "Manage all platform users"
+    },
+    {
+        title: "Owner Subscriptions",
+        href: "/subscription-management",
+        icon: CreditCard,
+        description: "Plans, billing, and payments"
+    },
+    {
+        title: "Owner Billing",
+        href: "/dashboard/billing",
+        icon: CreditCard,
+        description: "Payments and invoices"
     }
 ]
 
@@ -81,6 +111,8 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
     const pathname = usePathname()
+    const { data: session } = useSession()
+    const isOwner = !!(session?.user as any)?.isOwner
 
     return (
         <div className={cn("w-full pb-12", className)}>
@@ -111,6 +143,35 @@ export function Sidebar({ className }: SidebarProps) {
                         })}
                     </div>
                 </div>
+
+                {isOwner && (
+                    <div className="px-2">
+                        <h2 className="mb-4 px-4 text-lg font-semibold tracking-tight">
+                            Owner Console
+                        </h2>
+                        <div className="space-y-2">
+                            {ownerItems.map((item) => {
+                                const Icon = item.icon
+                                return (
+                                    <Button
+                                        key={item.href}
+                                        variant={pathname === item.href ? "secondary" : "ghost"}
+                                        className={cn(
+                                            "w-full justify-start",
+                                            pathname === item.href && "bg-secondary"
+                                        )}
+                                        asChild
+                                    >
+                                        <Link href={item.href}>
+                                            <Icon className="mr-2 size-4" />
+                                            {item.title}
+                                        </Link>
+                                    </Button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Quick Stats Card */}
                 <div className="px-2">

@@ -83,11 +83,6 @@ export default function DocsPage() {
             description: "Course CRUD operations"
         },
         {
-            endpoint: "/api/auth/dev-login",
-            method: "POST",
-            description: "Development authentication"
-        },
-        {
             endpoint: "/api/chat",
             method: "POST",
             description: "AI chat and response generation"

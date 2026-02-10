@@ -15,6 +15,22 @@ export async function GET(request: NextRequest) {
             })
         }
 
+        // Force profile completion when name/image missing
+        if (!session.user?.name || !session.user?.image) {
+            return NextResponse.json({
+                authenticated: true,
+                user: {
+                    email: session.user?.email,
+                    name: session.user?.name,
+                    role: session.user?.role,
+                    subscriptionType: session.user?.subscriptionType,
+                    trialExpiresAt: session.user?.trialExpiresAt
+                },
+                redirectUrl: '/dashboard/profile',
+                timestamp: new Date().toISOString()
+            })
+        }
+
         // Determine where user should be redirected based on their role/subscription
         let redirectUrl = '/trial-dashboard' // default
 

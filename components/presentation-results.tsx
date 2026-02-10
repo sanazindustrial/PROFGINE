@@ -102,12 +102,12 @@ export function PresentationResults({ presentation, course }: PresentationResult
                 <div>
                     <Link href={`/dashboard/courses/${course.id}/studio`}>
                         <Button variant="ghost" size="sm">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            <ArrowLeft className="mr-2 size-4" />
                             Back to Studio
                         </Button>
                     </Link>
-                    <h1 className="text-3xl font-bold mt-2">{presentation.title}</h1>
-                    <p className="text-gray-600 mt-1">
+                    <h1 className="mt-2 text-3xl font-bold">{presentation.title}</h1>
+                    <p className="mt-1 text-gray-600">
                         Course: {course.title} {course.code ? `(${course.code})` : ""}
                     </p>
                 </div>
@@ -119,8 +119,8 @@ export function PresentationResults({ presentation, course }: PresentationResult
             {/* Success Alert */}
             {presentation.status === "COMPLETED" && (
                 <Alert className="border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 shadow-sm">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <AlertDescription className="text-green-900 font-medium">
+                    <CheckCircle2 className="size-5 text-green-600" />
+                    <AlertDescription className="font-medium text-green-900">
                         Your presentation has been generated successfully. Download it below or create a new one.
                     </AlertDescription>
                 </Alert>
@@ -129,8 +129,8 @@ export function PresentationResults({ presentation, course }: PresentationResult
             {/* Processing Alert */}
             {presentation.status === "PROCESSING" && (
                 <Alert className="border-yellow-300 bg-gradient-to-r from-yellow-50 to-amber-50 shadow-sm">
-                    <Clock className="h-5 w-5 text-yellow-600 animate-spin" />
-                    <AlertDescription className="text-yellow-900 font-medium">
+                    <Clock className="size-5 animate-spin text-yellow-600" />
+                    <AlertDescription className="font-medium text-yellow-900">
                         Your presentation is being generated. This usually takes 2-3 minutes. Refresh the page to check status.
                     </AlertDescription>
                 </Alert>
@@ -151,15 +151,15 @@ export function PresentationResults({ presentation, course }: PresentationResult
                 </Alert>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Main Content */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6 lg:col-span-2">
                     {/* Lecture Notes */}
                     {presentation.slides && presentation.slides.length > 0 && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <FileText className="h-5 w-5" />
+                                    <FileText className="size-5" />
                                     Lecture Notes (Speaker Notes)
                                 </CardTitle>
                                 <CardDescription>
@@ -187,7 +187,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Monitor className="h-5 w-5" />
+                                <Monitor className="size-5" />
                                 Presentation Details
                             </CardTitle>
                         </CardHeader>
@@ -212,8 +212,8 @@ export function PresentationResults({ presentation, course }: PresentationResult
                             </div>
 
                             {presentation.description && (
-                                <div className="pt-4 border-t">
-                                    <p className="text-sm font-medium text-gray-500 mb-2">Description</p>
+                                <div className="border-t pt-4">
+                                    <p className="mb-2 text-sm font-medium text-gray-500">Description</p>
                                     <p className="text-gray-700">{presentation.description}</p>
                                 </div>
                             )}
@@ -224,7 +224,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Download className="h-5 w-5" />
+                                <Download className="size-5" />
                                 Download Presentation
                             </CardTitle>
                             <CardDescription>
@@ -234,8 +234,8 @@ export function PresentationResults({ presentation, course }: PresentationResult
                         <CardContent className="space-y-4">
                             {/* Primary Download Options */}
                             <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Primary Formats</p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <p className="mb-2 text-sm font-medium text-gray-700">Primary Formats</p>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                     {presentation.fileUrl && (
                                         <Button
                                             size="lg"
@@ -243,7 +243,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                             onClick={() => handleDownload("pptx")}
                                             disabled={isDownloading}
                                         >
-                                            <Monitor className="mr-2 h-4 w-4" />
+                                            <Monitor className="mr-2 size-4" />
                                             PowerPoint (Windows)
                                         </Button>
                                     )}
@@ -256,7 +256,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                             onClick={() => handleDownload("pdf")}
                                             disabled={isDownloading}
                                         >
-                                            <FileText className="mr-2 h-4 w-4" />
+                                            <FileText className="mr-2 size-4" />
                                             PDF
                                         </Button>
                                     )}
@@ -265,7 +265,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
 
                             {/* Additional Format Options */}
                             <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">Additional Formats</p>
+                                <p className="mb-2 text-sm font-medium text-gray-700">Additional Formats</p>
                                 <div className="grid grid-cols-1 gap-2">
                                     {presentation.fileUrl && (
                                         <>
@@ -275,7 +275,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                                 onClick={() => handleDownload("keynote")}
                                                 disabled={isDownloading}
                                             >
-                                                <Apple className="mr-2 h-4 w-4" />
+                                                <Apple className="mr-2 size-4" />
                                                 Keynote (Mac)
                                             </Button>
                                             <Button
@@ -284,17 +284,17 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                                 onClick={() => handleDownload("google-slides")}
                                                 disabled={isDownloading}
                                             >
-                                                <FileDown className="mr-2 h-4 w-4" />
+                                                <FileDown className="mr-2 size-4" />
                                                 Google Slides (Upload to Drive)
                                             </Button>
                                         </>
                                     )}
                                     <Button variant="outline" className="w-full justify-start" disabled>
-                                        <FileText className="mr-2 h-4 w-4" />
+                                        <FileText className="mr-2 size-4" />
                                         Word (.docx) lecture notes (coming soon)
                                     </Button>
                                     <Button variant="outline" className="w-full justify-start" disabled>
-                                        <FileText className="mr-2 h-4 w-4" />
+                                        <FileText className="mr-2 size-4" />
                                         Google Docs lecture notes (coming soon)
                                     </Button>
                                 </div>
@@ -302,10 +302,10 @@ export function PresentationResults({ presentation, course }: PresentationResult
 
                             {presentation.previewUrl && (
                                 <>
-                                    <div className="pt-2 border-t">
+                                    <div className="border-t pt-2">
                                         <Button size="lg" variant="secondary" className="w-full" asChild>
                                             <a href={presentation.previewUrl} target="_blank" rel="noopener noreferrer">
-                                                <Eye className="mr-2 h-4 w-4" />
+                                                <Eye className="mr-2 size-4" />
                                                 Preview Online
                                             </a>
                                         </Button>
@@ -313,9 +313,9 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                 </>
                             )}
 
-                            <div className="pt-3 border-t flex gap-2">
+                            <div className="flex gap-2 border-t pt-3">
                                 <Button variant="outline" size="sm" className="flex-1">
-                                    <Share2 className="mr-2 h-4 w-4" />
+                                    <Share2 className="mr-2 size-4" />
                                     Share
                                 </Button>
                                 <Button
@@ -325,13 +325,13 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                     onClick={handleDelete}
                                     disabled={isDeleting}
                                 >
-                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <Trash2 className="mr-2 size-4" />
                                     {isDeleting ? "Deleting..." : "Delete"}
                                 </Button>
                             </div>
 
                             {/* Format Info */}
-                            <div className="pt-2 border-t">
+                            <div className="border-t pt-2">
                                 <p className="text-xs text-gray-600">
                                     <strong>Lecture notes:</strong> Included in slide speaker notes (PPTX, PDF)<br />
                                     <strong>Windows:</strong> Use PowerPoint (Windows) format<br />
@@ -344,15 +344,15 @@ export function PresentationResults({ presentation, course }: PresentationResult
                             {presentation.previewUrl && (
                                 <Button size="lg" variant="secondary" className="w-full" asChild>
                                     <a href={presentation.previewUrl} target="_blank" rel="noopener noreferrer">
-                                        <Eye className="mr-2 h-4 w-4" />
+                                        <Eye className="mr-2 size-4" />
                                         Preview Online
                                     </a>
                                 </Button>
                             )}
 
-                            <div className="pt-3 border-t flex gap-2">
+                            <div className="flex gap-2 border-t pt-3">
                                 <Button variant="outline" size="sm" className="flex-1">
-                                    <Share2 className="mr-2 h-4 w-4" />
+                                    <Share2 className="mr-2 size-4" />
                                     Share
                                 </Button>
                                 <Button
@@ -362,7 +362,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                     onClick={handleDelete}
                                     disabled={isDeleting}
                                 >
-                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <Trash2 className="mr-2 size-4" />
                                     {isDeleting ? "Deleting..." : "Delete"}
                                 </Button>
                             </div>
@@ -407,19 +407,19 @@ export function PresentationResults({ presentation, course }: PresentationResult
                         <CardContent className="space-y-2">
                             <Button variant="outline" className="w-full justify-start" asChild>
                                 <Link href={`/dashboard/courses/${course.id}/studio`}>
-                                    <Monitor className="mr-2 h-4 w-4" />
+                                    <Monitor className="mr-2 size-4" />
                                     Create Another
                                 </Link>
                             </Button>
                             <Button variant="outline" className="w-full justify-start" asChild>
                                 <Link href={`/dashboard/courses/${course.id}`}>
-                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    <ArrowLeft className="mr-2 size-4" />
                                     Back to Course
                                 </Link>
                             </Button>
                             <Button variant="outline" className="w-full justify-start" asChild>
                                 <Link href={`/dashboard/courses/${course.id}/build-sections`}>
-                                    <FileUp className="mr-2 h-4 w-4" />
+                                    <FileUp className="mr-2 size-4" />
                                     Upload to Course
                                 </Link>
                             </Button>
@@ -427,11 +427,11 @@ export function PresentationResults({ presentation, course }: PresentationResult
                     </Card>
 
                     {/* Tips */}
-                    <Card className="bg-blue-50 border-blue-200">
+                    <Card className="border-blue-200 bg-blue-50">
                         <CardHeader>
                             <CardTitle className="text-base text-blue-900">Tips</CardTitle>
                         </CardHeader>
-                        <CardContent className="text-sm text-blue-800 space-y-2">
+                        <CardContent className="space-y-2 text-sm text-blue-800">
                             <p>• Review and customize slides before class</p>
                             <p>• Add personal examples and stories</p>
                             <p>• Test animations and transitions</p>
@@ -440,11 +440,11 @@ export function PresentationResults({ presentation, course }: PresentationResult
                     </Card>
 
                     {/* Next Steps */}
-                    <Card className="bg-green-50 border-green-200">
+                    <Card className="border-green-200 bg-green-50">
                         <CardHeader>
                             <CardTitle className="text-base text-green-900">Next Steps</CardTitle>
                         </CardHeader>
-                        <CardContent className="text-sm text-green-800 space-y-2">
+                        <CardContent className="space-y-2 text-sm text-green-800">
                             <p>• Add presentation to course sections</p>
                             <p>• Create assignments based on content</p>
                             <p>• Generate discussion questions</p>

@@ -14,6 +14,7 @@ model User {
   email                 String                @unique
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
+  sessionVersion        Int                   @default(0)
   role                  UserRole              @default(STUDENT)
   isOwner               Boolean               @default(false)
   emailVerified         DateTime?
@@ -45,6 +46,35 @@ model User {
   userSubscription      UserSubscription?
   userUsage             UserUsageCounter?
   presentations         Presentation[]        @relation("UserPresentations")
+  aiSettings            UserAISettings?
+}
+
+// User's custom AI provider settings (Bring Your Own Key - BYOK)
+model UserAISettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  // Preferred provider selection
+  preferredProvider     String?  @default("platform") // "platform", "openai", "anthropic", etc.
+  usePlatformFallback   Boolean  @default(true)
+  // Encrypted API keys for each provider
+  openaiApiKey          String?  // Encrypted
+  anthropicApiKey       String?  // Encrypted
+  geminiApiKey          String?  // Encrypted
+  groqApiKey            String?  // Encrypted
+  perplexityApiKey      String?  // Encrypted
+  cohereApiKey          String?  // Encrypted
+  huggingfaceApiKey     String?  // Encrypted
+  // Provider preferences
+  openaiModel           String?  @default("gpt-4o-mini")
+  anthropicModel        String?  @default("claude-3-haiku-20240307")
+  // Settings
+  isEnabled             Boolean  @default(false) // Whether to use custom keys
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_ai_settings")
 }
 
 model Course {
@@ -65,6 +95,7 @@ model Course {
   enrollments   Enrollment[]
   modules       Module[]
   presentations Presentation[]
+  designMetadata CourseDesignMetadata?
 }
 
 model Enrollment {
@@ -494,6 +525,443 @@ model AdminConfig {
   createdBy   String?
 
   @@map("admin_configs")
+}
+
+// =============================================================================
+// COURSE DESIGN STUDIO - Full Governance Model
+// =============================================================================
+
+// Phase 0.5: Course Details & Bulk Course Information
+model CourseDesignMetadata {
+  id                   String               @id @default(cuid())
+  courseId             String               @unique
+  // Core Course Information
+  creditHours          Int?                 @default(3)
+  contactHours         Int?                 @default(3)
+  academicLevel        AcademicLevel        @default(UNDERGRADUATE)
+  termLength           Int                  @default(16) // weeks
+  deliveryMode         DeliveryMode         @default(ONLINE)
+  prerequisites        String?              // JSON array of prerequisite course codes
+  programAlignment     String?              // Program/degree this course belongs to
+  // Instructional Parameters
+  learningModel        LearningModel        @default(LECTURE)
+  assessmentWeighting  String?              // JSON: {exam: 40, assignments: 30, participation: 30}
+  participationRules   String?
+  weeklyWorkloadHours  Int?                 @default(9)
+  // Governance & Standards
+  formattingStandard   FormattingStandard   @default(APA)
+  accessibilityRequired Boolean             @default(true)
+  aiUsagePolicy        AIUsagePolicy        @default(PERMITTED_WITH_DISCLOSURE)
+  accreditationBody    String?
+  // Versioning
+  versionId            String               @default(cuid())
+  isLocked             Boolean              @default(false)
+  lockedAt             DateTime?
+  lockedBy             String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  course               Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  evidenceItems        EvidenceKitItem[]
+  courseObjectives     CourseObjective[]
+  courseSections       CourseDesignSection[]
+  readyChecks          ReadyCheckResult[]
+  auditLogs            CourseAuditLog[]
+  syllabusVersions     SyllabusVersion[]
+  
+  @@map("course_design_metadata")
+}
+
+// Phase 1: Evidence Kit - Material Ingestion & Storage
+model EvidenceKitItem {
+  id                   String               @id @default(cuid())
+  courseDesignId       String
+  // File Information
+  title                String
+  fileName             String
+  fileType             EvidenceFileType
+  fileUrl              String
+  fileSize             Int?
+  mimeType             String?
+  // Content Analysis (AI-generated)
+  extractedText        String?              // OCR/parsed text
+  contentSummary       String?              // AI summary
+  topicsIdentified     String?              // JSON array of topics
+  conceptsMapping      String?              // JSON mapping of concepts
+  citationsFound       String?              // JSON array of citations
+  pageCount            Int?
+  chapterMapping       String?              // JSON: {chapter: pages}
+  // Source Indexing
+  sourceType           EvidenceSourceType   @default(TEXTBOOK)
+  isbn                 String?              // For textbooks
+  doi                  String?              // For articles
+  externalUrl          String?              // For web content
+  // Governance
+  uploadedBy           String
+  isProcessed          Boolean              @default(false)
+  processingStatus     ProcessingStatus     @default(PENDING)
+  processingError      String?
+  semanticChunks       String?              // JSON array of semantic chunks with embeddings
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  courseDesign         CourseDesignMetadata @relation(fields: [courseDesignId], references: [id], onDelete: Cascade)
+  sectionContents      SectionContent[]
+  citationLinks        CitationLink[]
+  
+  @@index([courseDesignId, fileType])
+  @@map("evidence_kit_items")
+}
+
+// Citation tracking for governance
+model CitationLink {
+  id                   String             @id @default(cuid())
+  evidenceItemId       String
+  targetType           String             // objective, section, lecture_note, etc.
+  targetId             String
+  pageReference        String?            // e.g., "pp. 45-52"
+  formattedCitation    String             // APA/MLA formatted
+  inTextCitation       String             // (Author, Year, p. X)
+  createdAt            DateTime           @default(now())
+  
+  evidenceItem         EvidenceKitItem    @relation(fields: [evidenceItemId], references: [id], onDelete: Cascade)
+  
+  @@index([targetType, targetId])
+  @@map("citation_links")
+}
+
+// Phase 3: Course Objectives with Bloom's Taxonomy
+model CourseObjective {
+  id                   String               @id @default(cuid())
+  courseDesignId       String
+  objectiveNumber      String               // e.g., "1.1", "2.3"
+  description          String
+  bloomsLevel          BloomsLevel          @default(UNDERSTAND)
+  assessmentMethod     String?              // How this will be assessed
+  alignedModules       String?              // JSON array of module IDs
+  sourceEvidence       String?              // Evidence Kit item IDs
+  isAIGenerated        Boolean              @default(false)
+  isApproved           Boolean              @default(false)
+  approvedBy           String?
+  approvedAt           DateTime?
+  orderIndex           Int                  @default(0)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  courseDesign         CourseDesignMetadata @relation(fields: [courseDesignId], references: [id], onDelete: Cascade)
+  
+  @@map("course_objectives")
+}
+
+// Phase 4 & 5: Course Structure - Drag & Drop Sections
+model CourseDesignSection {
+  id                   String               @id @default(cuid())
+  courseDesignId       String
+  parentSectionId      String?              // For nested modules
+  title                String
+  description          String?
+  sectionType          DesignSectionType    @default(MODULE)
+  weekNumber           Int?
+  orderIndex           Int                  @default(0)
+  isPublished          Boolean              @default(false)
+  durationMinutes      Int?                 // Estimated time
+  learningOutcomes     String?              // JSON array linked to objectives
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  courseDesign         CourseDesignMetadata @relation(fields: [courseDesignId], references: [id], onDelete: Cascade)
+  parentSection        CourseDesignSection? @relation("ChildSections", fields: [parentSectionId], references: [id])
+  childSections        CourseDesignSection[] @relation("ChildSections")
+  contents             SectionContent[]
+  
+  @@index([courseDesignId, orderIndex])
+  @@map("course_design_sections")
+}
+
+// Content within sections (files + AI content)
+model SectionContent {
+  id                   String               @id @default(cuid())
+  sectionId            String
+  evidenceItemId       String?              // Link to Evidence Kit
+  contentType          SectionContentType
+  title                String
+  description          String?
+  content              String?              // Rich text/HTML content
+  aiGeneratedContent   String?              // AI lecture notes, etc.
+  isAIGenerated        Boolean              @default(false)
+  orderIndex           Int                  @default(0)
+  isRequired           Boolean              @default(true)
+  dueDate              DateTime?
+  points               Int?
+  // Governance
+  citationRequired     Boolean              @default(false)
+  aiDisclosureAdded    Boolean              @default(false)
+  wcagCompliant        Boolean?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  section              CourseDesignSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  evidenceItem         EvidenceKitItem?     @relation(fields: [evidenceItemId], references: [id])
+  rubric               AssessmentRubric?
+  
+  @@map("section_contents")
+}
+
+// Phase 6: Assessment Rubrics
+model AssessmentRubric {
+  id                   String               @id @default(cuid())
+  sectionContentId     String               @unique
+  title                String
+  description          String?
+  totalPoints          Int                  @default(100)
+  criteria             String               // JSON array of criteria with levels
+  isAIGenerated        Boolean              @default(false)
+  alignedObjectives    String?              // Objective IDs
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  sectionContent       SectionContent       @relation(fields: [sectionContentId], references: [id], onDelete: Cascade)
+  
+  @@map("assessment_rubrics")
+}
+
+// Phase 7: Syllabus Versioning
+model SyllabusVersion {
+  id                   String               @id @default(cuid())
+  courseDesignId       String
+  version              Int                  @default(1)
+  status               SyllabusStatus       @default(DRAFT)
+  content              String               // Full syllabus HTML/Markdown
+  pdfUrl               String?
+  wordUrl              String?
+  // Compilation Sources
+  compiledFrom         String?              // JSON: sections, objectives, policies
+  // Governance
+  academicPolicies     String?              // JSON academic integrity, etc.
+  aiDisclosure         String?              // AI usage policy text
+  accessibilityStatement String?
+  // Approval
+  isApproved           Boolean              @default(false)
+  approvedBy           String?
+  approvedAt           DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  courseDesign         CourseDesignMetadata @relation(fields: [courseDesignId], references: [id], onDelete: Cascade)
+  
+  @@unique([courseDesignId, version])
+  @@map("syllabus_versions")
+}
+
+// Phase 8: Ready-Check Validation
+model ReadyCheckResult {
+  id                   String               @id @default(cuid())
+  courseDesignId       String
+  checkType            ReadyCheckType
+  status               ReadyCheckStatus     @default(PENDING)
+  score                Float?               // 0-100
+  issues               String?              // JSON array of issues
+  suggestions          String?              // JSON array of suggestions
+  details              String?              // Detailed report
+  createdAt            DateTime             @default(now())
+  
+  courseDesign         CourseDesignMetadata @relation(fields: [courseDesignId], references: [id], onDelete: Cascade)
+  
+  @@index([courseDesignId, checkType])
+  @@map("ready_check_results")
+}
+
+// Audit Log for all AI and user actions
+model CourseAuditLog {
+  id                   String               @id @default(cuid())
+  courseDesignId       String
+  userId               String
+  action               AuditAction
+  targetType           String               // objective, section, syllabus, etc.
+  targetId             String?
+  previousValue        String?              // JSON before
+  newValue             String?              // JSON after
+  aiProvider           String?              // Which AI provider was used
+  aiPrompt             String?              // Governed prompt (sanitized)
+  createdAt            DateTime             @default(now())
+  
+  courseDesign         CourseDesignMetadata @relation(fields: [courseDesignId], references: [id], onDelete: Cascade)
+  
+  @@index([courseDesignId, action])
+  @@index([userId, createdAt])
+  @@map("course_audit_logs")
+}
+
+// Ask Professor GENIE Conversations
+model GenieConversation {
+  id                   String               @id @default(cuid())
+  courseId             String
+  userId               String
+  context              String?              // JSON: current phase, section, etc.
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  
+  messages             GenieMessage[]
+  
+  @@index([courseId, userId])
+  @@map("genie_conversations")
+}
+
+model GenieMessage {
+  id                   String               @id @default(cuid())
+  conversationId       String
+  role                 String               // user, assistant
+  content              String
+  context              String?              // JSON: phase, references
+  createdAt            DateTime             @default(now())
+  
+  conversation         GenieConversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@map("genie_messages")
+}
+
+// =============================================================================
+// ENUMS FOR COURSE DESIGN STUDIO
+// =============================================================================
+
+enum AcademicLevel {
+  UNDERGRADUATE
+  GRADUATE
+  DOCTORAL
+  PROFESSIONAL
+  CERTIFICATE
+}
+
+enum DeliveryMode {
+  ONLINE
+  HYBRID
+  IN_PERSON
+  HYFLEX
+}
+
+enum LearningModel {
+  LECTURE
+  CASE_BASED
+  PROJECT_BASED
+  FLIPPED
+  SEMINAR
+  LAB
+  PRACTICUM
+  MIXED
+}
+
+enum FormattingStandard {
+  APA
+  MLA
+  CHICAGO
+  HARVARD
+  IEEE
+  INSTITUTIONAL
+}
+
+enum AIUsagePolicy {
+  NOT_PERMITTED
+  PERMITTED_WITH_DISCLOSURE
+  PERMITTED_ALL
+  COURSE_SPECIFIC
+}
+
+enum EvidenceFileType {
+  TEXTBOOK
+  ARTICLE
+  LECTURE_SLIDES
+  VIDEO
+  NOTES
+  SYLLABUS
+  RUBRIC
+  EXTERNAL_LINK
+  OTHER
+}
+
+enum EvidenceSourceType {
+  TEXTBOOK
+  JOURNAL_ARTICLE
+  CONFERENCE_PAPER
+  WEB_RESOURCE
+  VIDEO_LECTURE
+  INSTRUCTOR_NOTES
+  INSTITUTIONAL_POLICY
+  OTHER
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum BloomsLevel {
+  REMEMBER
+  UNDERSTAND
+  APPLY
+  ANALYZE
+  EVALUATE
+  CREATE
+}
+
+enum DesignSectionType {
+  MODULE
+  WEEK
+  UNIT
+  CHAPTER
+  LESSON
+  PAGE
+}
+
+enum SectionContentType {
+  LECTURE
+  READING
+  ASSIGNMENT
+  QUIZ
+  DISCUSSION
+  VIDEO
+  EXTERNAL_LINK
+  RESOURCE
+  PROJECT
+}
+
+enum SyllabusStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReadyCheckType {
+  OBJECTIVE_COVERAGE
+  CITATION_COMPLIANCE
+  ACCESSIBILITY_WCAG
+  AI_DISCLOSURE
+  POLICY_COMPLETENESS
+  CONTENT_ALIGNMENT
+  WORKLOAD_BALANCE
+}
+
+enum ReadyCheckStatus {
+  PENDING
+  PASSED
+  FAILED
+  WARNING
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  AI_GENERATE
+  AI_REFINE
+  APPROVE
+  PUBLISH
+  REVERT
+  IMPORT
+  EXPORT
 }
 
 model SystemHealth {

@@ -14,7 +14,7 @@ export function MarketingBanner({ className = "" }: MarketingBannerProps) {
                 <Card className="border-2 border-indigo-200 bg-white/80 p-6 shadow-xl backdrop-blur-sm dark:border-indigo-800 dark:bg-gray-900/80">
                     <div className="flex flex-col items-center justify-center gap-6 md:flex-row">
                         {/* Logo Standard */}
-                        <div className="relative h-20 w-full max-w-md animate-float sm:h-24">
+                        <div className="animate-float relative h-20 w-full max-w-md sm:h-24">
                             <Image
                                 src="/icons/logo-standard.png"
                                 alt="ProfGenie Platform"

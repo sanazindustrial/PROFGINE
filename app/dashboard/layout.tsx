@@ -23,19 +23,20 @@ export default async function DashboardLayout({
                     name: session.user.name,
                     email: session.user.email,
                     image: session.user.image,
-                    role: session.user.role
+                    role: session.user.role,
+                    isOwner: (session.user as any).isOwner
                 }}
             />
 
             {/* Main Content with Sidebar */}
             <div className="flex">
                 {/* Sidebar */}
-                <aside className="hidden lg:block w-64 min-h-[calc(100vh-64px)] border-r bg-white dark:bg-gray-950">
+                <aside className="hidden min-h-[calc(100vh-64px)] w-64 border-r bg-white dark:bg-gray-950 lg:block">
                     <Sidebar />
                 </aside>
 
                 {/* Main Content Area */}
-                <main className="flex-1 min-h-[calc(100vh-64px)]">
+                <main className="min-h-[calc(100vh-64px)] flex-1">
                     {children}
                 </main>
             </div>

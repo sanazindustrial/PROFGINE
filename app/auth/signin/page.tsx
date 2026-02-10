@@ -5,17 +5,22 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
+import { Input } from "@/components/ui/input"
 
 export default function SignIn() {
     const [providers, setProviders] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [hasGoogleAuth, setHasGoogleAuth] = useState(false)
+    const [hasGuestAuth, setHasGuestAuth] = useState(false)
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
 
     useEffect(() => {
         const loadProviders = async () => {
             const res = await getProviders()
             setProviders(res)
             setHasGoogleAuth(!!res?.google)
+            setHasGuestAuth(!!res?.guest)
         }
         loadProviders()
     }, [])
@@ -24,12 +29,29 @@ export default function SignIn() {
         setIsLoading(true)
         try {
             await signIn("google", {
-                callbackUrl: "/dashboard",
+                callbackUrl: "/auth/success",
                 redirect: true
             })
         } catch (error) {
             console.error("Sign in error:", error)
             alert("Sign in failed. Please try again or contact an administrator.")
+            setIsLoading(false)
+        }
+    }
+
+    const handlePasswordSignIn = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsLoading(true)
+        try {
+            await signIn("credentials", {
+                email,
+                password,
+                callbackUrl: "/auth/success",
+                redirect: true
+            })
+        } catch (error) {
+            console.error("Sign in error:", error)
+            alert("Sign in failed. Please check your credentials or contact an administrator.")
             setIsLoading(false)
         }
     }
@@ -81,6 +103,24 @@ export default function SignIn() {
                                 </div>
                             )}
 
+                            {hasGuestAuth && (
+                                <Button
+                                    onClick={async () => {
+                                        setIsLoading(true)
+                                        try {
+                                            await signIn("guest", { callbackUrl: "/auth/success" })
+                                        } finally {
+                                            setIsLoading(false)
+                                        }
+                                    }}
+                                    disabled={isLoading}
+                                    variant="outline"
+                                    className="h-12 w-full border-gray-300 hover:bg-gray-50"
+                                >
+                                    Continue as Guest
+                                </Button>
+                            )}
+
                             {providers?.github && (
                                 <Button
                                     onClick={async () => {
@@ -103,6 +143,37 @@ export default function SignIn() {
                             )}
                         </div>
 
+                        {/* Admin/Owner Password Sign In */}
+                        <div className="rounded-md border border-gray-200 bg-white p-4">
+                            <p className="mb-3 text-xs text-gray-600">
+                                Admin/Owner password sign-in (university email required)
+                            </p>
+                            <form onSubmit={handlePasswordSignIn} className="space-y-3">
+                                <Input
+                                    type="email"
+                                    placeholder="admin@university.edu"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                                <Input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                <Button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    variant="outline"
+                                    className="w-full border-gray-300 hover:bg-gray-50"
+                                >
+                                    Sign in with Password
+                                </Button>
+                            </form>
+                        </div>
+
                         {/* Sign Up Link */}
                         <div className="pt-4 text-center text-sm text-gray-600">
                             Don&apos;t have an account?{" "}
@@ -111,14 +182,6 @@ export default function SignIn() {
                             </a>
                         </div>
 
-                        {/* Development Mode Link */}
-                        {process.env.NODE_ENV !== 'production' && (
-                            <div className="pt-2 text-center text-sm">
-                                <a href="/auth/dev-login" className="font-medium text-red-600 hover:text-red-500">
-                                    🛠️ Development Login (Bypass OAuth)
-                                </a>
-                            </div>
-                        )}
                     </CardContent>
                 </Card>
             </div>

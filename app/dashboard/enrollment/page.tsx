@@ -1,9 +1,9 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
-import { prisma } from '@/prisma/client';
+import { prisma } from '@/lib/prisma';
 import { createModuleManager, LMSModule } from '@/lib/module-manager';
-import { UserRole } from '@prisma/client';
+import { SubscriptionType, UserRole } from '@prisma/client';
+import { getBillingContext, ensureUserSubscription } from '@/lib/access/getBillingContext';
+import { requireSession } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,35 +26,34 @@ import { Users, UserPlus, Crown, Lock } from 'lucide-react';
  */
 
 export default async function EnrollmentPage() {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-        redirect('/auth/signin');
-    }
+    const session = await requireSession();
 
     // Get or create user
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
         where: { id: session.user.id }
     });
 
     if (!user) {
-        user = await prisma.user.create({
-            data: {
-                id: session.user.id,
-                name: session.user.name,
-                email: session.user.email!,
-                role: UserRole.PROFESSOR
-            }
-        });
+        redirect('/auth/signin');
     }
 
+    if (user.role !== UserRole.PROFESSOR && user.role !== UserRole.ADMIN) {
+        redirect('/dashboard');
+    }
+
+    await ensureUserSubscription(user.id);
+
     // Check module access
+    const billingContext = await getBillingContext();
+    const subscriptionType: SubscriptionType | null =
+        billingContext.tier === 'FREE_TRIAL' ? null : (billingContext.tier as SubscriptionType);
+
     const moduleManager = createModuleManager({
         userId: user.id,
         role: user.role,
-        subscriptionType: 'PREMIUM', // Simulated
-        subscriptionExpiresAt: null,
-        trialExpiresAt: null
+        subscriptionType,
+        subscriptionExpiresAt: billingContext.currentPeriodEnd,
+        trialExpiresAt: user.trialExpiresAt
     });
 
     const hasAccess = moduleManager.hasModuleAccess(LMSModule.STUDENT_ENROLLMENT);
