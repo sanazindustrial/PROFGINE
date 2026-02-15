@@ -85,6 +85,7 @@ model Course {
   term          String?
   description   String?
   instructorId  String
+  isPublic      Boolean            @default(false)
   durationWeeks Int?               @default(16) // Flexible: 8-16 weeks or more
   startDate     DateTime?
   endDate       DateTime?
