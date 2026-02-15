@@ -104,8 +104,8 @@ async function testForbiddenPatternDetection() {
         userRole: 'PROFESSOR',
         toolInvoked: 'GENIE_ADVISORY',
         courseId: 'test-course',
-        institutionPolicies: [],
         formattingStandard: 'APA',
+        academicLevel: 'UNDERGRADUATE',
         policyPack: {
             aiDisclosureRequired: true,
             integrityStatementRequired: true,
@@ -185,8 +185,14 @@ async function testEscalationPatternDetection() {
         userRole: 'PROFESSOR',
         toolInvoked: 'EXPORT_FORMAT',
         courseId: 'test-course',
-        institutionPolicies: [],
         formattingStandard: 'APA',
+        academicLevel: 'UNDERGRADUATE',
+        policyPack: {
+            aiDisclosureRequired: true,
+            integrityStatementRequired: true,
+            accessibilityRequired: true,
+            institutionalPolicies: [],
+        },
     }
 
     const escalationPrompts = [
@@ -257,8 +263,14 @@ async function testRBACEnforcement() {
         userRole: 'STUDENT',
         toolInvoked: 'GRADING_ASSIST',
         courseId: 'test-course',
-        institutionPolicies: [],
         formattingStandard: 'APA',
+        academicLevel: 'UNDERGRADUATE',
+        policyPack: {
+            aiDisclosureRequired: true,
+            integrityStatementRequired: true,
+            accessibilityRequired: true,
+            institutionalPolicies: [],
+        },
     }
 
     try {
@@ -325,9 +337,9 @@ async function testGovernanceContextCreation() {
 
         logTest(
             'context',
-            'Context includes institutionPolicies array',
-            Array.isArray(context.institutionPolicies),
-            `policies: ${context.institutionPolicies?.length || 0}`
+            'Context includes policyPack institutional policies',
+            Array.isArray(context.policyPack?.institutionalPolicies),
+            `policies: ${context.policyPack?.institutionalPolicies?.length || 0}`
         )
 
     } catch (error) {
@@ -349,9 +361,23 @@ async function testPromptGovernanceFlow() {
         userRole: 'PROFESSOR',
         toolInvoked: 'GENERATE_OBJECTIVES',
         courseId: 'course-456',
-        courseTitle: 'Introduction to AI',
-        institutionPolicies: ['Use APA formatting', 'Include AI disclosure'],
         formattingStandard: 'APA',
+        academicLevel: 'GRADUATE',
+        policyPack: {
+            aiDisclosureRequired: true,
+            integrityStatementRequired: true,
+            accessibilityRequired: true,
+            institutionalPolicies: ['Use APA formatting', 'Include AI disclosure'],
+        },
+        courseMetadata: {
+            title: 'Introduction to AI',
+            code: 'AI-101',
+            creditHours: 3,
+            termLength: 16,
+            deliveryMode: 'ONLINE',
+            learningModel: 'LECTURE',
+            aiUsagePolicy: 'PERMITTED_WITH_DISCLOSURE',
+        },
     }
 
     try {
@@ -435,8 +461,14 @@ async function testAuthorityLevels() {
         userRole: 'PROFESSOR',
         toolInvoked: 'GENIE_ADVISORY',
         courseId: 'test-course',
-        institutionPolicies: [],
         formattingStandard: 'APA',
+        academicLevel: 'UNDERGRADUATE',
+        policyPack: {
+            aiDisclosureRequired: true,
+            integrityStatementRequired: true,
+            accessibilityRequired: true,
+            institutionalPolicies: [],
+        },
     }
 
     const result = await promptGovernance.governPrompt(
