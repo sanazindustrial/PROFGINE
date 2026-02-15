@@ -47,6 +47,7 @@ model User {
   userUsage             UserUsageCounter?
   presentations         Presentation[]        @relation("UserPresentations")
   aiSettings            UserAISettings?
+  notifications         Notification[]
 }
 
 // User's custom AI provider settings (Bring Your Own Key - BYOK)
@@ -96,6 +97,7 @@ model Course {
   modules       Module[]
   presentations Presentation[]
   designMetadata CourseDesignMetadata?
+  notifications  Notification[]
 }
 
 model Enrollment {
@@ -118,10 +120,32 @@ model Module {
   orderIndex  Int             @default(0) // For custom ordering
   content     String? // Rich text content
   isPublished Boolean         @default(false)
+  dueDate     DateTime?       // Module completion deadline
+  startDate   DateTime?       // Module start date
+  objectives  String?         // JSON array of learning objectives for this module
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   course      Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
   contents    ModuleContent[] // Files, assignments, links, pages
+  sections    ModuleSection[] // Sub-sections within module
+}
+
+// Module Sections - Sub-divisions within a module
+model ModuleSection {
+  id          String    @id @default(cuid())
+  moduleId    String
+  title       String
+  description String?
+  content     String?   // Rich text content
+  orderIndex  Int       @default(0)
+  dueDate     DateTime?
+  isPublished Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  module      Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId, orderIndex])
+  @@map("module_sections")
 }
 
 model Presentation {
@@ -198,19 +222,26 @@ model ModuleContent {
 }
 
 model Assignment {
-  id             String          @id @default(cuid())
-  courseId       String
-  lmsId          String?
-  title          String
-  type           AssignmentType  @default(OTHER)
-  instructions   String?
-  points         Int             @default(100)
-  dueAt          DateTime?
-  createdAt      DateTime        @default(now())
-  course         Course          @relation(fields: [courseId], references: [id])
-  rubric         Rubric?
-  submissions    Submission[]
-  moduleContents ModuleContent[] // Reverse relation
+  id                    String          @id @default(cuid())
+  courseId              String
+  lmsId                 String?
+  title                 String
+  type                  AssignmentType  @default(OTHER)
+  instructions          String?
+  points                Int             @default(100)
+  dueAt                 DateTime?       // Final submission deadline
+  preSubmissionDeadline DateTime?       // Early/draft submission deadline
+  gradingDeadline       DateTime?       // Instructor grading deadline
+  lateSubmissionAllowed Boolean         @default(false)
+  latePenaltyPercent    Int?            // e.g., 10 = 10% penalty per day
+  reminderSent          Boolean         @default(false)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  course                Course          @relation(fields: [courseId], references: [id])
+  rubric                Rubric?
+  submissions           Submission[]
+  moduleContents        ModuleContent[] // Reverse relation
+  notifications         Notification[]  // Related notifications
 
   @@unique([courseId, lmsId], name: "courseId_lmsId")
 }
@@ -258,22 +289,89 @@ model Grade {
 }
 
 model DiscussionThread {
-  id       String           @id @default(cuid())
-  courseId String
-  title    String
-  prompt   String?
-  posts    DiscussionPost[]
-  course   Course           @relation(fields: [courseId], references: [id])
+  id        String           @id @default(cuid())
+  courseId  String
+  title     String
+  prompt    String?
+  dueDate   DateTime?        // When discussion responses are due
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  posts     DiscussionPost[]
+  course    Course           @relation(fields: [courseId], references: [id])
 }
 
 model DiscussionPost {
-  id        String           @id @default(cuid())
+  id        String              @id @default(cuid())
   threadId  String
   authorId  String
   body      String
-  createdAt DateTime         @default(now())
-  author    User             @relation(fields: [authorId], references: [id])
-  thread    DiscussionThread @relation(fields: [threadId], references: [id])
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  author    User                @relation(fields: [authorId], references: [id])
+  thread    DiscussionThread    @relation(fields: [threadId], references: [id])
+  feedback  DiscussionFeedback?
+}
+
+// AI-Generated Discussion Feedback
+model DiscussionFeedback {
+  id                String           @id @default(cuid())
+  postId            String           @unique
+  professorId       String
+  // AI-generated content
+  aiFeedback        String           // The generated feedback text
+  aiScore           Float?           // Optional numeric score (e.g., 0-100)
+  aiStrengths       String[]         // Identified strengths
+  aiImprovements    String[]         // Suggested improvements
+  aiProvider        String?          // Which AI provider was used
+  // Professor customization
+  professorEdits    String?          // Professor's edited version
+  finalFeedback     String?          // Final feedback (edited or original)
+  finalScore        Float?           // Final score after professor review
+  isApproved        Boolean          @default(false)
+  approvedAt        DateTime?
+  // Professor style used
+  gradingDifficulty String?          // EASY, MEDIUM, HARD
+  feedbackDepth     String?          // LIGHT, MODERATE, COMPREHENSIVE, DEEP
+  personality       String?          // ENCOURAGING, CRITICAL, ANALYTICAL, etc.
+  // Metadata
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  post              DiscussionPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([professorId])
+  @@index([createdAt])
+}
+
+// Notification System - For due dates, submissions, grades
+model Notification {
+  id              String             @id @default(cuid())
+  userId          String
+  type            NotificationType
+  title           String
+  message         String
+  isRead          Boolean            @default(false)
+  isEmailSent     Boolean            @default(false)
+  // Related entities
+  courseId        String?
+  assignmentId    String?
+  submissionId    String?
+  // Scheduling
+  scheduledFor    DateTime?          // For scheduled notifications
+  sentAt          DateTime?
+  // Metadata
+  data            String?            // JSON additional data
+  priority        NotificationPriority @default(NORMAL)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assignment      Assignment?        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([type, scheduledFor])
+  @@map("notifications")
 }
 
 model Account {
@@ -693,6 +791,11 @@ model SectionContent {
   isRequired           Boolean              @default(true)
   dueDate              DateTime?
   points               Int?
+  // AI Content Review
+  reviewStatus         ReviewStatus         @default(PENDING)
+  reviewedBy           String?              // User ID who reviewed
+  reviewedAt           DateTime?
+  reviewNotes          String?              // Professor/admin feedback
   // Governance
   citationRequired     Boolean              @default(false)
   aiDisclosureAdded    Boolean              @default(false)
@@ -790,6 +893,46 @@ model CourseAuditLog {
   @@index([courseDesignId, action])
   @@index([userId, createdAt])
   @@map("course_audit_logs")
+}
+
+// Prompt Governance Audit Log (IEEE SRS FR-34)
+model PromptAuditLog {
+  id                   String               @id @default(cuid())
+  promptId             String               @unique // PG-{timestamp}-{random}
+  userId               String
+  userRole             UserRole
+  toolInvoked          String               // Which AI tool was invoked
+  promptType           PromptType           // ADVISORY, GENERATION, VALIDATION, EXPORT
+  courseId             String?
+  metadataSnapshotId   String?              // Foreign key to metadata version
+  evidenceSnapshotId   String?              // Hash of evidence kit state
+  aiModel              String?              // Which AI model processed the request
+  inputHash            String?              // Hash of governed prompt
+  outputHash           String?              // Hash of AI response
+  decision             GovernanceDecision   // ALLOW, BLOCK, ESCALATE
+  blockReason          String?
+  timestamp            DateTime             @default(now())
+  
+  @@index([userId, timestamp])
+  @@index([courseId, timestamp])
+  @@index([toolInvoked])
+  @@index([decision])
+  @@map("prompt_audit_logs")
+}
+
+// Prompt Type Enum
+enum PromptType {
+  ADVISORY
+  GENERATION
+  VALIDATION
+  EXPORT
+}
+
+// Governance Decision Enum
+enum GovernanceDecision {
+  ALLOW
+  BLOCK
+  ESCALATE
 }
 
 // Ask Professor GENIE Conversations
@@ -1112,4 +1255,53 @@ enum ContentType {
   VIDEO // Video content
   QUIZ // Quiz/test
   DISCUSSION // Discussion topic
+}
+
+// Notification Types
+enum NotificationType {
+  // Assignment notifications
+  ASSIGNMENT_CREATED
+  ASSIGNMENT_DUE_SOON      // 24-48 hours before due
+  ASSIGNMENT_DUE_TODAY
+  ASSIGNMENT_OVERDUE
+  PRE_SUBMISSION_REMINDER  // Pre-submission deadline reminder
+  
+  // Grading notifications  
+  GRADE_POSTED
+  GRADING_DEADLINE_SOON    // Reminder for instructors
+  FEEDBACK_AVAILABLE
+  
+  // Submission notifications
+  SUBMISSION_RECEIVED
+  SUBMISSION_GRADED
+  
+  // Course notifications
+  COURSE_PUBLISHED
+  SYLLABUS_UPDATED
+  MODULE_PUBLISHED
+  
+  // AI Content notifications
+  AI_CONTENT_READY         // AI-generated content ready for review
+  AI_CONTENT_APPROVED
+  AI_CONTENT_REJECTED
+  
+  // General
+  ENROLLMENT_CONFIRMED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// Review Status for AI-generated content
+enum ReviewStatus {
+  PENDING           // Awaiting review
+  APPROVED          // Approved by professor/admin
+  REJECTED          // Rejected, needs changes
+  REVISION_REQUESTED // Requires revision
+  PUBLISHED         // Approved and published
 }

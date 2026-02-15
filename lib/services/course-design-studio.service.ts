@@ -5,6 +5,8 @@
 
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { prisma } from "@/lib/prisma"
+import { notificationService } from "@/lib/services/notification.service"
+import { exportService, type SyllabusExportData } from "@/lib/services/export.service"
 import type {
     CourseDetails,
     EvidenceKitItem,
@@ -1560,6 +1562,17 @@ Generate the complete syllabus document.
                 lockedBy: userId,
                 versionId: `v${Date.now()}`,
             },
+            include: {
+                course: {
+                    include: {
+                        instructor: true,
+                        enrollments: { include: { user: true } },
+                        modules: true,
+                    }
+                },
+                syllabusVersions: { where: { status: 'DRAFT' }, take: 1 },
+                courseObjectives: true,
+            }
         })
 
         // Mark syllabus as published
@@ -1574,12 +1587,81 @@ Generate the complete syllabus document.
             data: { isPublished: true },
         })
 
+        // Generate exports (PDF, Word, PPTX)
+        let exportUrls: { pdfUrl?: string; wordUrl?: string; pptxUrl?: string } = {}
+        try {
+            const syllabus = courseDesign.syllabusVersions[0]
+            let syllabusContent: Record<string, any> | undefined
+            if (syllabus?.content) {
+                try {
+                    syllabusContent = typeof syllabus.content === 'string'
+                        ? JSON.parse(syllabus.content)
+                        : syllabus.content as Record<string, any>
+                } catch { syllabusContent = undefined }
+            }
+
+            const exportData: SyllabusExportData = {
+                courseTitle: courseDesign.course.title,
+                courseCode: courseDesign.course.code || undefined,
+                semester: syllabusContent?.semester,
+                instructor: {
+                    name: courseDesign.course.instructor.name || 'Instructor',
+                    email: courseDesign.course.instructor.email,
+                    office: syllabusContent?.instructorInfo?.office,
+                    officeHours: syllabusContent?.instructorInfo?.officeHours,
+                },
+                description: courseDesign.course.description || undefined,
+                objectives: courseDesign.courseObjectives.map(o => o.description),
+                modules: courseDesign.course.modules.map((m, i) => ({
+                    title: m.title,
+                    week: i + 1,
+                    topics: m.description ? [m.description] : [],
+                })),
+                gradingPolicy: syllabusContent?.gradingPolicy,
+                policies: syllabusContent?.policies,
+            }
+
+            const exports = await exportService.exportSyllabusAll(exportData)
+
+            if (exports.pdf.success) exportUrls.pdfUrl = exports.pdf.url
+            if (exports.docx.success) exportUrls.wordUrl = exports.docx.url
+            if (exports.pptx.success) exportUrls.pptxUrl = exports.pptx.url
+
+            // Update syllabus version with export URLs
+            if (syllabus) {
+                await prisma.syllabusVersion.update({
+                    where: { id: syllabus.id },
+                    data: { pdfUrl: exportUrls.pdfUrl, wordUrl: exportUrls.wordUrl },
+                })
+            }
+        } catch (exportError) {
+            console.error('[PublishCourse] Export error:', exportError)
+        }
+
+        // Send notifications to enrolled students
+        let notificationResult = { sent: 0, failed: 0, total: 0 }
+        try {
+            const result = await notificationService.notifyCoursePublished(
+                courseDesign.course.id,
+                userId
+            )
+            notificationResult = { sent: result.sent, failed: result.failed, total: result.total }
+        } catch (notifyError) {
+            console.error('[PublishCourse] Notification error:', notifyError)
+        }
+
         await this.logAudit(courseDesignId, userId, 'PUBLISH', 'course_design', courseDesignId)
 
         return {
             success: true,
             publishedAt: new Date(),
             version: courseDesign.versionId,
+            exports: exportUrls,
+            notifications: {
+                sent: notificationResult.sent,
+                failed: notificationResult.failed,
+                total: notificationResult.total,
+            },
         }
     }
 

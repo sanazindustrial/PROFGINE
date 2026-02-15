@@ -130,7 +130,8 @@ class CanvasAdapter {
   async extractDiscussionThread(doc) {
     const content = {
       kind: 'discussion',
-      targets: {}
+      targets: {},
+      posts: [] // Array to hold ALL individual student posts
     };
 
     // Extract discussion prompt/topic
@@ -140,6 +141,42 @@ class CanvasAdapter {
       content.prompt = topicElement.textContent.trim();
     }
 
+    // Extract discussion title
+    const titleElement = doc.querySelector('.discussion-title') ||
+      doc.querySelector('h1.discussion-topic-title') ||
+      doc.querySelector('[data-testid="discussion-topic-title"]');
+    if (titleElement) {
+      content.threadTitle = titleElement.textContent.trim();
+    }
+
+    // ============= BULK EXTRACT ALL DISCUSSION POSTS =============
+    // Find all discussion entries on the page
+    const allEntries = doc.querySelectorAll(
+      '.discussion_entry, .discussion-entry, [data-testid="discussion-entry"], ' +
+      '.entry-content, .discussion-reply, [role="article"]'
+    );
+
+    allEntries.forEach((entry, index) => {
+      const post = this.extractSinglePost(entry, index);
+      if (post && post.content) {
+        content.posts.push(post);
+      }
+    });
+
+    // Also try newer Canvas UI formats
+    const newUIEntries = doc.querySelectorAll(
+      '[data-testid="reply-tree-entry"], .threadedReplies__entry, ' +
+      '.discussion-entry-container, .DiscussionEntry-module__container'
+    );
+
+    newUIEntries.forEach((entry, index) => {
+      const post = this.extractSinglePost(entry, content.posts.length + index);
+      if (post && post.content && !content.posts.some(p => p.content === post.content)) {
+        content.posts.push(post);
+      }
+    });
+
+    // ============= LEGACY: Extract selected post for single grading =============
     // Extract student post (usually the selected/focused one)
     const selectedPost = doc.querySelector('.discussion_entry.selected .message') ||
       doc.querySelector('.discussion-entry:hover .message') ||
@@ -305,5 +342,146 @@ class CanvasAdapter {
 
   delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Extract a single discussion post/reply from page element
+  extractSinglePost(entry, index) {
+    const post = {
+      index: index,
+      studentId: null,
+      studentName: null,
+      studentEmail: null,
+      content: null,
+      timestamp: null,
+      isReply: false,
+      parentId: null,
+      wordCount: 0
+    };
+
+    // Try multiple selectors for author name
+    const authorSelectors = [
+      '.author_name', '[data-testid="author-name"]', '.discussion-author',
+      '.author', '.user_name', '.display-name', '[data-testid="author"]',
+      '.entry-author', '.DiscussionEntry-module__authorName'
+    ];
+
+    for (const selector of authorSelectors) {
+      const authorEl = entry.querySelector(selector);
+      if (authorEl) {
+        post.studentName = authorEl.textContent.trim();
+        break;
+      }
+    }
+
+    // Extract student ID from data attributes or URL
+    const studentIdAttr = entry.getAttribute('data-student-id') ||
+      entry.getAttribute('data-user-id') ||
+      entry.querySelector('[data-student-id]')?.getAttribute('data-student-id') ||
+      entry.querySelector('[data-user-id]')?.getAttribute('data-user-id');
+    if (studentIdAttr) {
+      post.studentId = studentIdAttr;
+    }
+
+    // Extract post content
+    const contentSelectors = [
+      '.message', '.user_content', '.message-body', '.entry-message',
+      '.discussion-entry__message', '[data-testid="discussion-entry-message"]',
+      '.DiscussionEntry-module__message', '.reply-content', 'p'
+    ];
+
+    for (const selector of contentSelectors) {
+      const contentEl = entry.querySelector(selector);
+      if (contentEl) {
+        post.content = contentEl.textContent.trim();
+        post.wordCount = post.content.split(/\s+/).filter(w => w.length > 0).length;
+        break;
+      }
+    }
+
+    // Extract timestamp
+    const timestampSelectors = [
+      '.discussion-pubdate', '.timestamp', '[data-testid="discussion-timestamp"]',
+      '.pubdate time', 'time', '.entry-date', '.discussion-time'
+    ];
+
+    for (const selector of timestampSelectors) {
+      const timeEl = entry.querySelector(selector);
+      if (timeEl) {
+        post.timestamp = timeEl.getAttribute('datetime') ||
+          timeEl.getAttribute('title') ||
+          timeEl.textContent.trim();
+        break;
+      }
+    }
+
+    // Check if this is a reply (nested)
+    const parentEntry = entry.parentElement?.closest('.discussion_entry, .discussion-entry');
+    if (parentEntry && parentEntry !== entry) {
+      post.isReply = true;
+      post.parentId = parentEntry.getAttribute('data-entry-id') ||
+        parentEntry.getAttribute('data-id') ||
+        entry.getAttribute('data-parent-entry-id');
+    }
+
+    // Generate a unique identifier
+    post.uniqueId = `${post.studentId || 'unknown'}_${index}_${Date.now()}`;
+
+    return post;
+  }
+
+  // Bulk extract all discussion posts for review
+  async extractAllDiscussionPosts(doc) {
+    const result = {
+      threadTitle: null,
+      threadPrompt: null,
+      courseId: null,
+      assignmentId: null,
+      posts: [],
+      metadata: {
+        extractedAt: new Date().toISOString(),
+        lms: this.id,
+        totalPosts: 0,
+        uniqueStudents: 0
+      }
+    };
+
+    // Extract thread info
+    const titleEl = doc.querySelector('.discussion-title, h1, [data-testid="discussion-title"]');
+    if (titleEl) result.threadTitle = titleEl.textContent.trim();
+
+    const promptEl = doc.querySelector('.discussion-topic .message, .user_content');
+    if (promptEl) result.threadPrompt = promptEl.textContent.trim();
+
+    // Try to get course/assignment IDs from URL
+    const urlMatch = window.location.pathname.match(/courses\/(\d+)/);
+    if (urlMatch) result.courseId = urlMatch[1];
+
+    const discussionMatch = window.location.pathname.match(/discussion_topics\/(\d+)/);
+    if (discussionMatch) result.assignmentId = discussionMatch[1];
+
+    // Extract all posts
+    const entrySelectors = [
+      '.discussion_entry', '.discussion-entry', '[data-testid="discussion-entry"]',
+      '.threadedReplies__entry', '.DiscussionEntry-module__container',
+      '[data-testid="reply-tree-entry"]', '.entry-content'
+    ];
+
+    const allEntries = doc.querySelectorAll(entrySelectors.join(', '));
+    const seenContent = new Set();
+
+    allEntries.forEach((entry, index) => {
+      const post = this.extractSinglePost(entry, index);
+      if (post.content && !seenContent.has(post.content)) {
+        seenContent.add(post.content);
+        result.posts.push(post);
+      }
+    });
+
+    // Update metadata
+    result.metadata.totalPosts = result.posts.length;
+    const uniqueStudents = new Set(result.posts.map(p => p.studentName || p.studentId).filter(Boolean));
+    result.metadata.uniqueStudents = uniqueStudents.size;
+
+    return result;
   }
 }

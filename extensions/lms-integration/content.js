@@ -111,9 +111,19 @@ class ProfGiniLMSIntegration {
             <button class="profgini-btn primary" id="profgini-extract">
               📊 Extract Content
             </button>
+            ${pageType === 'discussion_thread' ? `
+            <button class="profgini-btn info" id="profgini-scan-all">
+              🔍 Scan ALL Posts
+            </button>
+            ` : ''}
             <button class="profgini-btn secondary" id="profgini-generate" disabled>
               🤖 Generate Feedback
             </button>
+            ${pageType === 'discussion_thread' ? `
+            <button class="profgini-btn warning" id="profgini-bulk-review" disabled>
+              📝 Bulk AI Review
+            </button>
+            ` : ''}
             <button class="profgini-btn success" id="profgini-apply" disabled>
               ✅ Apply to LMS
             </button>
@@ -143,6 +153,11 @@ class ProfGiniLMSIntegration {
             <h4>Extracted Content:</h4>
             <div class="extracted-info"></div>
           </div>
+          
+          <div class="profgini-posts" id="profgini-posts" style="display: none;">
+            <h4>Scanned Posts: <span id="post-count">0</span></h4>
+            <div class="posts-list" id="posts-list"></div>
+          </div>
         </div>
       </div>
     `;
@@ -162,6 +177,22 @@ class ProfGiniLMSIntegration {
       this.extractContent();
     });
 
+    // Scan ALL posts (discussion only)
+    const scanAllBtn = document.getElementById('profgini-scan-all');
+    if (scanAllBtn) {
+      scanAllBtn.addEventListener('click', () => {
+        this.scanAllDiscussionPosts();
+      });
+    }
+
+    // Bulk AI Review (discussion only)
+    const bulkReviewBtn = document.getElementById('profgini-bulk-review');
+    if (bulkReviewBtn) {
+      bulkReviewBtn.addEventListener('click', () => {
+        this.bulkReviewDiscussions();
+      });
+    }
+
     // Generate feedback
     document.getElementById('profgini-generate').addEventListener('click', () => {
       this.generateFeedback();
@@ -179,6 +210,154 @@ class ProfGiniLMSIntegration {
 
     // Make overlay draggable
     this.makeDraggable();
+  }
+
+  // Scan ALL discussion posts on the page
+  async scanAllDiscussionPosts() {
+    try {
+      this.updateStatus('Scanning all discussion posts...', 'loading');
+
+      // Use adapter's bulk extraction method
+      if (this.currentAdapter.extractAllDiscussionPosts) {
+        this.scannedPosts = await this.currentAdapter.extractAllDiscussionPosts(document);
+      } else {
+        // Fallback: use extractContent and get posts array
+        const content = await this.currentAdapter.extractContent(document);
+        this.scannedPosts = {
+          threadTitle: content.prompt?.substring(0, 100),
+          posts: content.posts || [],
+          metadata: {
+            extractedAt: new Date().toISOString(),
+            totalPosts: content.posts?.length || 0
+          }
+        };
+      }
+
+      if (this.scannedPosts && this.scannedPosts.posts.length > 0) {
+        this.displayScannedPosts();
+        document.getElementById('profgini-bulk-review').disabled = false;
+        this.updateStatus(
+          `Found ${this.scannedPosts.posts.length} posts from ${this.scannedPosts.metadata.uniqueStudents || 'multiple'} students`,
+          'success'
+        );
+      } else {
+        this.updateStatus('No discussion posts found on this page', 'error');
+      }
+    } catch (error) {
+      console.error('ProfGini: Scan error:', error);
+      this.updateStatus('Scan failed: ' + error.message, 'error');
+    }
+  }
+
+  // Display scanned posts in the overlay
+  displayScannedPosts() {
+    const postsDiv = document.getElementById('profgini-posts');
+    const listDiv = document.getElementById('posts-list');
+    const countSpan = document.getElementById('post-count');
+
+    countSpan.textContent = this.scannedPosts.posts.length;
+
+    let html = '';
+    this.scannedPosts.posts.forEach((post, idx) => {
+      html += `
+        <div class="scanned-post" data-index="${idx}">
+          <div class="post-header">
+            <input type="checkbox" id="post-check-${idx}" class="post-checkbox" checked>
+            <strong>${post.studentName || 'Unknown Student'}</strong>
+            <span class="post-words">${post.wordCount} words</span>
+          </div>
+          <div class="post-preview">${post.content?.substring(0, 150)}${post.content?.length > 150 ? '...' : ''}</div>
+          ${post.isReply ? '<span class="reply-badge">Reply</span>' : ''}
+        </div>
+      `;
+    });
+
+    listDiv.innerHTML = html;
+    postsDiv.style.display = 'block';
+  }
+
+  // Bulk review all scanned discussions
+  async bulkReviewDiscussions() {
+    if (!this.scannedPosts || this.scannedPosts.posts.length === 0) {
+      this.updateStatus('No posts to review', 'error');
+      return;
+    }
+
+    try {
+      this.updateStatus('Sending posts for AI review...', 'loading');
+
+      // Get selected posts
+      const selectedPosts = this.scannedPosts.posts.filter((_, idx) => {
+        const checkbox = document.getElementById(`post-check-${idx}`);
+        return checkbox?.checked;
+      });
+
+      if (selectedPosts.length === 0) {
+        this.updateStatus('No posts selected for review', 'error');
+        return;
+      }
+
+      const tone = document.getElementById('profgini-tone').value;
+
+      // Send to bulk review API
+      const response = await fetch(`${this.config.apiBaseUrl}/api/extension/bulk-discussion-review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.authToken || 'dev-token'}`
+        },
+        body: JSON.stringify({
+          threadTitle: this.scannedPosts.threadTitle,
+          threadPrompt: this.scannedPosts.threadPrompt,
+          posts: selectedPosts,
+          tone: tone,
+          lms: this.currentAdapter.id,
+          metadata: this.scannedPosts.metadata
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.updateStatus(
+          `AI review complete! ${result.reviewedCount} posts reviewed. Open Professor GENIE dashboard to see feedback.`,
+          'success'
+        );
+
+        // Show link to dashboard
+        this.displayBulkReviewResult(result);
+      } else {
+        throw new Error(result.error || 'Review failed');
+      }
+
+    } catch (error) {
+      console.error('ProfGini: Bulk review error:', error);
+      this.updateStatus('Bulk review failed: ' + error.message, 'error');
+    }
+  }
+
+  // Display bulk review result
+  displayBulkReviewResult(result) {
+    const previewDiv = document.getElementById('profgini-preview');
+    const feedbackDiv = document.getElementById('feedback-content');
+
+    feedbackDiv.innerHTML = `
+      <div class="bulk-result">
+        <p><strong>✅ ${result.reviewedCount} posts reviewed</strong></p>
+        <p>Feedback generated and saved to Professor GENIE platform.</p>
+        <a href="${this.config.apiBaseUrl}/dashboard/discussions/review" 
+           target="_blank" 
+           class="profgini-btn primary">
+          Open Dashboard to Review & Approve
+        </a>
+      </div>
+    `;
+
+    previewDiv.style.display = 'block';
   }
 
   async extractContent() {

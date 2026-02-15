@@ -55,7 +55,7 @@ interface EvidenceKitProps {
     courseId: string
     courseDesignId?: string
     items: EvidenceKitItem[]
-    onItemsChange: (items: EvidenceKitItem[]) => void
+    onItemsChangeAction: (items: EvidenceKitItem[]) => void
     onDragStart?: (item: EvidenceKitItem) => void
     isReadOnly?: boolean
 }
@@ -90,7 +90,7 @@ export function EvidenceKit({
     courseId,
     courseDesignId,
     items,
-    onItemsChange,
+    onItemsChangeAction,
     onDragStart,
     isReadOnly = false,
 }: EvidenceKitProps) {
@@ -147,7 +147,7 @@ export function EvidenceKit({
 
                 if (response.ok) {
                     const { data } = await response.json()
-                    onItemsChange([...items, data])
+                    onItemsChangeAction([...items, data])
                 }
 
                 setUploadProgress(((i + 1) / files.length) * 100)
@@ -158,7 +158,7 @@ export function EvidenceKit({
             setIsUploading(false)
             setUploadProgress(0)
         }
-    }, [courseId, courseDesignId, items, onItemsChange])
+    }, [courseId, courseDesignId, items, onItemsChangeAction])
 
     // Add external link
     const handleAddLink = async (url: string, title: string, sourceType: EvidenceSourceType) => {
@@ -184,7 +184,7 @@ export function EvidenceKit({
 
             if (response.ok) {
                 const { data } = await response.json()
-                onItemsChange([...items, data])
+                onItemsChangeAction([...items, data])
                 setIsAddingLink(false)
             }
         } catch (error) {
@@ -201,7 +201,7 @@ export function EvidenceKit({
             )
 
             if (response.ok) {
-                onItemsChange(items.filter(item => item.id !== itemId))
+                onItemsChangeAction(items.filter(item => item.id !== itemId))
             }
         } catch (error) {
             console.error("Delete error:", error)
@@ -255,7 +255,7 @@ export function EvidenceKit({
                 {/* Upload Area */}
                 {!isReadOnly && (
                     <div
-                        className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                        className="cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary/50"
                         onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
                         onDrop={(e) => {
                             e.preventDefault()
@@ -266,19 +266,19 @@ export function EvidenceKit({
                     >
                         {isUploading ? (
                             <div className="space-y-2">
-                                <Loader2 className="size-8 mx-auto animate-spin text-primary" />
-                                <Progress value={uploadProgress} className="w-full max-w-xs mx-auto" />
+                                <Loader2 className="mx-auto size-8 animate-spin text-primary" />
+                                <Progress value={uploadProgress} className="mx-auto w-full max-w-xs" />
                                 <p className="text-sm text-muted-foreground">
                                     Uploading... {uploadProgress.toFixed(0)}%
                                 </p>
                             </div>
                         ) : (
                             <>
-                                <Upload className="size-8 mx-auto text-muted-foreground mb-2" />
+                                <Upload className="mx-auto mb-2 size-8 text-muted-foreground" />
                                 <p className="text-sm font-medium">
                                     Drop files here or click to upload
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                     PDF, DOCX, PPTX, MP4, and more
                                 </p>
                             </>
@@ -348,8 +348,8 @@ export function EvidenceKit({
                 <ScrollArea className="h-[400px]">
                     <div className="space-y-2">
                         {filteredItems.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <BookOpen className="size-12 mx-auto mb-2 opacity-50" />
+                            <div className="py-8 text-center text-muted-foreground">
+                                <BookOpen className="mx-auto mb-2 size-12 opacity-50" />
                                 <p>No materials uploaded yet</p>
                                 <p className="text-xs">Upload textbooks, articles, slides, and more</p>
                             </div>
@@ -357,23 +357,23 @@ export function EvidenceKit({
                             filteredItems.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors group"
+                                    className="group flex items-center gap-3 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50"
                                     draggable={!isReadOnly}
                                     onDragStart={(e) => handleDragStartItem(e, item)}
                                 >
                                     {/* Drag Handle */}
                                     {!isReadOnly && (
-                                        <GripVertical className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
+                                        <GripVertical className="size-4 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100" />
                                     )}
 
                                     {/* File Type Icon */}
-                                    <div className="flex-shrink-0 p-2 bg-background rounded-md">
+                                    <div className="shrink-0 rounded-md bg-background p-2">
                                         {fileTypeIcons[item.fileType]}
                                     </div>
 
                                     {/* Item Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium truncate">{item.title}</p>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate font-medium">{item.title}</p>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                             <span>{item.fileType.replace('_', ' ')}</span>
                                             {item.fileSize && (
