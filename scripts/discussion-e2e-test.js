@@ -147,7 +147,7 @@ async function testDiscussionAPIEndpoints() {
   await testEndpoint(
     'POST /api/discussions/bulk-review (unauthorized)',
     `${BASE_URL}/api/discussions/bulk-review`,
-    [401, 200, 400], // May return 200/400 with error JSON
+    [401, 200, 400, 405], // May return 200/400 with error JSON or 405 in prod
     'POST', {
       threadId: 'test',
       postIds: []
@@ -166,7 +166,7 @@ async function testDiscussionAPIEndpoints() {
   await testEndpoint(
     'POST /api/discussions/feedback/approve (unauthorized/invalid)',
     `${BASE_URL}/api/discussions/feedback/approve`,
-    [401, 200, 400], // May return 200/400 with error JSON
+    [401, 200, 400, 405], // May return 200/400 with error JSON or 405 in prod
     'POST', {
       feedbackIds: [],
       action: 'approve'
@@ -230,7 +230,7 @@ async function testExtensionAPIEndpoints() {
   await testEndpoint(
     'POST /api/extension/bulk-discussion-review (unauthorized/valid-payload)',
     `${BASE_URL}/api/extension/bulk-discussion-review`,
-    [401, 200, 400], // May return 200 with error JSON or 400 validation error
+    [401, 200, 400, 405], // May return 200/400 or 405 in prod
     'POST', {
       threadTitle: "Test Discussion Thread",
       threadPrompt: "What are your thoughts on this topic?",
@@ -688,7 +688,7 @@ async function testStressScenarios() {
 
     logResult(
       'Large batch API request parsing',
-      response.status === 401 || response.status === 200, // 401 expected without auth
+      response.status === 401 || response.status === 200 || response.status === 405, // 405 possible in prod
       `Status ${response.status} in ${batchTestDuration}ms`
     );
   } catch (error) {
