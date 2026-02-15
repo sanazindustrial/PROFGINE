@@ -106,7 +106,7 @@ export default async function ApiConfigPage() {
     ]
 
     const categories = ['AI', 'Auth', 'Payments', 'Database']
-    
+
     // Group by category
     const groupedApis = categories.reduce((acc, cat) => {
         acc[cat] = apiConfigurations.filter(api => api.category === cat)
@@ -204,10 +204,10 @@ export default async function ApiConfigPage() {
                                             {api.envVar}
                                         </code>
                                     </div>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        asChild 
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
                                         className="w-full"
                                     >
                                         <a href={api.docs} target="_blank" rel="noopener noreferrer">
@@ -238,21 +238,21 @@ export default async function ApiConfigPage() {
                     <div>
                         <p className="mb-2 font-medium">2️⃣ Set Environment Variables</p>
                         <p className="text-muted-foreground">
-                            Add the API keys to your .env.local file (local development) or 
+                            Add the API keys to your .env.local file (local development) or
                             Vercel dashboard (production deployment).
                         </p>
                     </div>
                     <div>
                         <p className="mb-2 font-medium">3️⃣ Restart Development Server</p>
                         <p className="text-muted-foreground">
-                            After adding environment variables, restart your development server 
+                            After adding environment variables, restart your development server
                             for changes to take effect.
                         </p>
                     </div>
                     <div>
                         <p className="mb-2 font-medium">4️⃣ Test Configuration</p>
                         <p className="text-muted-foreground">
-                            Use the AI Management page to test AI providers, or check the Environment 
+                            Use the AI Management page to test AI providers, or check the Environment
                             page to verify all variables are loaded.
                         </p>
                     </div>
@@ -306,7 +306,7 @@ export default async function ApiConfigPage() {
                             </Link>
                         </Button>
                         <Button variant="outline" asChild className="justify-start">
-                            <Link href="/user-management">
+                            <Link href="/dashboard/settings/ai">
                                 🧠 AI Management
                             </Link>
                         </Button>

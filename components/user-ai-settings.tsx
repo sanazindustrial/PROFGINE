@@ -74,7 +74,16 @@ export function UserAISettings() {
             const res = await fetch('/api/user/ai-settings')
             if (res.ok) {
                 const data = await res.json()
-                setSettings(data)
+                // Ensure providers array exists with fallback
+                setSettings({
+                    ...data,
+                    providers: data.providers || [],
+                    apiKeys: data.apiKeys || {},
+                    hasKeys: data.hasKeys || {},
+                    models: data.models || { openai: 'gpt-4o-mini', anthropic: 'claude-3-haiku-20240307' },
+                })
+            } else {
+                console.error('Failed to fetch AI settings:', res.status, res.statusText)
             }
         } catch (error) {
             console.error('Failed to fetch AI settings:', error)
@@ -353,8 +362,8 @@ export function UserAISettings() {
             {/* Message Display */}
             {message && (
                 <div className={`flex items-center gap-2 rounded-md border p-3 ${message.type === 'success'
-                        ? 'border-green-200 bg-green-50 text-green-700'
-                        : 'border-red-200 bg-red-50 text-red-700'
+                    ? 'border-green-200 bg-green-50 text-green-700'
+                    : 'border-red-200 bg-red-50 text-red-700'
                     }`}>
                     {message.type === 'success' ? (
                         <CheckCircle className="size-4" />

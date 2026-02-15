@@ -601,11 +601,15 @@ export default function BulkReviewPage() {
 
                                                         {/* Editable Feedback */}
                                                         <div>
-                                                            <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                                                            <label
+                                                                htmlFor={`feedback-text-${feedback.id}`}
+                                                                className="text-sm font-medium flex items-center gap-2 mb-2"
+                                                            >
                                                                 <Edit className="h-4 w-4" />
                                                                 Feedback (editable)
                                                             </label>
                                                             <Textarea
+                                                                id={`feedback-text-${feedback.id}`}
                                                                 value={currentFeedbackText}
                                                                 onChange={(e) => handleEditFeedback(
                                                                     feedback.id,
@@ -619,8 +623,14 @@ export default function BulkReviewPage() {
 
                                                         {/* Score */}
                                                         <div className="flex items-center gap-4">
-                                                            <label className="text-sm font-medium">Score:</label>
+                                                            <label
+                                                                htmlFor={`feedback-score-${feedback.id}`}
+                                                                className="text-sm font-medium"
+                                                            >
+                                                                Score:
+                                                            </label>
                                                             <input
+                                                                id={`feedback-score-${feedback.id}`}
                                                                 type="number"
                                                                 min={0}
                                                                 max={100}

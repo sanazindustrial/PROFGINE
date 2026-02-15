@@ -169,6 +169,43 @@ function generateId(): string {
     return `slide_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
+function sanitizeClassName(value: string): string {
+    return value.replace(/[^a-zA-Z0-9_-]/g, '-')
+}
+
+function getSlideThemeClass(slideId: string): string {
+    return `presentation-slide-${sanitizeClassName(slideId)}`
+}
+
+function buildThemeCss(
+    className: string,
+    theme: PresentationTheme,
+    backgroundColor: string
+): string {
+    return [
+        `.${className}{`,
+        `--presentation-primary:${theme.primaryColor};`,
+        `--presentation-secondary:${theme.secondaryColor};`,
+        `--presentation-background:${backgroundColor};`,
+        `--presentation-text:${theme.textColor};`,
+        `--presentation-accent:${theme.accentColor};`,
+        `}`,
+    ].join('')
+}
+
+function ThemeStyle({
+    className,
+    theme,
+    backgroundColor,
+}: {
+    className: string
+    theme: PresentationTheme
+    backgroundColor: string
+}) {
+    const css = buildThemeCss(className, theme, backgroundColor)
+    return <style>{css}</style>
+}
+
 function createDefaultSlide(layout: Slide['layout'] = 'content'): Slide {
     return {
         id: generateId(),
@@ -217,6 +254,7 @@ function SlidePreview({
     compact?: boolean
 }) {
     const bgColor = slide.backgroundColor || theme.backgroundColor
+    const themeClass = getSlideThemeClass(slide.id)
 
     return (
         <div
@@ -224,19 +262,19 @@ function SlidePreview({
             className={cn(
                 'relative cursor-pointer rounded-lg border-2 transition-all',
                 isActive ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50',
-                compact ? 'aspect-video w-full' : 'aspect-video w-48'
+                compact ? 'aspect-video w-full' : 'aspect-video w-48',
+                themeClass
             )}
         >
             {/* Slide content preview */}
+            <ThemeStyle className={themeClass} theme={theme} backgroundColor={bgColor} />
             <div
-                className="size-full overflow-hidden rounded-md p-2"
-                style={{ backgroundColor: bgColor }}
+                className="size-full overflow-hidden rounded-md bg-[color:var(--presentation-background)] p-2"
             >
                 {slide.layout === 'title' ? (
                     <div className="flex size-full flex-col items-center justify-center text-center">
                         <h3
-                            className="line-clamp-2 text-xs font-bold"
-                            style={{ color: theme.primaryColor }}
+                            className="line-clamp-2 text-xs font-bold text-[color:var(--presentation-primary)]"
                         >
                             {slide.title}
                         </h3>
@@ -249,8 +287,7 @@ function SlidePreview({
                 ) : (
                     <div className="size-full">
                         <h4
-                            className="line-clamp-1 text-[10px] font-semibold"
-                            style={{ color: theme.primaryColor }}
+                            className="line-clamp-1 text-[10px] font-semibold text-[color:var(--presentation-primary)]"
                         >
                             {slide.title}
                         </h4>
@@ -455,6 +492,8 @@ function FullScreenPreview({
     onSlideChange: (index: number) => void
 }) {
     const slide = slides[currentSlide]
+    const bgColor = slide?.backgroundColor || theme.backgroundColor
+    const themeClass = slide ? getSlideThemeClass(slide.id) : ''
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -512,21 +551,28 @@ function FullScreenPreview({
             {/* Slide content */}
             <div className="flex flex-1 items-center justify-center p-8">
                 <div
-                    className="aspect-video w-full max-w-5xl overflow-hidden rounded-lg shadow-2xl"
-                    style={{ backgroundColor: slide.backgroundColor || theme.backgroundColor }}
+                    className={cn(
+                        'aspect-video w-full max-w-5xl overflow-hidden rounded-lg bg-[color:var(--presentation-background)] shadow-2xl',
+                        themeClass
+                    )}
                 >
+                    {themeClass && (
+                        <ThemeStyle
+                            className={themeClass}
+                            theme={theme}
+                            backgroundColor={bgColor}
+                        />
+                    )}
                     {slide.layout === 'title' ? (
                         <div className="flex size-full flex-col items-center justify-center p-12 text-center">
                             <h1
-                                className="text-5xl font-bold"
-                                style={{ color: theme.primaryColor }}
+                                className="text-5xl font-bold text-[color:var(--presentation-primary)]"
                             >
                                 {slide.title}
                             </h1>
                             {slide.content[0] && (
                                 <p
-                                    className="mt-6 text-2xl"
-                                    style={{ color: theme.textColor }}
+                                    className="mt-6 text-2xl text-[color:var(--presentation-text)]"
                                 >
                                     {slide.content[0].content}
                                 </p>
@@ -535,8 +581,7 @@ function FullScreenPreview({
                     ) : (
                         <div className="size-full p-12">
                             <h2
-                                className="mb-8 text-3xl font-bold"
-                                style={{ color: theme.primaryColor }}
+                                className="mb-8 text-3xl font-bold text-[color:var(--presentation-primary)]"
                             >
                                 {slide.title}
                             </h2>
@@ -545,16 +590,14 @@ function FullScreenPreview({
                                     <div key={item.id}>
                                         {item.type === 'heading' && (
                                             <h3
-                                                className="text-2xl font-semibold"
-                                                style={{ color: theme.secondaryColor }}
+                                                className="text-2xl font-semibold text-[color:var(--presentation-secondary)]"
                                             >
                                                 {item.content}
                                             </h3>
                                         )}
                                         {item.type === 'text' && (
                                             <p
-                                                className="text-xl"
-                                                style={{ color: theme.textColor }}
+                                                className="text-xl text-[color:var(--presentation-text)]"
                                             >
                                                 {item.content}
                                             </p>
@@ -564,8 +607,7 @@ function FullScreenPreview({
                                                 {item.content.split('\n').map((bullet, i) => (
                                                     <li
                                                         key={i}
-                                                        className="text-xl"
-                                                        style={{ color: theme.textColor }}
+                                                        className="text-xl text-[color:var(--presentation-text)]"
                                                     >
                                                         {bullet}
                                                     </li>
@@ -574,11 +616,7 @@ function FullScreenPreview({
                                         )}
                                         {item.type === 'quote' && (
                                             <blockquote
-                                                className="border-l-4 pl-4 text-xl italic"
-                                                style={{
-                                                    color: theme.textColor,
-                                                    borderColor: theme.accentColor,
-                                                }}
+                                                className="border-l-4 border-[color:var(--presentation-accent)] pl-4 text-xl italic text-[color:var(--presentation-text)]"
                                             >
                                                 {item.content}
                                             </blockquote>
@@ -1063,29 +1101,29 @@ export function PresentationEditor({
                                     {activeSlide && (
                                         <div className="flex h-full items-center justify-center">
                                             <div
-                                                className="aspect-video w-full max-w-2xl overflow-hidden rounded-lg border shadow-lg"
-                                                style={{
-                                                    backgroundColor:
-                                                        activeSlide.backgroundColor ||
-                                                        presentation.theme.backgroundColor,
-                                                }}
+                                                className={cn(
+                                                    'aspect-video w-full max-w-2xl overflow-hidden rounded-lg border bg-[color:var(--presentation-background)] shadow-lg',
+                                                    getSlideThemeClass(activeSlide.id)
+                                                )}
                                             >
+                                                <ThemeStyle
+                                                    className={getSlideThemeClass(activeSlide.id)}
+                                                    theme={presentation.theme}
+                                                    backgroundColor={
+                                                        activeSlide.backgroundColor ||
+                                                        presentation.theme.backgroundColor
+                                                    }
+                                                />
                                                 {activeSlide.layout === 'title' ? (
                                                     <div className="flex size-full flex-col items-center justify-center p-8 text-center">
                                                         <h1
-                                                            className="text-3xl font-bold"
-                                                            style={{
-                                                                color: presentation.theme.primaryColor,
-                                                            }}
+                                                            className="text-3xl font-bold text-[color:var(--presentation-primary)]"
                                                         >
                                                             {activeSlide.title}
                                                         </h1>
                                                         {activeSlide.content[0] && (
                                                             <p
-                                                                className="mt-4 text-lg"
-                                                                style={{
-                                                                    color: presentation.theme.textColor,
-                                                                }}
+                                                                className="mt-4 text-lg text-[color:var(--presentation-text)]"
                                                             >
                                                                 {activeSlide.content[0].content}
                                                             </p>
@@ -1094,10 +1132,7 @@ export function PresentationEditor({
                                                 ) : (
                                                     <div className="size-full p-6">
                                                         <h2
-                                                            className="mb-4 text-xl font-bold"
-                                                            style={{
-                                                                color: presentation.theme.primaryColor,
-                                                            }}
+                                                            className="mb-4 text-xl font-bold text-[color:var(--presentation-primary)]"
                                                         >
                                                             {activeSlide.title}
                                                         </h2>
@@ -1106,21 +1141,14 @@ export function PresentationEditor({
                                                                 <div key={item.id}>
                                                                     {item.type === 'heading' && (
                                                                         <h3
-                                                                            className="text-lg font-semibold"
-                                                                            style={{
-                                                                                color: presentation.theme
-                                                                                    .secondaryColor,
-                                                                            }}
+                                                                            className="text-lg font-semibold text-[color:var(--presentation-secondary)]"
                                                                         >
                                                                             {item.content}
                                                                         </h3>
                                                                     )}
                                                                     {item.type === 'text' && (
                                                                         <p
-                                                                            style={{
-                                                                                color: presentation.theme
-                                                                                    .textColor,
-                                                                            }}
+                                                                            className="text-[color:var(--presentation-text)]"
                                                                         >
                                                                             {item.content}
                                                                         </p>
@@ -1132,10 +1160,7 @@ export function PresentationEditor({
                                                                                 .map((bullet, i) => (
                                                                                     <li
                                                                                         key={i}
-                                                                                        style={{
-                                                                                            color: presentation
-                                                                                                .theme.textColor,
-                                                                                        }}
+                                                                                        className="text-[color:var(--presentation-text)]"
                                                                                     >
                                                                                         {bullet}
                                                                                     </li>
@@ -1144,14 +1169,7 @@ export function PresentationEditor({
                                                                     )}
                                                                     {item.type === 'quote' && (
                                                                         <blockquote
-                                                                            className="border-l-4 pl-3 italic"
-                                                                            style={{
-                                                                                color: presentation.theme
-                                                                                    .textColor,
-                                                                                borderColor:
-                                                                                    presentation.theme
-                                                                                        .accentColor,
-                                                                            }}
+                                                                            className="border-l-4 border-[color:var(--presentation-accent)] pl-3 italic text-[color:var(--presentation-text)]"
                                                                         >
                                                                             {item.content}
                                                                         </blockquote>

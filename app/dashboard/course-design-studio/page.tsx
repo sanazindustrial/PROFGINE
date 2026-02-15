@@ -355,6 +355,20 @@ function CourseDesignStudioContent() {
                             Select a course to enable presentations
                         </Badge>
                     )}
+                    {!effectiveCourseId && !isCourseIdLoading && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <Button asChild variant="outline" size="sm">
+                                <Link href="/dashboard/courses">
+                                    Choose Existing Course
+                                </Link>
+                            </Button>
+                            <Button asChild size="sm">
+                                <Link href="/dashboard/courses/new">
+                                    Create New Course
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
                     {!effectiveCourseId && isCourseIdLoading && (
                         <Badge variant="outline" className="mt-2">
                             Loading courses...
@@ -504,7 +518,7 @@ function CourseDesignStudioContent() {
                     ) : (
                         <Alert>
                             <AlertDescription>
-                                Initialize course details first to unlock the Evidence Kit.
+                                Save course details first to unlock the Evidence Kit for textbooks, files, and links.
                             </AlertDescription>
                         </Alert>
                     )}

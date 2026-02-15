@@ -258,26 +258,37 @@ class SecurityTester {
       // Test audit logging
       this.log('Testing audit logging capabilities...', 'info')
       try {
-        await prisma.gradingActivity.create({
-          data: {
-            submissionId: 'test-submission',
-            userId: 'test-user',
-            activityType: 'SECURITY_TEST',
-            details: JSON.stringify({
-              test: 'audit trail'
-            })
+        const existingSubmission = await prisma.submission.findFirst({
+          select: {
+            id: true,
+            studentId: true
           }
         })
 
-        // Clean up test data
-        await prisma.gradingActivity.deleteMany({
-          where: {
-            submissionId: 'test-submission'
-          }
-        })
+        if (!existingSubmission) {
+          this.log('⚠️  No submissions found; skipping audit log test', 'warning')
+          this.testResults.warnings++
+        } else {
+          const activity = await prisma.gradingActivity.create({
+            data: {
+              submissionId: existingSubmission.id,
+              userId: existingSubmission.studentId,
+              activityType: 'SECURITY_TEST',
+              details: JSON.stringify({
+                test: 'audit trail'
+              })
+            }
+          })
 
-        this.log('✅ Audit logging working correctly', 'success')
-        this.testResults.passed++
+          await prisma.gradingActivity.delete({
+            where: {
+              id: activity.id
+            }
+          })
+
+          this.log('✅ Audit logging working correctly', 'success')
+          this.testResults.passed++
+        }
       } catch (error) {
         this.log('❌ Audit logging not working - may need migration', 'error')
         this.testResults.failed++

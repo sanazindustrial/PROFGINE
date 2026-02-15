@@ -51,7 +51,7 @@ export default async function AdminSettingsPage() {
             title: "AI Management",
             description: "Configure AI providers and enable Claude Haiku 4.5",
             icon: Zap,
-            href: "/user-management",
+            href: "/dashboard/settings/ai",
             badge: "Critical",
             badgeColor: "bg-red-500"
         },
@@ -162,7 +162,7 @@ export default async function AdminSettingsPage() {
                 </CardHeader>
                 <CardContent>
                     <p className="mb-4 text-sm">Claude Haiku 4.5 is currently <strong>DISABLED</strong>. Enable it from AI Management to provide the best experience for all users.</p>
-                    <Link href="/user-management">
+                    <Link href="/dashboard/settings/ai">
                         <Button className="bg-red-600 hover:bg-red-700">
                             <Zap className="mr-2 size-4" />
                             Go to AI Management
@@ -228,6 +228,11 @@ export default async function AdminSettingsPage() {
                         <Link href="/user-management">
                             <Button variant="outline" className="w-full justify-start">
                                 User Management
+                            </Button>
+                        </Link>
+                        <Link href="/dashboard/settings/ai">
+                            <Button variant="outline" className="w-full justify-start">
+                                AI Provider Settings
                             </Button>
                         </Link>
                         <Link href="/subscription-management">

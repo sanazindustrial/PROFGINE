@@ -1,0 +1,43 @@
+server {
+    server_name profgenie.ai www.profgenie.ai;
+
+    proxy_intercept_errors on;
+    error_page 502 503 504 /maintenance.html;
+    location = /maintenance.html {
+        root /var/www/profgenie;
+        internal;
+    }
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    client_max_body_size 50M;
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/profgenie.ai/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/profgenie.ai/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+server {
+    if ($host = www.profgenie.ai) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    if ($host = profgenie.ai) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    listen 80;
+    server_name profgenie.ai www.profgenie.ai;
+    return 404; # managed by Certbot
+}

@@ -124,6 +124,11 @@ const splitCsvLine = (line: string) => {
     return result.map(cell => cell.trim())
 }
 
+const splitDelimitedLine = (line: string, delimiter: string) =>
+    line
+        .split(delimiter)
+        .map(cell => cell.trim())
+
 const headerKeyMap: Record<string, keyof CourseDetails> = {
     title: "title",
     course_title: "title",
@@ -298,27 +303,112 @@ export function CourseInformation({
         })
     }
 
+    const parseDelimited = (text: string, delimiter: string) => {
+        const rows = text.split(/\r?\n/).filter(Boolean)
+        if (rows.length < 2) {
+            throw new Error("File must include a header row and at least one data row.")
+        }
+
+        const headers = splitDelimitedLine(rows[0], delimiter).map(header =>
+            header.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9_]/g, "")
+        )
+
+        return rows.slice(1).map(line => {
+            const cells = splitDelimitedLine(line, delimiter)
+            const entry: Partial<CourseDetails> = { assessmentWeighting: { ...emptyWeighting } }
+
+            headers.forEach((header, index) => {
+                const rawValue = cells[index] ?? ""
+                if (!rawValue) return
+
+                if (header in weightingKeys) {
+                    const weightKey = weightingKeys[header]
+                    const weightValue = toNumber(rawValue)
+                    if (weightValue !== undefined) {
+                        entry.assessmentWeighting = {
+                            ...(entry.assessmentWeighting || emptyWeighting),
+                            [weightKey]: weightValue,
+                        }
+                    }
+                    return
+                }
+
+                const mappedKey = headerKeyMap[header]
+                if (!mappedKey) return
+
+                switch (mappedKey) {
+                    case "creditHours":
+                    case "contactHours":
+                    case "termLength":
+                    case "weeklyWorkloadHours":
+                        entry[mappedKey] = toNumber(rawValue) as never
+                        break
+                    case "prerequisites":
+                        entry.prerequisites = splitList(rawValue)
+                        break
+                    case "academicLevel":
+                        entry.academicLevel = academicLevelMap[normalizeEnum(rawValue)]
+                        break
+                    case "deliveryMode":
+                        entry.deliveryMode = deliveryModeMap[normalizeEnum(rawValue)]
+                        break
+                    case "learningModel":
+                        entry.learningModel = learningModelMap[normalizeEnum(rawValue)]
+                        break
+                    case "formattingStandard":
+                        entry.formattingStandard = formattingStandardMap[normalizeEnum(rawValue)]
+                        break
+                    case "aiUsagePolicy":
+                        entry.aiUsagePolicy = aiUsageMap[normalizeEnum(rawValue)]
+                        break
+                    case "accessibilityRequired":
+                        entry.accessibilityRequired = rawValue.toLowerCase() === "true"
+                        break
+                    default:
+                        entry[mappedKey] = rawValue as never
+                        break
+                }
+            })
+
+            return entry
+        })
+    }
+
+    const parseJsonLines = (text: string) => {
+        const rows = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
+        const courses = rows.map(line => JSON.parse(line))
+        return courses as Partial<CourseDetails>[]
+    }
+
     const handleBulkFile = async (file: File) => {
         setBulkError(null)
         setBulkStatus(null)
         setBulkCourses([])
 
-        if (file.name.toLowerCase().endsWith(".xlsx")) {
-            setBulkError("XLSX import is not supported in-browser yet. Please upload CSV or JSON.")
-            return
-        }
+        const fileName = file.name.toLowerCase()
 
         try {
             const text = await file.text()
-            if (file.name.toLowerCase().endsWith(".json")) {
+            if (fileName.endsWith(".json") || fileName.endsWith(".jsonl") || fileName.endsWith(".ndjson")) {
+                if (fileName.endsWith(".jsonl") || fileName.endsWith(".ndjson")) {
+                    setBulkCourses(parseJsonLines(text))
+                    return
+                }
+
                 const parsed = JSON.parse(text)
                 const courses = Array.isArray(parsed) ? parsed : parsed?.courses
                 if (!Array.isArray(courses)) {
                     throw new Error("JSON must be an array or include a 'courses' array.")
                 }
                 setBulkCourses(courses)
-            } else {
+            } else if (fileName.endsWith(".tsv")) {
+                setBulkCourses(parseDelimited(text, "\t"))
+            } else if (fileName.endsWith(".txt")) {
+                setBulkCourses(parseDelimited(text, "\t"))
+            } else if (fileName.endsWith(".csv")) {
                 setBulkCourses(parseCsv(text))
+            } else {
+                setBulkError("Unsupported file type. Use CSV, TSV, JSON, or JSONL.")
             }
         } catch (err) {
             setBulkError(err instanceof Error ? err.message : "Unable to parse file")
@@ -607,13 +697,13 @@ export function CourseInformation({
                 <CardHeader>
                     <CardTitle>Bulk Course Information</CardTitle>
                     <CardDescription>
-                        Import structured course metadata via CSV or JSON.
+                        Import structured course metadata via CSV, TSV, JSON, or JSONL.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Input
                         type="file"
-                        accept=".csv,.json,.xlsx"
+                        accept=".csv,.tsv,.json,.jsonl,.ndjson,.txt"
                         onChange={(e) => {
                             const file = e.target.files?.[0]
                             if (file) handleBulkFile(file)
@@ -633,8 +723,9 @@ export function CourseInformation({
                         Import Course Data
                     </Button>
                     <div className="text-xs text-muted-foreground">
-                        CSV headers should match field names like title, code, creditHours, academicLevel,
+                        Headers should match fields like title, code, creditHours, academicLevel,
                         termLength, deliveryMode, learningModel, formattingStandard, and assessment weights.
+                        Upload textbooks and links in the Evidence Kit tab.
                     </div>
                 </CardContent>
             </Card>

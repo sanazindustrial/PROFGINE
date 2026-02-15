@@ -17,7 +17,10 @@ import {
     User,
     Monitor,
     CreditCard,
-    Key
+    Key,
+    Target,
+    ClipboardCheck,
+    Lightbulb
 } from "lucide-react"
 
 interface SidebarItem {
@@ -45,6 +48,30 @@ const navigationItems: SidebarItem[] = [
         href: "/dashboard/courses",
         icon: Monitor,
         description: "Create AI-powered presentations"
+    },
+    {
+        title: "Create Syllabus",
+        href: "/dashboard/create-syllabus",
+        icon: BookOpen,
+        description: "Generate AI syllabus"
+    },
+    {
+        title: "Design Assessments",
+        href: "/dashboard/design-assessments",
+        icon: ClipboardCheck,
+        description: "Create AI-powered assessments"
+    },
+    {
+        title: "Learning Objectives",
+        href: "/dashboard/generate-objectives",
+        icon: Target,
+        description: "Generate course objectives"
+    },
+    {
+        title: "Suggest Curriculum",
+        href: "/dashboard/suggest-curriculum",
+        icon: Lightbulb,
+        description: "AI curriculum suggestions"
     },
     {
         title: "Module Registration",

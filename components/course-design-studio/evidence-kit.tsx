@@ -279,7 +279,7 @@ export function EvidenceKit({
                                     Drop files here or click to upload
                                 </p>
                                 <p className="mt-1 text-xs text-muted-foreground">
-                                    PDF, DOCX, PPTX, MP4, and more
+                                    PDF, DOCX, PPTX, CSV, MD, MP4, and more
                                 </p>
                             </>
                         )}
@@ -289,7 +289,7 @@ export function EvidenceKit({
                             multiple
                             aria-label="Upload evidence files"
                             className="hidden"
-                            accept=".pdf,.doc,.docx,.ppt,.pptx,.epub,.txt,.mp4,.webm"
+                            accept=".pdf,.doc,.docx,.ppt,.pptx,.epub,.txt,.csv,.tsv,.md,.rtf,.html,.htm,.mp4,.webm"
                             onChange={(e) => handleFileUpload(e.target.files)}
                         />
                     </div>
