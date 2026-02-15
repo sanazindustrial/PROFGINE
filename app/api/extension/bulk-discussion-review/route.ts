@@ -212,19 +212,23 @@ ${post.content}`;
                 let aiScore: number | null = null;
                 let aiStrengths: string[] = [];
                 let aiImprovements: string[] = [];
+                let aiProvider = "multi-ai";
 
                 try {
-                    const aiResponse = await multiAI.chat({
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: userMessage }
-                        ],
-                        temperature: 0.7,
-                        maxTokens: 1000
-                    });
+                    const { stream, provider } = await multiAI.streamChat([
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userMessage }
+                    ]);
+                    aiProvider = provider;
 
-                    // Parse AI response
-                    const responseText = aiResponse.content || "";
+                    const reader = stream.getReader();
+                    let responseText = "";
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        responseText += new TextDecoder().decode(value);
+                    }
+
                     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
                     if (jsonMatch) {
@@ -252,7 +256,7 @@ ${post.content}`;
                         aiScore: aiScore,
                         aiStrengths: aiStrengths,
                         aiImprovements: aiImprovements,
-                        aiProvider: multiAI.getCurrentProvider() || "multi-ai",
+                        aiProvider,
                         gradingDifficulty,
                         feedbackDepth,
                         personality,
