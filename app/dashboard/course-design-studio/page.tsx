@@ -541,6 +541,45 @@ function CourseDesignStudioContent() {
                 </TabsContent>
 
                 <TabsContent value="sections" className="space-y-6">
+                    {/* Quick Actions for Presentation Studio and Lecture Notes */}
+                    {effectiveCourseId && hasDesign && (
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <Link href={`/dashboard/courses/${effectiveCourseId}/studio`}>
+                                <Card className="border-l-4 border-pink-500 transition-all hover:bg-pink-50 hover:shadow-md dark:hover:bg-pink-950/20">
+                                    <CardContent className="flex items-center gap-3 py-4">
+                                        <Monitor className="size-8 text-pink-600" />
+                                        <div>
+                                            <p className="font-semibold">Presentation Studio</p>
+                                            <p className="text-sm text-muted-foreground">Generate PowerPoint slides with AI</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                            <Link href={`/dashboard/courses/${effectiveCourseId}/lecture-notes`}>
+                                <Card className="border-l-4 border-orange-500 transition-all hover:bg-orange-50 hover:shadow-md dark:hover:bg-orange-950/20">
+                                    <CardContent className="flex items-center gap-3 py-4">
+                                        <FileText className="size-8 text-orange-600" />
+                                        <div>
+                                            <p className="font-semibold">Lecture Notes</p>
+                                            <p className="text-sm text-muted-foreground">Build structured lecture notes</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                            <Link href={`/dashboard/courses/${effectiveCourseId}/build-sections`}>
+                                <Card className="border-l-4 border-indigo-500 transition-all hover:bg-indigo-50 hover:shadow-md dark:hover:bg-indigo-950/20">
+                                    <CardContent className="flex items-center gap-3 py-4">
+                                        <Layout className="size-8 text-indigo-600" />
+                                        <div>
+                                            <p className="font-semibold">Build Course Sections</p>
+                                            <p className="text-sm text-muted-foreground">Advanced section editor</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        </div>
+                    )}
+                    
                     {effectiveCourseId && hasDesign ? (
                         <SectionBuilder
                             courseId={effectiveCourseId}

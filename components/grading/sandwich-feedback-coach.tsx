@@ -24,8 +24,8 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
-    Sparkles,
-    MessageSquarePlus,
+    Star,
+    MessageSquare,
     ThumbsUp,
     AlertTriangle,
     Lightbulb,
@@ -49,6 +49,10 @@ import {
     Layers,
     Wand2,
 } from 'lucide-react'
+
+// Aliases for renamed icons
+const Sparkles = Star
+const MessageSquarePlus = MessageSquare
 
 // Types
 interface ConstructiveFeedbackItem {
@@ -99,13 +103,16 @@ interface RubricCriterion {
 
 interface SandwichFeedbackCoachProps {
     submissionId: string
-    submissionContent: string
-    rubricCriteria: RubricCriterion[]
+    submissionContent?: string
+    rubricCriteria?: RubricCriterion[]
     studentName?: string
     assignmentTitle?: string
     existingFeedback?: FeedbackCycleData
-    onSave: (data: FeedbackCycleData) => void
+    enableAI?: boolean
+    maxPoints?: number
+    onSave: (data: FeedbackCycleData) => void | Promise<void>
     onApprove?: (data: FeedbackCycleData) => void
+    onFeedbackGenerated?: (feedback: FeedbackCycleData) => void
     onCancel?: () => void
     isReadOnly?: boolean
 }
@@ -166,13 +173,16 @@ type FeedbackFormData = z.infer<typeof FeedbackFormSchema>
 
 export function SandwichFeedbackCoach({
     submissionId,
-    submissionContent,
-    rubricCriteria,
+    submissionContent = '',
+    rubricCriteria = [],
     studentName,
     assignmentTitle,
     existingFeedback,
+    enableAI = false,
+    maxPoints,
     onSave,
     onApprove,
+    onFeedbackGenerated,
     onCancel,
     isReadOnly = false,
 }: SandwichFeedbackCoachProps) {
@@ -203,7 +213,7 @@ export function SandwichFeedbackCoach({
         setValue,
         formState: { errors, isDirty }
     } = useForm<FeedbackFormData>({
-        resolver: zodResolver(FeedbackFormSchema),
+        resolver: zodResolver(FeedbackFormSchema) as any,
         defaultValues: {
             feedbackStyle: existingFeedback?.feedbackStyle || 'ENCOURAGING_MENTOR',
             academicLevel: existingFeedback?.academicLevel || 'UNDERGRADUATE',
@@ -747,10 +757,10 @@ export function SandwichFeedbackCoach({
                                             <div
                                                 key={index}
                                                 className={`p-3 rounded border-l-4 ${segment.evidenceStrength === 'STRONG'
-                                                        ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
-                                                        : segment.evidenceStrength === 'MODERATE'
-                                                            ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
-                                                            : 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                                                    ? 'border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                    : segment.evidenceStrength === 'MODERATE'
+                                                        ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20'
+                                                        : 'border-red-500 bg-red-50 dark:bg-red-950/20'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-between mb-2">

@@ -110,18 +110,11 @@ async function setupOwners() {
         console.log(`✅ Created ${email} as OWNER`);
       }
 
-      // Log owner setup in OwnerAccessLog
-      await prisma.ownerAccessLog.create({
-        data: {
-          ownerId: 'SYSTEM',
-          action: 'SYSTEM_CONFIG_CHANGE',
-          targetType: 'user',
-          details: {
-            action: 'OWNER_SETUP',
-            email,
-            timestamp: new Date().toISOString()
-          }
-        }
+      // Log owner setup (console only - OwnerAccessLog model pending)
+      console.log('[OWNER_SETUP]', {
+        action: 'OWNER_SETUP',
+        email,
+        timestamp: new Date().toISOString()
       });
 
     } catch (error) {

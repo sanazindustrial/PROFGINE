@@ -217,8 +217,9 @@ export async function POST(req: NextRequest) {
                 )
                 return NextResponse.json({ success: true, data: objectives })
 
-            // Phase 3.2: Suggest Curriculum
+            // Phase 3.2: Suggest Curriculum / Generate Sections
             case "suggest-curriculum":
+            case "generate-sections":
                 const curDesign = await prisma.courseDesignMetadata.findUnique({
                     where: { courseId },
                 })

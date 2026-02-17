@@ -399,6 +399,36 @@ export function SectionBuilder({
         }
     }
 
+    // AI Generate full course sections
+    const [isGeneratingSections, setIsGeneratingSections] = useState(false)
+
+    const handleAIGenerateSections = async () => {
+        if (!courseId) return
+        setIsGeneratingSections(true)
+        try {
+            const response = await fetch("/api/course-design-studio", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "generate-sections",
+                    courseId,
+                }),
+            })
+            if (response.ok) {
+                const { data } = await response.json()
+                if (data && Array.isArray(data)) {
+                    onSectionsChange(data)
+                    // Expand all newly generated sections
+                    setExpandedSections(new Set(data.map((s: CourseDesignSection) => s.id)))
+                }
+            }
+        } catch (error) {
+            console.error("AI Generate sections error:", error)
+        } finally {
+            setIsGeneratingSections(false)
+        }
+    }
+
     return (
         <Card className="h-full">
             <CardHeader className="pb-3">
@@ -413,17 +443,37 @@ export function SectionBuilder({
                         </CardDescription>
                     </div>
                     {!isReadOnly && (
-                        <Dialog open={isAddingSectionDialog} onOpenChange={setIsAddingSectionDialog}>
-                            <DialogTrigger asChild>
-                                <Button size="sm">
-                                    <Plus className="size-4 mr-2" />
-                                    Add Section
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <AddSectionForm onSubmit={addSection} onCancel={() => setIsAddingSectionDialog(false)} />
-                            </DialogContent>
-                        </Dialog>
+                        <div className="flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleAIGenerateSections}
+                                disabled={isGeneratingSections}
+                            >
+                                {isGeneratingSections ? (
+                                    <>
+                                        <Star className="size-4 mr-2 animate-spin" />
+                                        Generating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Star className="size-4 mr-2" />
+                                        AI Generate Sections
+                                    </>
+                                )}
+                            </Button>
+                            <Dialog open={isAddingSectionDialog} onOpenChange={setIsAddingSectionDialog}>
+                                <DialogTrigger asChild>
+                                    <Button size="sm">
+                                        <Plus className="size-4 mr-2" />
+                                        Add Section
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <AddSectionForm onSubmit={addSection} onCancel={() => setIsAddingSectionDialog(false)} />
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     )}
                 </div>
             </CardHeader>

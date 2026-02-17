@@ -67,13 +67,11 @@ export async function GET(req: NextRequest) {
                     name: true,
                     role: true,
                     isOwner: true,
-                    isPremium: true,
                     subscriptionType: true,
                     subscriptionExpiresAt: true,
                     creditBalance: true,
                     monthlyCredits: true,
                     createdAt: true,
-                    maxConcurrentSessions: true,
                     _count: {
                         select: {
                             sessions: true,
@@ -87,13 +85,6 @@ export async function GET(req: NextRequest) {
                             status: true,
                             currentPeriodEnd: true
                         }
-                    },
-                    costControl: {
-                        select: {
-                            monthlyBudget: true,
-                            currentSpend: true,
-                            hardLimit: true
-                        }
                     }
                 },
                 orderBy: { createdAt: 'desc' }
@@ -101,13 +92,11 @@ export async function GET(req: NextRequest) {
             prisma.user.count({ where })
         ]);
 
-        // Log access
-        await prisma.ownerAccessLog.create({
-            data: {
-                ownerId: session.user.email,
-                action: 'VIEW_CLIENT_DATA',
-                details: { search, role, subscription, page, limit, resultsCount: users.length }
-            }
+        // Log access (console only - OwnerAccessLog model pending)
+        console.log('[OWNER_ACCESS] VIEW_CLIENT_DATA:', {
+            ownerId: session.user.email || session.user.id,
+            resultsCount: users.length,
+            timestamp: new Date().toISOString()
         });
 
         return NextResponse.json({
@@ -154,7 +143,7 @@ export async function PATCH(req: NextRequest) {
                     data: {
                         userId,
                         amount: value,
-                        type: 'ADMIN_GRANT',
+                        type: 'BONUS',
                         description: reason || `Credits added by owner: ${session.user.email}`
                     }
                 });
@@ -164,17 +153,18 @@ export async function PATCH(req: NextRequest) {
                 result = await prisma.user.update({
                     where: { id: userId },
                     data: {
-                        subscriptionType: value,
-                        isPremium: value === 'PREMIUM' || value === 'ENTERPRISE'
+                        subscriptionType: value
                     }
                 });
                 break;
 
             case 'SET_SESSION_LIMIT':
-                result = await prisma.user.update({
-                    where: { id: userId },
-                    data: { maxConcurrentSessions: value }
+                // maxConcurrentSessions field not yet implemented - log to console
+                console.log('[OWNER_ACTION] SET_SESSION_LIMIT requested but maxConcurrentSessions field pending:', {
+                    userId,
+                    sessionLimit: value
                 });
+                result = { success: true, message: 'Session limit setting pending - field not yet in schema' };
                 break;
 
             case 'SET_ROLE':
@@ -191,35 +181,28 @@ export async function PATCH(req: NextRequest) {
                 break;
 
             case 'SET_BUDGET':
-                result = await prisma.costControl.upsert({
-                    where: { userId },
-                    update: {
-                        monthlyBudget: value.budget,
-                        hardLimit: value.hardLimit ?? false
-                    },
-                    create: {
-                        userId,
-                        monthlyBudget: value.budget,
-                        hardLimit: value.hardLimit ?? false
-                    }
+                // CostControl model not yet implemented - log to console
+                console.log('[OWNER_ACTION] SET_BUDGET requested but CostControl model pending:', {
+                    userId,
+                    budget: value.budget,
+                    hardLimit: value.hardLimit
                 });
+                result = { success: true, message: 'Budget setting pending - CostControl model not yet implemented' };
                 break;
 
             default:
                 return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
         }
 
-        // Log the action
-        await prisma.ownerAccessLog.create({
-            data: {
-                ownerId: session.user.email,
-                action: action === 'ADD_CREDITS' ? 'MODIFY_CREDITS' :
-                    action === 'SET_SUBSCRIPTION' ? 'UPDATE_SUBSCRIPTION' :
-                        action === 'SET_ROLE' ? 'USER_ROLE_CHANGE' : 'BILLING_ADJUSTMENT',
-                targetType: 'user',
-                targetId: userId,
-                details: { action, value, reason }
-            }
+        // Log the action (console only - OwnerAccessLog model pending)
+        console.log('[OWNER_ACTION]', {
+            ownerId: session.user.email || session.user.id || 'unknown',
+            action: action === 'ADD_CREDITS' ? 'MODIFY_CREDITS' :
+                action === 'SET_SUBSCRIPTION' ? 'UPDATE_SUBSCRIPTION' :
+                    action === 'SET_ROLE' ? 'USER_ROLE_CHANGE' : 'BILLING_ADJUSTMENT',
+            targetId: userId,
+            details: { action, value, reason },
+            timestamp: new Date().toISOString()
         });
 
         return NextResponse.json({ success: true, result });

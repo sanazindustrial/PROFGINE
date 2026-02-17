@@ -125,14 +125,17 @@ interface ConsensusReviewData {
 }
 
 interface GovernanceDashboardProps {
-    feedbackCycleId: string
-    submissionId: string
+    feedbackCycleId?: string
+    submissionId?: string
     courseId: string
+    assignmentId?: string
+    instructorId?: string
     existingGovernance?: GovernanceData
     consensusReviews?: ConsensusReviewData[]
     scoreDistribution?: ScoreDistribution[]
     demographicMetrics?: DemographicMetrics[]
-    onSave: (data: Partial<GovernanceData>) => void
+    onSave?: (data: Partial<GovernanceData>) => void
+    onAcknowledgeAlert?: () => void | Promise<void>
     onExportAuditLog?: () => void
     isInstructor?: boolean
     isAdmin?: boolean
@@ -153,11 +156,14 @@ export function GovernanceDashboard({
     feedbackCycleId,
     submissionId,
     courseId,
+    assignmentId,
+    instructorId,
     existingGovernance,
     consensusReviews = [],
     scoreDistribution = [],
     demographicMetrics = [],
     onSave,
+    onAcknowledgeAlert,
     onExportAuditLog,
     isInstructor = false,
     isAdmin = false,
@@ -187,7 +193,7 @@ export function GovernanceDashboard({
         try {
             const newValue = !isBlindMode
             setIsBlindMode(newValue)
-            await onSave({ isBlindGraded: newValue })
+            await onSave?.({ isBlindGraded: newValue })
         } finally {
             setIsLoading(false)
         }
@@ -199,7 +205,7 @@ export function GovernanceDashboard({
 
         setIsLoading(true)
         try {
-            await onSave({
+            await onSave?.({
                 wasOverridden: true,
                 originalAIScore: governance?.finalScore,
                 finalScore: newScore,
@@ -568,8 +574,8 @@ export function GovernanceDashboard({
                                             <div
                                                 key={index}
                                                 className={`p-4 rounded-lg border ${review.requiresReconciliation
-                                                        ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20'
-                                                        : 'bg-muted/30'
+                                                    ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20'
+                                                    : 'bg-muted/30'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-between">

@@ -2,20 +2,20 @@ import { defineConfig } from 'vitest/config'
 import path from 'path'
 
 export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'node',
-    include: ['**/*.test.ts', '**/*.test.tsx'],
-    exclude: ['node_modules', '.next', 'dist'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['lib/**/*.ts', 'components/**/*.tsx'],
+    test: {
+        globals: true,
+        environment: 'node',
+        include: ['**/*.test.ts', '**/*.test.tsx'],
+        exclude: ['node_modules', '.next', 'dist'],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'json', 'html'],
+            include: ['lib/**/*.ts', 'components/**/*.tsx'],
+        },
     },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './'),
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, './'),
+        },
     },
-  },
 })

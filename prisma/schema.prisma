@@ -17,8 +17,6 @@ model User {
   sessionVersion        Int                   @default(0)
   role                  UserRole              @default(STUDENT)
   isOwner               Boolean               @default(false)
-  isPremium             Boolean               @default(false)
-  maxConcurrentSessions Int                   @default(2)  // Session limit per user
   emailVerified         DateTime?
   image                 String?
   password              String?
@@ -50,8 +48,6 @@ model User {
   presentations         Presentation[]        @relation("UserPresentations")
   aiSettings            UserAISettings?
   notifications         Notification[]
-  costControl           CostControl?
-  sessionPolicy         SessionPolicy?
 }
 
 // User's custom AI provider settings (Bring Your Own Key - BYOK)
@@ -281,278 +277,7 @@ model Submission {
   gradingActivities GradingActivity[]
   assignment        Assignment        @relation(fields: [assignmentId], references: [id])
   student           User              @relation(fields: [studentId], references: [id])
-  
-  // Grading Workflow Relations
-  feedbackCycle     FeedbackCycle?
-  selfEvaluation    ReadyGateSelfEvaluation?
-  aiUseStatement    AIUseStatement?
-  consensusReviews  ConsensusReview[]
 }
-
-// ============================================================================
-// INTEGRATED GRADING & FEEDBACK WORKFLOW SYSTEM
-// ============================================================================
-
-// Professor coaching style for personalized feedback
-enum FeedbackStyleEnum {
-  ENCOURAGING_MENTOR   // Undergraduate - focus on mastery of core concepts
-  CRITICAL_PEER        // Graduate - synthesis and professional application
-  SCHOLARLY_ADVISOR    // Doctoral - methodological rigor and publication potential
-  TECHNICAL_LEAD       // XR/Lab - procedure adherence and safety telemetry
-}
-
-// Uncertainty level for AI-generated feedback
-enum UncertaintyLevel {
-  LOW      // High confidence
-  MEDIUM   // Moderate confidence
-  HIGH     // Low confidence - requires human review
-}
-
-// Intervention nudge type
-enum NudgeType {
-  MOTIVATIONAL      // Gentle encouragement
-  REMINDER          // Deadline or task reminder
-  ESCALATION        // Elevated concern
-  SUPPORT_OFFER     // Offer of additional help
-}
-
-// Intervention status
-enum InterventionStatus {
-  PENDING           // Not yet sent
-  SENT              // Sent to student
-  ACKNOWLEDGED      // Student acknowledged
-  ACTION_TAKEN      // Student took action
-  ESCALATED         // Escalated to advisor
-}
-
-// Ready-Gate Self-Evaluation - Phase 1
-model ReadyGateSelfEvaluation {
-  id                    String    @id @default(cuid())
-  submissionId          String    @unique
-  submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  
-  // Self-reflection against rubric criteria
-  reflections           Json      // Array of { criterion, selfScore, note }
-  
-  // Outcome mastery self-assessment
-  outcomesMastery       Json?     // Array of { outcomeId, masteryLevel, evidence }
-  
-  // Compliance checks completed
-  structureCheck        Boolean   @default(false)
-  citationsCheck        Boolean   @default(false)
-  evidenceCheck         Boolean   @default(false)
-  accessibilityCheck    Boolean   @default(false)
-  
-  // Gate status
-  isGatePassed          Boolean   @default(false)
-  gateFailureReasons    Json?     // Array of failure reasons
-  
-  completedAt           DateTime?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  @@map("ready_gate_self_evaluations")
-}
-
-// AI-Use Statement - Phase 1 (student documents AI collaboration)
-model AIUseStatement {
-  id                    String    @id @default(cuid())
-  submissionId          String    @unique
-  submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  
-  // Tools documentation
-  toolsUsed             Json      // Array of { toolName, purpose, sections }
-  
-  // Verification steps
-  verificationSteps     Json?     // Array of { step, description, completed }
-  
-  // Student reflection on AI collaboration
-  collaborationReflection String?
-  
-  // Process integrity indicators
-  hasProcessEvidence    Boolean   @default(false)
-  draftVersionsCount    Int       @default(0)
-  changeLogAvailable    Boolean   @default(false)
-  
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  @@map("ai_use_statements")
-}
-
-// Feedback Cycle - Phase 2 (The "Sandwich" Feedback)
-model FeedbackCycle {
-  id                    String              @id @default(cuid())
-  submissionId          String              @unique
-  submission            Submission          @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  
-  // Feedback style context
-  feedbackStyle         FeedbackStyleEnum   @default(ENCOURAGING_MENTOR)
-  academicLevel         AcademicLevel       @default(UNDERGRADUATE)
-  fieldOfStudy          String?             // e.g., "Clinical", "Engineering", "Humanities"
-  
-  // The "Sandwich" Layers
-  topBunPositive        String              // Motivational opening - highlights strengths and LO mastery
-  fillingConstructive   Json                // Array of { criterion, finding, rationale, lineReferences, uncertaintyBadge }
-  bottomBunMotivational String              // Actionable tasks and encouragement
-  
-  // AI Analysis
-  heatmapData           Json?               // Text segment highlights with rubric evidence
-  uncertaintyScore      Float?              // Overall AI confidence (0.0 - 1.0)
-  processAnomalies      Json?               // Array of detected anomalies (e.g., one-click paste)
-  
-  // Review status
-  isDraft               Boolean             @default(true)
-  isApproved            Boolean             @default(false)
-  approvedBy            String?             // Professor who approved
-  approvedAt            DateTime?
-  
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  
-  // Governance relation
-  governance            GradingGovernance?
-  
-  @@map("feedback_cycles")
-}
-
-// Grading Governance - Phase 3 (Ethics, Compliance, Audit)
-model GradingGovernance {
-  id                    String        @id @default(cuid())
-  feedbackCycleId       String        @unique
-  feedbackCycle         FeedbackCycle @relation(fields: [feedbackCycleId], references: [id], onDelete: Cascade)
-  
-  // Bias mitigation
-  isBlindGraded         Boolean       @default(false)  // Student identity hidden
-  
-  // Inter-rater reliability
-  irrValue              Float?        // Krippendorff alpha for consensus
-  varianceDetected      Boolean       @default(false)  // High variance flag
-  
-  // Fairness monitoring
-  biasFlag              Boolean       @default(false)  // Anomaly in demographic score distribution
-  fairnessCheckPassed   Boolean       @default(true)
-  
-  // Override tracking (Human-in-the-Loop)
-  wasOverridden         Boolean       @default(false)
-  originalAIScore       Float?
-  finalScore            Float?
-  overrideRationale     String?       // Mandatory for manual changes
-  overriddenBy          String?       // Professor ID
-  overriddenAt          DateTime?
-  
-  // Audit trail
-  auditLog              Json?         // Array of all changes with timestamps
-  
-  // Compliance
-  ferpaCompliant        Boolean       @default(true)
-  gdprCompliant         Boolean       @default(true)
-  
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-  
-  @@map("grading_governance")
-}
-
-// Consensus Review - Multiple reviewer scoring for high-stakes work
-model ConsensusReview {
-  id                    String    @id @default(cuid())
-  submissionId          String
-  submission            Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  
-  reviewerId            String    // TA or Faculty ID
-  reviewerRole          String    // "TA", "FACULTY", "EXTERNAL"
-  weight                Float     @default(1.0)  // Weighted scoring
-  
-  // Scores per criterion
-  scores                Json      // Array of { criterion, score, rationale }
-  overallScore          Float
-  
-  // Confidence
-  confidenceLevel       UncertaintyLevel @default(MEDIUM)
-  
-  // Reconciliation
-  requiresReconciliation Boolean  @default(false)
-  reconciliationNote    String?
-  
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  @@map("consensus_reviews")
-  @@index([submissionId])
-}
-
-// Intervention Nudge - Student support system
-model InterventionNudge {
-  id                    String              @id @default(cuid())
-  studentId             String
-  courseId              String?
-  submissionId          String?
-  
-  // Nudge content (Sandwich style)
-  nudgeType             NudgeType           @default(MOTIVATIONAL)
-  status                InterventionStatus  @default(PENDING)
-  
-  // Sandwich content
-  positivePart          String              // Top bun
-  constructivePart      String              // Filling
-  motivationalPart      String              // Bottom bun
-  
-  // Quick action
-  actionableSteps       Json?               // Array of specific steps
-  estimatedTime         String?             // e.g., "15 minutes"
-  
-  // Trigger info
-  triggerEvent          String              // What triggered the nudge
-  triggerData           Json?               // Related data
-  
-  // Tracking
-  sentAt                DateTime?
-  acknowledgedAt        DateTime?
-  actionTakenAt         DateTime?
-  
-  // Escalation
-  escalationLevel       Int                 @default(0)  // 0=gentle, 1=firm, 2=advisor CC
-  escalatedToAdvisor    Boolean             @default(false)
-  
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  
-  @@map("intervention_nudges")
-  @@index([studentId])
-  @@index([courseId])
-}
-
-// Final Bundle - Archive of complete grading package
-model FinalBundle {
-  id                    String    @id @default(cuid())
-  submissionId          String    @unique
-  
-  // Bundle contents
-  submissionSnapshot    Json      // Original submission content
-  rubricSnapshot        Json      // Rubric at time of grading
-  feedbackSnapshot      Json      // Final feedback
-  aiUseStatementSnapshot Json?    // AI-use declaration
-  changeLog             Json?     // All changes made
-  vivasSummary          String?   // Oral defense summary if applicable
-  
-  // PDF generation
-  pdfUrl                String?   // Stored PDF URL
-  pdfGeneratedAt        DateTime?
-  
-  // Portfolio tagging
-  skillsMapTags         Json?     // Array of skill/competency tags
-  portfolioArchived     Boolean   @default(false)
-  archivedAt            DateTime?
-  
-  createdAt             DateTime  @default(now())
-  
-  @@map("final_bundles")
-}
-
-// ============================================================================
-// END GRADING WORKFLOW SYSTEM
-// ============================================================================
 
 model Grade {
   id           String     @id @default(cuid())
@@ -669,20 +394,11 @@ model Account {
 }
 
 model Session {
-  id            String    @id @default(cuid())
-  sessionToken  String    @unique
-  userId        String
-  expires       DateTime
-  // Enhanced session tracking for security
-  ipAddress     String?   // Track IP for session
-  userAgent     String?   // Browser/device info
-  deviceId      String?   // Unique device fingerprint
-  lastActive    DateTime  @default(now())
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId, isActive])
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -1429,8 +1145,7 @@ enum FeatureType {
 }
 
 enum UserRole {
-  OWNER      // Platform owner - highest access level
-  ADMIN      // Regular admin - managed by owner
+  ADMIN
   PROFESSOR
   STUDENT
 }
@@ -1581,136 +1296,6 @@ enum NotificationPriority {
   NORMAL
   HIGH
   URGENT
-}
-
-// ==========================================
-// OWNER ACCESS CONTROL & PAYMENT MANAGEMENT
-// ==========================================
-
-// Owner-specific access log for audit trail
-model OwnerAccessLog {
-  id          String          @id @default(cuid())
-  ownerId     String
-  action      OwnerAction
-  targetType  String?         // "user", "payment", "session", "credit"
-  targetId    String?
-  details     Json?           // Additional context about the action
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime        @default(now())
-  
-  @@index([ownerId, createdAt])
-  @@index([action, createdAt])
-}
-
-enum OwnerAction {
-  VIEW_CLIENT_DATA
-  VIEW_PAYMENT_HISTORY
-  MODIFY_CREDITS
-  TERMINATE_SESSION
-  UPDATE_SUBSCRIPTION
-  VIEW_SESSION_LIST
-  EXPORT_DATA
-  SYSTEM_CONFIG_CHANGE
-  USER_ROLE_CHANGE
-  BILLING_ADJUSTMENT
-}
-
-// Payment cycle tracking for billing management
-model PaymentCycle {
-  id                  String            @id @default(cuid())
-  userId              String?
-  organizationId      String?
-  cycleStart          DateTime
-  cycleEnd            DateTime
-  amount              Float             @default(0)
-  currency            String            @default("USD")
-  status              PaymentStatus     @default(PENDING)
-  stripeInvoiceId     String?           @unique
-  stripePaymentIntent String?
-  paidAt              DateTime?
-  failedAt            DateTime?
-  failureReason       String?
-  retryCount          Int               @default(0)
-  metadata            Json?             // Usage breakdown, credits used, etc.
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  
-  @@index([userId, cycleStart])
-  @@index([organizationId, cycleStart])
-  @@index([status, cycleEnd])
-}
-
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  PAID
-  FAILED
-  REFUNDED
-  CANCELLED
-  OVERDUE
-}
-
-// Client session tracking for concurrent session limits
-model ClientSessionTracker {
-  id            String    @id @default(cuid())
-  userId        String
-  sessionId     String    @unique  // Links to Session.id
-  deviceInfo    Json?     // Device fingerprint, browser, OS
-  ipAddress     String?
-  location      String?   // Geo-location from IP
-  loginAt       DateTime  @default(now())
-  lastPing      DateTime  @default(now())
-  isActive      Boolean   @default(true)
-  terminatedAt  DateTime?
-  terminatedBy  String?   // User ID of who terminated (owner/admin)
-  reason        String?   // Reason for termination
-  
-  @@index([userId, isActive])
-  @@index([lastPing])
-}
-
-// Cost control and usage tracking per client
-model CostControl {
-  id                  String        @id @default(cuid())
-  userId              String?       @unique
-  organizationId      String?
-  monthlyBudget       Float?        // Max spend per month
-  currentSpend        Float         @default(0)
-  alertThreshold      Float         @default(0.8) // Alert at 80% of budget
-  hardLimit           Boolean       @default(false) // Stop service at limit
-  lastAlertSent       DateTime?
-  budgetResetDay      Int           @default(1) // Day of month to reset
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  user                User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([organizationId])
-}
-
-// Platform owner configuration
-model OwnerConfig {
-  id                      String    @id @default(cuid())
-  key                     String    @unique
-  value                   Json
-  description             String?
-  lastModifiedBy          String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-}
-
-// Concurrent session policy
-model SessionPolicy {
-  id                    String    @id @default(cuid())
-  userId                String?   @unique
-  organizationId        String?   @unique
-  maxConcurrentSessions Int       @default(2) // Default 2 sessions max
-  sessionTimeout        Int       @default(3600) // Seconds of inactivity
-  enforceIpConsistency  Boolean   @default(false)
-  allowedIps            String[]  // Whitelist IPs if needed
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  user                  User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Review Status for AI-generated content

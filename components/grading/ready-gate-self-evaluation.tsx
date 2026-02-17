@@ -7,569 +7,367 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Slider } from '@/components/ui/slider'
-import { 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  FileText,
-  BookOpen,
-  Shield,
-  Sparkles,
-  ArrowRight,
-  Loader2,
+import {
+    CheckCircle2,
+    XCircle,
+    AlertTriangle,
+    FileText,
+    BookOpen,
+    Shield,
+    Star,
+    ArrowRight,
+    Loader2,
 } from 'lucide-react'
+
+// Export status type for external use
+export type ReadyGateStatus = 'PENDING' | 'PASSED' | 'FAILED' | 'NEEDS_REVIEW'
 
 // Validation schema for the form
 const SelfReflectionSchema = z.object({
-  criterion: z.string(),
-  selfScore: z.number().min(0).max(100),
-  note: z.string().min(10, "Please provide a meaningful reflection (at least 10 characters)"),
+    criterion: z.string(),
+    selfScore: z.number().min(0).max(100),
+    note: z.string().min(10, "Please provide a meaningful reflection (at least 10 characters)"),
 })
 
-const ReadyGateFormSchema = z.object({
-  submissionId: z.string(),
-  reflections: z.array(SelfReflectionSchema).min(1),
-  structureCheck: z.boolean(),
-  citationsCheck: z.boolean(),
-  evidenceCheck: z.boolean(),
-  accessibilityCheck: z.boolean(),
+const ReadyGateSchema = z.object({
+    submissionId: z.string().uuid(),
+    reflections: z.array(SelfReflectionSchema).min(1),
+    outcomesMastery: z.record(z.string(), z.number()),
+    structureCheck: z.boolean(),
+    citationsCheck: z.boolean(),
+    evidenceCheck: z.boolean(),
+    accessibilityCheck: z.boolean(),
 })
 
-type ReadyGateFormData = z.infer<typeof ReadyGateFormSchema>
+export type ReadyGateFormData = z.infer<typeof ReadyGateSchema>
 
 interface RubricCriterion {
-  id: string
-  label: string
-  description?: string
-  maxPoints: number
-}
-
-interface AIToolEntry {
-  toolName: string
-  purpose: string
-  sections: string[]
+    id: string
+    name: string
+    description: string
+    maxScore: number
 }
 
 interface ReadyGateSelfEvaluationProps {
-  submissionId: string
-  rubricCriteria: RubricCriterion[]
-  onComplete: (data: ReadyGateFormData & { aiUseStatement: any }) => void
-  onCancel?: () => void
+    assignmentId: string
+    studentId: string
+    studentName?: string
+    dueDate?: string
+    rubricCriteria?: RubricCriterion[]
+    onComplete?: (data: ReadyGateFormData) => void
+    onFormSubmit?: (data: ReadyGateFormData) => void | Promise<void>
+    onSave?: (data: Partial<ReadyGateFormData>) => void
+    showHistory?: boolean
 }
 
-export function ReadyGateSelfEvaluation({ 
-  submissionId, 
-  rubricCriteria, 
-  onComplete,
-  onCancel,
+const DEFAULT_CRITERIA: RubricCriterion[] = [
+    { id: '1', name: 'Thesis & Argument', description: 'Clear thesis statement and logical argument flow', maxScore: 25 },
+    { id: '2', name: 'Evidence & Support', description: 'Quality of sources and evidence integration', maxScore: 25 },
+    { id: '3', name: 'Organization', description: 'Structure, transitions, and coherence', maxScore: 20 },
+    { id: '4', name: 'Writing Mechanics', description: 'Grammar, spelling, and formatting', maxScore: 15 },
+    { id: '5', name: 'Critical Analysis', description: 'Depth of analysis and original thinking', maxScore: 15 },
+]
+
+export function ReadyGateSelfEvaluation({
+    assignmentId,
+    studentId,
+    studentName,
+    dueDate,
+    rubricCriteria = DEFAULT_CRITERIA,
+    onComplete,
+    onFormSubmit,
+    onSave,
+    showHistory = false,
 }: ReadyGateSelfEvaluationProps) {
-  const [step, setStep] = useState<'reflection' | 'ai-use' | 'compliance'>('reflection')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [aiTools, setAiTools] = useState<AIToolEntry[]>([])
-  const [aiReflection, setAiReflection] = useState('')
-  const [newToolName, setNewToolName] = useState('')
-  const [newToolPurpose, setNewToolPurpose] = useState('')
-  const [hasProcessEvidence, setHasProcessEvidence] = useState(false)
-  const [draftVersionsCount, setDraftVersionsCount] = useState(0)
+    const [currentStep, setCurrentStep] = useState(0)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [complianceChecks, setComplianceChecks] = useState({
+        structureCheck: false,
+        citationsCheck: false,
+        evidenceCheck: false,
+        accessibilityCheck: false,
+    })
 
-  const { 
-    register, 
-    control, 
-    handleSubmit, 
-    watch,
-    setValue,
-    formState: { errors, isValid } 
-  } = useForm<ReadyGateFormData>({
-    resolver: zodResolver(ReadyGateFormSchema),
-    defaultValues: {
-      submissionId,
-      reflections: rubricCriteria.map(c => ({ 
-        criterion: c.label, 
-        selfScore: 0, 
-        note: '' 
-      })),
-      structureCheck: false,
-      citationsCheck: false,
-      evidenceCheck: false,
-      accessibilityCheck: false,
-    },
-  })
+    const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<ReadyGateFormData>({
+        resolver: zodResolver(ReadyGateSchema),
+        defaultValues: {
+            submissionId: assignmentId,
+            reflections: rubricCriteria.map(c => ({
+                criterion: c.id,
+                selfScore: 50,
+                note: '',
+            })),
+            outcomesMastery: {},
+            structureCheck: false,
+            citationsCheck: false,
+            evidenceCheck: false,
+            accessibilityCheck: false,
+        },
+    })
 
-  const { fields } = useFieldArray({
-    control,
-    name: 'reflections',
-  })
+    const reflections = watch('reflections')
 
-  const watchedReflections = watch('reflections')
-  const watchedChecks = {
-    structure: watch('structureCheck'),
-    citations: watch('citationsCheck'),
-    evidence: watch('evidenceCheck'),
-    accessibility: watch('accessibilityCheck'),
-  }
+    const steps = [
+        { title: 'Outcome Mastery', icon: <Star className="size-5" /> },
+        { title: 'Compliance Check', icon: <Shield className="size-5" /> },
+        { title: 'Review & Submit', icon: <CheckCircle2 className="size-5" /> },
+    ]
 
-  const completedReflections = watchedReflections?.filter(
-    r => r.note && r.note.length >= 10 && r.selfScore > 0
-  ).length || 0
+    const overallProgress = reflections?.reduce((acc, r) => acc + (r.note?.length >= 10 ? 1 : 0), 0) ?? 0
+    const progressPercent = Math.round((overallProgress / rubricCriteria.length) * 100)
 
-  const checksCompleted = Object.values(watchedChecks).filter(Boolean).length
-  const totalSteps = 3
-  const currentStepNumber = step === 'reflection' ? 1 : step === 'ai-use' ? 2 : 3
+    const complianceComplete = Object.values(complianceChecks).every(Boolean)
 
-  const addAITool = () => {
-    if (newToolName && newToolPurpose) {
-      setAiTools([...aiTools, { toolName: newToolName, purpose: newToolPurpose, sections: [] }])
-      setNewToolName('')
-      setNewToolPurpose('')
+    const onSubmit = async (data: ReadyGateFormData) => {
+        setIsSubmitting(true)
+        try {
+            // Merge compliance checks into data
+            const finalData = {
+                ...data,
+                ...complianceChecks,
+            }
+            await onComplete?.(finalData)
+        } catch (error) {
+            console.error('Error submitting Ready-Gate:', error)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
-  }
 
-  const removeAITool = (index: number) => {
-    setAiTools(aiTools.filter((_, i) => i !== index))
-  }
-
-  const onSubmitForm = async (data: ReadyGateFormData) => {
-    setIsSubmitting(true)
-    try {
-      const aiUseStatement = {
-        toolsUsed: aiTools,
-        collaborationReflection: aiReflection,
-        hasProcessEvidence,
-        draftVersionsCount,
-        changeLogAvailable: draftVersionsCount > 1,
-      }
-
-      // Submit to API
-      const response = await fetch('/api/grading-workflow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'self-evaluation',
-          ...data,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit self-evaluation')
-      }
-
-      // Also submit AI-use statement if tools were used
-      if (aiTools.length > 0 || aiReflection) {
-        await fetch('/api/grading-workflow', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'ai-use-statement',
-            submissionId,
-            ...aiUseStatement,
-          }),
-        })
-      }
-
-      onComplete({ ...data, aiUseStatement })
-    } catch (error) {
-      console.error('Error submitting self-evaluation:', error)
-    } finally {
-      setIsSubmitting(false)
+    const handleComplianceToggle = (key: keyof typeof complianceChecks) => {
+        const newChecks = { ...complianceChecks, [key]: !complianceChecks[key] }
+        setComplianceChecks(newChecks)
+        setValue(key, newChecks[key])
     }
-  }
 
-  const isGatePassed = watchedChecks.structure && 
-                       watchedChecks.citations && 
-                       watchedChecks.evidence &&
-                       completedReflections === rubricCriteria.length
-
-  return (
-    <div className="space-y-6">
-      {/* Progress Header */}
-      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="size-5 text-blue-600" />
-              <CardTitle>Ready-Gate: Pre-Submission Checklist</CardTitle>
-            </div>
-            <Badge variant={isGatePassed ? "default" : "secondary"}>
-              Step {currentStepNumber} of {totalSteps}
-            </Badge>
-          </div>
-          <CardDescription>
-            Complete this self-evaluation before submitting. Reflect on your mastery of the learning outcomes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Progress value={(currentStepNumber / totalSteps) * 100} className="h-2" />
-          <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-            <span className={step === 'reflection' ? 'font-semibold text-blue-600' : ''}>
-              1. Self-Reflection
-            </span>
-            <span className={step === 'ai-use' ? 'font-semibold text-blue-600' : ''}>
-              2. AI-Use Statement
-            </span>
-            <span className={step === 'compliance' ? 'font-semibold text-blue-600' : ''}>
-              3. Compliance Checks
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <form onSubmit={handleSubmit(onSubmitForm)}>
-        {/* Step 1: Self-Reflection */}
-        {step === 'reflection' && (
-          <Card>
+    return (
+        <Card className="w-full max-w-4xl mx-auto">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="size-5" />
-                Outcome Mastery Self-Reflection
-              </CardTitle>
-              <CardDescription>
-                Rate your mastery of each rubric criterion and explain how you demonstrated this skill.
-                <br />
-                <span className="text-sm font-medium text-blue-600">
-                  Completed: {completedReflections} / {rubricCriteria.length}
-                </span>
-              </CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                    <Shield className="size-6" />
+                    Ready-Gate Self-Evaluation
+                </CardTitle>
+                <CardDescription>
+                    Complete this self-reflection before final submission. Your honest assessment helps improve feedback quality.
+                </CardDescription>
+
+                {/* Progress indicator */}
+                <div className="mt-4">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                        <span>Reflection Progress</span>
+                        <span>{progressPercent}%</span>
+                    </div>
+                    <Progress value={progressPercent} className="h-2" />
+                </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {fields.map((field, index) => {
-                const criterion = rubricCriteria[index]
-                const currentScore = watchedReflections?.[index]?.selfScore || 0
-                const currentNote = watchedReflections?.[index]?.note || ''
-                const isComplete = currentNote.length >= 10 && currentScore > 0
 
-                return (
-                  <div 
-                    key={field.id} 
-                    className={`rounded-lg border p-4 transition-colors ${
-                      isComplete ? 'border-green-200 bg-green-50/50' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="mb-3 flex items-start justify-between">
-                      <div>
-                        <Label className="text-base font-medium">{criterion.label}</Label>
-                        {criterion.description && (
-                          <p className="text-sm text-muted-foreground">{criterion.description}</p>
-                        )}
-                      </div>
-                      {isComplete && <CheckCircle2 className="size-5 text-green-600" />}
-                    </div>
-                    
-                    <div className="mb-3">
-                      <Label className="text-sm">Self-Assessment: {currentScore}%</Label>
-                      <Slider
-                        value={[currentScore]}
-                        onValueChange={(value) => setValue(`reflections.${index}.selfScore`, value[0])}
-                        max={100}
-                        step={5}
-                        className="mt-2"
-                      />
-                    </div>
+            <CardContent>
+                {/* Step indicators */}
+                <div className="flex justify-between mb-8">
+                    {steps.map((step, index) => (
+                        <div
+                            key={index}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${currentStep === index
+                                ? 'bg-primary text-primary-foreground'
+                                : currentStep > index
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}
+                        >
+                            {currentStep > index ? <CheckCircle2 className="size-5" /> : step.icon}
+                            <span className="hidden sm:inline text-sm font-medium">{step.title}</span>
+                        </div>
+                    ))}
+                </div>
 
-                    <Textarea
-                      {...register(`reflections.${index}.note`)}
-                      placeholder="How did you demonstrate this skill? Provide specific examples from your work..."
-                      className="min-h-[80px]"
-                    />
-                    {errors.reflections?.[index]?.note && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.reflections[index]?.note?.message}
-                      </p>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    {/* Step 1: Outcome Mastery Reflection */}
+                    {currentStep === 0 && (
+                        <div className="space-y-6">
+                            <Alert>
+                                <BookOpen className="size-4" />
+                                <AlertDescription>
+                                    For each learning outcome, rate your mastery and explain how you demonstrated it in your work.
+                                </AlertDescription>
+                            </Alert>
+
+                            {rubricCriteria.map((criterion, index) => (
+                                <div key={criterion.id} className="p-4 border rounded-lg space-y-4">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <h4 className="font-semibold">{criterion.name}</h4>
+                                            <p className="text-sm text-muted-foreground">{criterion.description}</p>
+                                        </div>
+                                        <Badge variant="outline">{criterion.maxScore} pts</Badge>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">
+                                            Self-Assessment Score: {reflections?.[index]?.selfScore || 50}%
+                                        </label>
+                                        <Slider
+                                            value={[reflections?.[index]?.selfScore || 50]}
+                                            onValueChange={([value]) => setValue(`reflections.${index}.selfScore`, value)}
+                                            max={100}
+                                            step={5}
+                                            className="w-full"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium">
+                                            How did you demonstrate mastery of this outcome?
+                                        </label>
+                                        <Textarea
+                                            {...register(`reflections.${index}.note`)}
+                                            placeholder="Describe specific examples from your work..."
+                                            className="mt-1"
+                                        />
+                                        {errors.reflections?.[index]?.note && (
+                                            <p className="text-sm text-red-500 mt-1">
+                                                {errors.reflections[index]?.note?.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+
+                            <Button type="button" onClick={() => setCurrentStep(1)} className="w-full">
+                                Continue to Compliance Check
+                                <ArrowRight className="size-4 ml-2" />
+                            </Button>
+                        </div>
                     )}
-                  </div>
-                )
-              })}
 
-              <div className="flex justify-end">
-                <Button 
-                  type="button" 
-                  onClick={() => setStep('ai-use')}
-                  disabled={completedReflections < rubricCriteria.length}
-                >
-                  Continue to AI-Use Statement <ArrowRight className="ml-2 size-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    {/* Step 2: Compliance Check */}
+                    {currentStep === 1 && (
+                        <div className="space-y-6">
+                            <Alert>
+                                <Shield className="size-4" />
+                                <AlertDescription>
+                                    Verify that your submission meets all required standards. Your work will remain locked until all checks pass.
+                                </AlertDescription>
+                            </Alert>
 
-        {/* Step 2: AI-Use Statement */}
-        {step === 'ai-use' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="size-5" />
-                AI-Use Statement Wizard
-              </CardTitle>
-              <CardDescription>
-                Document any AI tools you used and how you verified the output. This promotes academic integrity through transparency.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* AI Tools List */}
-              <div className="space-y-3">
-                <Label>AI Tools Used (if any)</Label>
-                {aiTools.map((tool, index) => (
-                  <div key={index} className="flex items-center gap-2 rounded border bg-gray-50 p-3">
-                    <div className="flex-1">
-                      <p className="font-medium">{tool.toolName}</p>
-                      <p className="text-sm text-muted-foreground">{tool.purpose}</p>
-                    </div>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm"
-                      onClick= {() => removeAITool(index)}
-                    >
-                      <XCircle className="size-4 text-red-500" />
-                    </Button>
-                  </div>
-                ))}
+                            <div className="space-y-4">
+                                {[
+                                    { key: 'structureCheck' as const, label: 'Document Structure', description: 'Introduction, body, conclusion, and proper headings' },
+                                    { key: 'citationsCheck' as const, label: 'Citations & References', description: 'All sources properly cited in the required format' },
+                                    { key: 'evidenceCheck' as const, label: 'Evidence & Support', description: 'Claims are backed by appropriate evidence' },
+                                    { key: 'accessibilityCheck' as const, label: 'Accessibility', description: 'Alt text for images, proper heading hierarchy, readable fonts' },
+                                ].map((check) => (
+                                    <div
+                                        key={check.key}
+                                        onClick={() => handleComplianceToggle(check.key)}
+                                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${complianceChecks[check.key]
+                                            ? 'bg-green-50 border-green-200 dark:bg-green-900/20'
+                                            : 'hover:bg-muted'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="font-semibold">{check.label}</h4>
+                                                <p className="text-sm text-muted-foreground">{check.description}</p>
+                                            </div>
+                                            {complianceChecks[check.key] ? (
+                                                <CheckCircle2 className="size-6 text-green-600" />
+                                            ) : (
+                                                <XCircle className="size-6 text-gray-300" />
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
 
-                <div className="grid gap-2 rounded border border-dashed p-3">
-                  <input
-                    type="text"
-                    placeholder="Tool name (e.g., ChatGPT, Gemini, Grammarly)"
-                    value={newToolName}
-                    onChange={(e) => setNewToolName(e.target.value)}
-                    className="rounded border px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Purpose (e.g., grammar check, brainstorming ideas)"
-                    value={newToolPurpose}
-                    onChange={(e) => setNewToolPurpose(e.target.value)}
-                    className="rounded border px-3 py-2 text-sm"
-                  />
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={addAITool}
-                    disabled={!newToolName || !newToolPurpose}
-                  >
-                    Add Tool
-                  </Button>
-                </div>
-              </div>
+                            {!complianceComplete && (
+                                <Alert variant="destructive">
+                                    <AlertTriangle className="size-4" />
+                                    <AlertDescription>
+                                        All compliance checks must pass before you can submit.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
 
-              {/* AI Collaboration Reflection */}
-              <div>
-                <Label>Reflection on AI Collaboration</Label>
-                <Textarea
-                  value={aiReflection}
-                  onChange={(e) => setAiReflection(e.target.value)}
-                  placeholder="Describe how you verified AI outputs, what changes you made to AI suggestions, and how you ensured the final work represents your own understanding..."
-                  className="mt-2 min-h-[120px]"
-                />
-              </div>
-
-              {/* Process Evidence */}
-              <div className="space-y-3 rounded border p-4">
-                <Label className="text-base">Process Evidence</Label>
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id="processEvidence"
-                    checked={hasProcessEvidence}
-                    onCheckedChange={(checked) => setHasProcessEvidence(!!checked)}
-                  />
-                  <Label htmlFor="processEvidence" className="font-normal">
-                    I have drafts, notes, or version history showing my work process
-                  </Label>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Label>Number of draft versions:</Label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={20}
-                    value={draftVersionsCount}
-                    onChange={(e) => setDraftVersionsCount(parseInt(e.target.value) || 0)}
-                    className="w-20 rounded border px-3 py-1 text-center"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => setStep('reflection')}>
-                  Back
-                </Button>
-                <Button type="button" onClick={() => setStep('compliance')}>
-                  Continue to Compliance Checks <ArrowRight className="ml-2 size-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 3: Compliance Checks */}
-        {step === 'compliance' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="size-5" />
-                Compliance Checklist
-              </CardTitle>
-              <CardDescription>
-                Verify that your submission meets all requirements. All checks must pass before you can submit.
-                <br />
-                <span className="text-sm font-medium text-blue-600">
-                  Checks Passed: {checksCompleted} / 4
-                </span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className={`flex items-start gap-3 rounded border p-4 ${
-                  watchedChecks.structure ? 'border-green-200 bg-green-50/50' : ''
-                }`}>
-                  <Checkbox
-                    id="structureCheck"
-                    {...register('structureCheck')}
-                    onCheckedChange={(checked) => setValue('structureCheck', !!checked)}
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="structureCheck" className="text-base font-medium">
-                      Structure Verified
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      My submission follows the required format (introduction, body, conclusion, etc.)
-                    </p>
-                  </div>
-                  {watchedChecks.structure ? (
-                    <CheckCircle2 className="size-5 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="size-5 text-yellow-500" />
-                  )}
-                </div>
-
-                <div className={`flex items-start gap-3 rounded border p-4 ${
-                  watchedChecks.citations ? 'border-green-200 bg-green-50/50' : ''
-                }`}>
-                  <Checkbox
-                    id="citationsCheck"
-                    {...register('citationsCheck')}
-                    onCheckedChange={(checked) => setValue('citationsCheck', !!checked)}
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="citationsCheck" className="text-base font-medium">
-                      Citations Complete
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      All sources are properly cited in the required format (APA, MLA, etc.)
-                    </p>
-                  </div>
-                  {watchedChecks.citations ? (
-                    <CheckCircle2 className="size-5 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="size-5 text-yellow-500" />
-                  )}
-                </div>
-
-                <div className={`flex items-start gap-3 rounded border p-4 ${
-                  watchedChecks.evidence ? 'border-green-200 bg-green-50/50' : ''
-                }`}>
-                  <Checkbox
-                    id="evidenceCheck"
-                    {...register('evidenceCheck')}
-                    onCheckedChange={(checked) => setValue('evidenceCheck', !!checked)}
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="evidenceCheck" className="text-base font-medium">
-                      Evidence Provided
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      I have included sufficient evidence to support my arguments and claims
-                    </p>
-                  </div>
-                  {watchedChecks.evidence ? (
-                    <CheckCircle2 className="size-5 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="size-5 text-yellow-500" />
-                  )}
-                </div>
-
-                <div className={`flex items-start gap-3 rounded border p-4 ${
-                  watchedChecks.accessibility ? 'border-green-200 bg-green-50/50' : ''
-                }`}>
-                  <Checkbox
-                    id="accessibilityCheck"
-                    {...register('accessibilityCheck')}
-                    onCheckedChange={(checked) => setValue('accessibilityCheck', !!checked)}
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="accessibilityCheck" className="text-base font-medium">
-                      Accessibility Reviewed
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Images have alt text, headings are used properly, and content is readable
-                    </p>
-                  </div>
-                  {watchedChecks.accessibility ? (
-                    <CheckCircle2 className="size-5 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="size-5 text-yellow-500" />
-                  )}
-                </div>
-              </div>
-
-              {/* Gate Status */}
-              {isGatePassed ? (
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle2 className="size-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    All checks passed! You are ready to submit your work.
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <Alert className="border-yellow-200 bg-yellow-50">
-                  <AlertTriangle className="size-4 text-yellow-600" />
-                  <AlertDescription className="text-yellow-800">
-                    Please complete all self-reflections and compliance checks before submitting.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => setStep('ai-use')}>
-                  Back
-                </Button>
-                <div className="flex gap-2">
-                  {onCancel && (
-                    <Button type="button" variant="outline" onClick={onCancel}>
-                      Cancel
-                    </Button>
-                  )}
-                  <Button 
-                    type="submit" 
-                    disabled={!isGatePassed || isSubmitting}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 size-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="mr-2 size-4" />
-                        Complete Ready-Gate & Submit
-                      </>
+                            <div className="flex gap-3">
+                                <Button type="button" variant="outline" onClick={() => setCurrentStep(0)} className="flex-1">
+                                    Back
+                                </Button>
+                                <Button
+                                    type="button"
+                                    onClick={() => setCurrentStep(2)}
+                                    disabled={!complianceComplete}
+                                    className="flex-1"
+                                >
+                                    Review Submission
+                                    <ArrowRight className="size-4 ml-2" />
+                                </Button>
+                            </div>
+                        </div>
                     )}
-                  </Button>
-                </div>
-              </div>
+
+                    {/* Step 3: Review & Submit */}
+                    {currentStep === 2 && (
+                        <div className="space-y-6">
+                            <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20">
+                                <CheckCircle2 className="size-4 text-green-600" />
+                                <AlertDescription className="text-green-700 dark:text-green-300">
+                                    All checks passed! Review your self-evaluation below.
+                                </AlertDescription>
+                            </Alert>
+
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Self-Assessment Summary</h3>
+                                {rubricCriteria.map((criterion, index) => (
+                                    <div key={criterion.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                        <span>{criterion.name}</span>
+                                        <Badge variant={
+                                            (reflections?.[index]?.selfScore || 0) >= 80 ? 'default' :
+                                                (reflections?.[index]?.selfScore || 0) >= 60 ? 'secondary' : 'outline'
+                                        }>
+                                            {reflections?.[index]?.selfScore || 0}%
+                                        </Badge>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="p-4 border rounded-lg bg-muted/50">
+                                <label className="flex items-start gap-3">
+                                    <input type="checkbox" className="mt-1" required />
+                                    <span className="text-sm">
+                                        I certify that this self-evaluation accurately reflects my understanding of my work.
+                                        I have not misrepresented my mastery of any learning outcomes.
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Button type="button" variant="outline" onClick={() => setCurrentStep(1)} className="flex-1">
+                                    Back
+                                </Button>
+                                <Button type="submit" disabled={isSubmitting} className="flex-1">
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="size-4 mr-2 animate-spin" />
+                                            Submitting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="size-4 mr-2" />
+                                            Complete Ready-Gate
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </form>
             </CardContent>
-          </Card>
-        )}
-      </form>
-    </div>
-  )
+        </Card>
+    )
 }
+
+export default ReadyGateSelfEvaluation

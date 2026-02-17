@@ -45,34 +45,22 @@ export async function getMaxSessions(userId: string): Promise<number> {
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
-            maxConcurrentSessions: true,
             role: true,
             isOwner: true,
-            isPremium: true,
-            sessionPolicy: true
+            subscriptionType: true
         }
     });
 
     if (!user) return 2; // Default
 
-    // Check session policy first
-    if (user.sessionPolicy?.maxConcurrentSessions) {
-        return user.sessionPolicy.maxConcurrentSessions;
-    }
-
     // Owner gets most sessions
-    if (user.isOwner || user.role === 'OWNER') {
+    if (user.isOwner || user.role === 'ADMIN') {
         return 10;
     }
 
     // Premium users get more
-    if (user.isPremium) {
+    if (user.subscriptionType === 'PREMIUM' || user.subscriptionType === 'ENTERPRISE') {
         return 5;
-    }
-
-    // User-specific setting
-    if (user.maxConcurrentSessions) {
-        return user.maxConcurrentSessions;
     }
 
     return 2; // Default limit
@@ -127,21 +115,13 @@ export async function checkSessionAllowed(
 
         // If there are multiple different IPs in last 5 minutes, potentially sharing
         if (uniqueIps.size >= 2 && !uniqueIps.has(newIpAddress)) {
-            // Log suspicious activity
-            await prisma.ownerAccessLog.create({
-                data: {
-                    ownerId: 'SYSTEM',
-                    action: 'VIEW_SESSION_LIST',
-                    targetType: 'session',
-                    targetId: userId,
-                    details: {
-                        type: 'SUSPICIOUS_ACTIVITY',
-                        reason: 'Multiple IPs detected in short timeframe',
-                        ips: Array.from(uniqueIps),
-                        newIp: newIpAddress,
-                        timestamp: new Date().toISOString()
-                    }
-                }
+            // Log suspicious activity (console only - OwnerAccessLog model pending)
+            console.warn('[SUSPICIOUS_ACTIVITY] Multiple IPs detected:', {
+                userId,
+                reason: 'Multiple IPs detected in short timeframe',
+                ips: Array.from(uniqueIps),
+                newIp: newIpAddress,
+                timestamp: new Date().toISOString()
             });
         }
     }

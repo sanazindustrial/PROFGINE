@@ -83,8 +83,36 @@ export function PresentationResults({ presentation, course }: PresentationResult
 
             if (response.ok) {
                 const data = await response.json()
-                // Open download URL in new tab
-                window.open(data.downloadUrl, "_blank")
+
+                // Fetch the file and create proper download
+                try {
+                    const fileResponse = await fetch(data.downloadUrl)
+                    const blob = await fileResponse.blob()
+
+                    // Determine correct MIME type
+                    let mimeType = 'application/octet-stream'
+                    if (format === 'pdf') {
+                        mimeType = 'application/pdf'
+                    } else if (format === 'pptx') {
+                        mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+                    }
+
+                    // Create blob with correct type
+                    const typedBlob = new Blob([blob], { type: mimeType })
+                    const url = URL.createObjectURL(typedBlob)
+
+                    // Create download link
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = data.fileName || `presentation.${format}`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    URL.revokeObjectURL(url)
+                } catch {
+                    // Fallback to opening URL
+                    window.open(data.downloadUrl, "_blank")
+                }
             } else {
                 alert("Failed to generate download")
             }
