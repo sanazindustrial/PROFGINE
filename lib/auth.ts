@@ -409,7 +409,6 @@ export const authOptions: NextAuthOptions = {
                         data: {
                             role: UserRole.ADMIN,
                             isOwner: true,
-                            isPremium: true,
                             subscriptionType: SubscriptionType.PREMIUM,
                             creditBalance: 999999,
                             monthlyCredits: 999999

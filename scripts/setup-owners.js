@@ -37,7 +37,6 @@ async function setupOwners() {
           data: {
             role: 'ADMIN',
             isOwner: true,
-            isPremium: true,
             subscriptionType: 'PREMIUM',
             creditBalance: 999999,
             monthlyCredits: 999999
