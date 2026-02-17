@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
-export const runtime = "edge"
+// Using Node.js runtime for better compatibility with auth
+export const runtime = "nodejs"
 
 interface StudentPost {
     id: string
