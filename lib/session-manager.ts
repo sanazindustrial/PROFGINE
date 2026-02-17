@@ -1,5 +1,6 @@
 // lib/session-manager.ts
 // Session management with concurrent session limits and anti-sharing protection
+// NOTE: ClientSessionTracker model not yet added to schema - functions are stubbed
 
 import { prisma } from './prisma';
 
@@ -68,166 +69,78 @@ export async function getMaxSessions(userId: string): Promise<number> {
 
 /**
  * Get active sessions for a user
+ * NOTE: Stubbed - ClientSessionTracker model not yet in schema
  */
-export async function getActiveSessions(userId: string): Promise<SessionInfo[]> {
-    const sessions = await prisma.clientSessionTracker.findMany({
-        where: {
-            userId,
-            isActive: true
-        },
-        orderBy: { lastPing: 'desc' }
-    });
-
-    return sessions.map(s => ({
-        id: s.id,
-        userId: s.userId,
-        ipAddress: s.ipAddress,
-        userAgent: null,
-        deviceId: null,
-        loginAt: s.loginAt,
-        lastPing: s.lastPing,
-        isActive: s.isActive,
-        location: s.location || undefined
-    }));
+export async function getActiveSessions(_userId: string): Promise<SessionInfo[]> {
+    // TODO: Implement when ClientSessionTracker model is added to schema
+    return [];
 }
 
 /**
  * Check if a new session can be created
  * Implements anti-sharing detection based on IP changes
+ * NOTE: Stubbed - always allows session until model is added
  */
 export async function checkSessionAllowed(
     userId: string,
-    newIpAddress?: string,
-    newDeviceId?: string
+    _newIpAddress?: string,
+    _newDeviceId?: string
 ): Promise<SessionCheckResult> {
     const maxSessions = await getMaxSessions(userId);
-    const activeSessions = await getActiveSessions(userId);
 
-    // Check for suspicious activity (rapid IP changes suggesting account sharing)
-    if (newIpAddress && activeSessions.length > 0) {
-        const recentSessions = activeSessions.filter(
-            s => new Date().getTime() - s.lastPing.getTime() < 5 * 60 * 1000 // Last 5 minutes
-        );
-
-        const uniqueIps = new Set(
-            recentSessions.map(s => s.ipAddress).filter(Boolean)
-        );
-
-        // If there are multiple different IPs in last 5 minutes, potentially sharing
-        if (uniqueIps.size >= 2 && !uniqueIps.has(newIpAddress)) {
-            // Log suspicious activity (console only - OwnerAccessLog model pending)
-            console.warn('[SUSPICIOUS_ACTIVITY] Multiple IPs detected:', {
-                userId,
-                reason: 'Multiple IPs detected in short timeframe',
-                ips: Array.from(uniqueIps),
-                newIp: newIpAddress,
-                timestamp: new Date().toISOString()
-            });
-        }
-    }
-
-    // If under limit, allow
-    if (activeSessions.length < maxSessions) {
-        return {
-            allowed: true,
-            activeSessions,
-            maxSessions
-        };
-    }
-
-    // Over limit - need to terminate oldest session
-    const oldestSession = activeSessions[activeSessions.length - 1];
-
-    // Terminate the oldest session
-    await terminateSession(oldestSession.id, 'SYSTEM', 'Maximum concurrent sessions reached - oldest session terminated');
-
+    // Always allow - session tracking not yet implemented
     return {
         allowed: true,
-        activeSessions: activeSessions.slice(0, -1),
-        maxSessions,
-        terminatedSessions: [oldestSession.id],
-        reason: 'Oldest session was terminated to allow new login'
+        activeSessions: [],
+        maxSessions
     };
 }
 
 /**
  * Create a new session tracker entry
+ * NOTE: Stubbed - ClientSessionTracker model not yet in schema
  */
 export async function createSessionTracker(
-    userId: string,
-    sessionId: string,
-    ipAddress?: string,
-    userAgent?: string,
-    deviceInfo?: Record<string, unknown>
+    _userId: string,
+    _sessionId: string,
+    _ipAddress?: string,
+    _userAgent?: string,
+    _deviceInfo?: Record<string, unknown>
 ): Promise<void> {
-    // First check if session is allowed
-    const check = await checkSessionAllowed(userId, ipAddress);
-
-    if (!check.allowed) {
-        throw new Error(check.reason || 'Session not allowed');
-    }
-
-    await prisma.clientSessionTracker.create({
-        data: {
-            userId,
-            sessionId,
-            ipAddress,
-            deviceInfo: deviceInfo || { userAgent },
-            isActive: true,
-            loginAt: new Date(),
-            lastPing: new Date()
-        }
-    });
+    // TODO: Implement when ClientSessionTracker model is added to schema
+    console.log('[SessionManager] createSessionTracker stubbed - model not in schema');
 }
 
 /**
  * Update session last activity
+ * NOTE: Stubbed - ClientSessionTracker model not yet in schema
  */
-export async function pingSession(sessionId: string): Promise<void> {
-    await prisma.clientSessionTracker.updateMany({
-        where: { sessionId },
-        data: { lastPing: new Date() }
-    });
+export async function pingSession(_sessionId: string): Promise<void> {
+    // TODO: Implement when ClientSessionTracker model is added to schema
 }
 
 /**
  * Terminate a specific session
+ * NOTE: Stubbed - ClientSessionTracker model not yet in schema
  */
 export async function terminateSession(
-    trackerId: string,
-    terminatedBy: string,
-    reason?: string
+    _trackerId: string,
+    _terminatedBy: string,
+    _reason?: string
 ): Promise<void> {
-    await prisma.clientSessionTracker.update({
-        where: { id: trackerId },
-        data: {
-            isActive: false,
-            terminatedAt: new Date(),
-            terminatedBy,
-            reason
-        }
-    });
+    // TODO: Implement when ClientSessionTracker model is added to schema
 }
 
 /**
  * Terminate all sessions for a user (useful for password change, etc.)
+ * NOTE: Partially stubbed - only NextAuth session invalidation works
  */
 export async function terminateAllSessions(
     userId: string,
-    terminatedBy: string,
-    reason?: string
+    _terminatedBy: string,
+    _reason?: string
 ): Promise<number> {
-    const result = await prisma.clientSessionTracker.updateMany({
-        where: { userId, isActive: true },
-        data: {
-            isActive: false,
-            terminatedAt: new Date(),
-            terminatedBy,
-            reason: reason || 'All sessions terminated'
-        }
-    });
-
-    // Also invalidate NextAuth sessions
+    // Invalidate NextAuth sessions
     await prisma.session.deleteMany({
         where: { userId }
     });
@@ -238,87 +151,31 @@ export async function terminateAllSessions(
         data: { sessionVersion: { increment: 1 } }
     });
 
-    return result.count;
+    return 0;
 }
 
 /**
  * Clean up stale sessions (no ping in last hour)
+ * NOTE: Stubbed - ClientSessionTracker model not yet in schema
  */
 export async function cleanupStaleSessions(): Promise<number> {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
-    const result = await prisma.clientSessionTracker.updateMany({
-        where: {
-            isActive: true,
-            lastPing: { lt: oneHourAgo }
-        },
-        data: {
-            isActive: false,
-            terminatedAt: new Date(),
-            terminatedBy: 'SYSTEM',
-            reason: 'Session timeout due to inactivity'
-        }
-    });
-
-    return result.count;
+    // TODO: Implement when ClientSessionTracker model is added to schema
+    return 0;
 }
 
 /**
  * Get all sessions across all users (owner only)
+ * NOTE: Stubbed - ClientSessionTracker model not yet in schema
  */
 export async function getAllActiveSessions(): Promise<{
     total: number;
     byUser: Record<string, SessionInfo[]>;
     suspicious: SessionInfo[];
 }> {
-    const sessions = await prisma.clientSessionTracker.findMany({
-        where: { isActive: true },
-        orderBy: { lastPing: 'desc' },
-        include: {
-            // Include user info if needed
-        }
-    });
-
-    const byUser: Record<string, SessionInfo[]> = {};
-    const suspicious: SessionInfo[] = [];
-
-    for (const session of sessions) {
-        const info: SessionInfo = {
-            id: session.id,
-            userId: session.userId,
-            ipAddress: session.ipAddress,
-            userAgent: null,
-            deviceId: null,
-            loginAt: session.loginAt,
-            lastPing: session.lastPing,
-            isActive: session.isActive,
-            location: session.location || undefined
-        };
-
-        if (!byUser[session.userId]) {
-            byUser[session.userId] = [];
-        }
-        byUser[session.userId].push(info);
-    }
-
-    // Detect suspicious activity - multiple IPs for same user in short time
-    for (const [userId, userSessions] of Object.entries(byUser)) {
-        if (userSessions.length > 1) {
-            const recentSessions = userSessions.filter(
-                s => new Date().getTime() - s.lastPing.getTime() < 10 * 60 * 1000
-            );
-
-            const uniqueIps = new Set(recentSessions.map(s => s.ipAddress).filter(Boolean));
-
-            if (uniqueIps.size > 1) {
-                suspicious.push(...recentSessions);
-            }
-        }
-    }
-
+    // TODO: Implement when ClientSessionTracker model is added to schema
     return {
-        total: sessions.length,
-        byUser,
-        suspicious
+        total: 0,
+        byUser: {},
+        suspicious: []
     };
 }
