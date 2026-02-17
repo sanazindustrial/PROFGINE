@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { useSession, signIn } from "next-auth/react"
 // @ts-ignore
 import mixpanel from "mixpanel-browser"
 
@@ -8,9 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, RefreshCw, Star, User, FileText, MessageSquare, Wand2, Key } from "lucide-react"
+import { Copy, RefreshCw, Star, User, FileText, MessageSquare, Wand2, Key, LogIn } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
 import { useUserAISettings, getChatEndpoint } from "@/hooks/use-user-ai"
 
@@ -21,6 +23,7 @@ interface Message {
 }
 
 export function DiscussionResponse() {
+  const { data: session, status } = useSession()
   const [messages, setMessages] = useState<Message[]>([])
   const [isResponseLoading, setIsResponseLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -102,8 +105,23 @@ export function DiscussionResponse() {
         }),
       })
 
+      // Check for redirect (authentication required)
+      if (res.redirected || res.status === 307 || res.status === 302) {
+        throw new Error("Please sign in to generate AI responses. Your session may have expired.")
+      }
+
+      // Check content type to avoid JSON parse errors on HTML responses
+      const contentType = res.headers.get("content-type") || ""
+      if (!contentType.includes("application/json")) {
+        throw new Error("Please sign in to use AI features. Click 'Sign In' in the navigation.")
+      }
+
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Failed to generate response")
+
+      if (!data.content && !data.message) {
+        throw new Error("No response received from AI. Please try again.")
+      }
 
       setMessages([
         { role: "user", content, id: "0" },
@@ -164,6 +182,17 @@ export function DiscussionResponse() {
         }),
       })
 
+      // Check for redirect (authentication required)
+      if (res.redirected || res.status === 307 || res.status === 302) {
+        throw new Error("Please sign in to refine AI responses. Your session may have expired.")
+      }
+
+      // Check content type to avoid JSON parse errors on HTML responses
+      const contentType = res.headers.get("content-type") || ""
+      if (!contentType.includes("application/json")) {
+        throw new Error("Please sign in to use AI features. Click 'Sign In' in the navigation.")
+      }
+
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Failed to refine response")
 
@@ -213,6 +242,26 @@ export function DiscussionResponse() {
 
   return (
     <div className="space-y-8">
+      {/* Login Prompt for Unauthenticated Users */}
+      {status !== "loading" && !session && (
+        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
+          <LogIn className="size-4 text-amber-600" />
+          <AlertTitle>Sign in required</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>You need to sign in to generate AI responses.</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => signIn("google")}
+              className="ml-4"
+            >
+              <LogIn className="mr-2 size-4" />
+              Sign In
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Input Section */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Professor Profile */}

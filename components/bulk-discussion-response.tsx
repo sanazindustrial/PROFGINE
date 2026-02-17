@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { useSession, signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,10 +17,12 @@ import {
     Loader2,
     FileText,
     Zap,
+    LogIn,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
 import { getChatEndpoint } from "@/hooks/use-user-ai"
 
@@ -80,6 +83,17 @@ export function BulkDiscussionResponse() {
                     scanMode === "url" ? { url: webUrl } : { rawContent }
                 ),
             })
+
+            // Check for redirect (authentication required)
+            if (res.redirected || res.status === 307 || res.status === 302) {
+                throw new Error("Please sign in to scan content. Your session may have expired.")
+            }
+
+            // Check content type
+            const contentType = res.headers.get("content-type") || ""
+            if (!contentType.includes("application/json")) {
+                throw new Error("Please sign in to use this feature. Click 'Sign In' in the navigation.")
+            }
 
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || "Failed to scan")
@@ -161,6 +175,17 @@ Professor's Response to this student (personalized, encouraging, and constructiv
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ messages: [{ role: "user", content }] }),
                 })
+
+                // Check for redirect (authentication required)
+                if (res.redirected || res.status === 307 || res.status === 302) {
+                    throw new Error("Please sign in to generate AI responses.")
+                }
+
+                // Check content type
+                const contentType = res.headers.get("content-type") || ""
+                if (!contentType.includes("application/json")) {
+                    throw new Error("Authentication required. Please sign in.")
+                }
 
                 const data = await res.json()
                 if (!res.ok) throw new Error(data.error || "Failed to generate")

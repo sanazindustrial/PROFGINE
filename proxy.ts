@@ -23,7 +23,10 @@ function isPublicPath(pathname: string) {
     pathname.startsWith("/test/") ||
     pathname.startsWith("/api/debug/") ||
     pathname.startsWith("/api/redirect") ||
-    pathname.startsWith("/api/auth/")
+    pathname.startsWith("/api/auth/") ||
+    pathname.startsWith("/api/chat") ||
+    pathname.startsWith("/api/discussion/") ||
+    pathname.startsWith("/api/ai/")
   );
 }
 

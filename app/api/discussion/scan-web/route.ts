@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
-// Using Node.js runtime for better compatibility with auth
+// Using Node.js runtime for better compatibility
 export const runtime = "nodejs"
 
 interface StudentPost {
@@ -100,11 +98,7 @@ async function fetchWebpage(url: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions)
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-        }
-
+        // Public API - no auth required for discussion tools
         const body = await request.json()
         const { url, rawContent } = body
 
