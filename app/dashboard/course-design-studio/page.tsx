@@ -579,7 +579,7 @@ function CourseDesignStudioContent() {
                             </Link>
                         </div>
                     )}
-                    
+
                     {effectiveCourseId && hasDesign ? (
                         <SectionBuilder
                             courseId={effectiveCourseId}

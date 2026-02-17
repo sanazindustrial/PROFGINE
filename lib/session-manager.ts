@@ -59,7 +59,7 @@ export async function getMaxSessions(userId: string): Promise<number> {
     }
 
     // Premium users get more
-    if (user.subscriptionType === 'PREMIUM' || user.subscriptionType === 'ENTERPRISE') {
+    if (user.subscriptionType === 'PREMIUM') {
         return 5;
     }
 
