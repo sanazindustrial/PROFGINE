@@ -15,7 +15,7 @@ import {
     XCircle,
     Loader2,
     FileText,
-    Sparkles,
+    Zap,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -394,7 +394,7 @@ Here is my analysis of the topic..."
                                     </>
                                 ) : (
                                     <>
-                                        <Sparkles className="mr-2 size-4" />
+                                        <Zap className="mr-2 size-4" />
                                         Generate All Responses
                                     </>
                                 )}
@@ -472,7 +472,7 @@ Here is my analysis of the topic..."
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Sparkles className="size-5 text-yellow-500" />
+                                    <Zap className="size-5 text-yellow-500" />
                                     Generated Responses
                                     <Badge variant="outline" className="ml-2">
                                         {completedCount} completed
