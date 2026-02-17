@@ -9,6 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileText, Plus, Zap, Calendar, Users, Crown } from 'lucide-react';
+import Link from 'next/link';
+
+// Helper to format the limit display
+function formatLimit(limit: number | null | undefined): string {
+    if (limit === null || limit === undefined || limit === -1) {
+        return 'Unlimited';
+    }
+    return String(limit);
+}
 
 export default async function AssignmentsPage() {
     const session = await getServerSession(authOptions);
@@ -127,10 +136,12 @@ export default async function AssignmentsPage() {
                 </div>
                 <div className="flex gap-2">
                     {canCreateAssignment.canPerform ? (
-                        <Button>
-                            <Plus className="mr-2 size-4" />
-                            Create Assignment
-                        </Button>
+                        <Link href="/dashboard/courses">
+                            <Button>
+                                <Plus className="mr-2 size-4" />
+                                Create Assignment
+                            </Button>
+                        </Link>
                     ) : (
                         <div className="relative">
                             <Button disabled>
@@ -157,8 +168,7 @@ export default async function AssignmentsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {assignmentCount}
-                            {assignmentLimit && ` / ${assignmentLimit}`}
+                            {assignmentCount} / {formatLimit(assignmentLimit)}
                         </div>
                         <p className="text-sm text-muted-foreground">
                             {canCreateAssignment.canPerform ? 'Available' : canCreateAssignment.reason}
@@ -218,10 +228,12 @@ export default async function AssignmentsPage() {
                                 Create your first assignment to get started with student assessments.
                             </p>
                             {canCreateAssignment.canPerform && (
-                                <Button>
-                                    <Plus className="mr-2 size-4" />
-                                    Create First Assignment
-                                </Button>
+                                <Link href="/dashboard/courses">
+                                    <Button>
+                                        <Plus className="mr-2 size-4" />
+                                        Create First Assignment
+                                    </Button>
+                                </Link>
                             )}
                         </CardContent>
                     </Card>
