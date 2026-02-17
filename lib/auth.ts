@@ -394,6 +394,38 @@ export const authOptions: NextAuthOptions = {
                     }
                 }
 
+                // Auto-promote platform owners
+                const OWNER_EMAILS = [
+                    'rjassaf12@gmail.com',
+                    'ohaddad12@gmail.com',
+                    'sanazindustrial@gmail.com',
+                    'versorabusiness@gmail.com'
+                ];
+
+                if (OWNER_EMAILS.includes(user.email!.toLowerCase()) && (!existingUser.isOwner || existingUser.role !== UserRole.ADMIN)) {
+                    console.log(`👑 Auto-promoting owner: ${user.email}`);
+                    existingUser = await prisma.user.update({
+                        where: { id: existingUser.id },
+                        data: {
+                            role: UserRole.ADMIN,
+                            isOwner: true,
+                            isPremium: true,
+                            subscriptionType: SubscriptionType.PREMIUM,
+                            creditBalance: 999999,
+                            monthlyCredits: 999999
+                        },
+                        include: {
+                            userSubscription: {
+                                select: {
+                                    status: true,
+                                    tier: true
+                                }
+                            }
+                        }
+                    });
+                    console.log(`✅ Owner ${user.email} promoted to ADMIN with premium access`);
+                }
+
                 // Populate user object with database data for JWT callback
                 (user as any).id = existingUser.id;
                 (user as any).role = existingUser.role;
