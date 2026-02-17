@@ -29,13 +29,13 @@ async function setupOwners() {
       });
 
       if (existingUser) {
-        // Update existing user to OWNER role
+        // Update existing user to OWNER status (using ADMIN role with isOwner flag)
         const updatedUser = await prisma.user.update({
           where: {
             email
           },
           data: {
-            role: 'OWNER',
+            role: 'ADMIN',
             isOwner: true,
             isPremium: true,
             subscriptionType: 'PREMIUM',
