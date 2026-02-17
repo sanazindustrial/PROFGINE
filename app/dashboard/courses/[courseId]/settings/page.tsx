@@ -93,10 +93,10 @@ export default async function CourseSettingsPage({
                             <p>{course.instructor?.name || "Not assigned"}</p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-muted-foreground">Status</label>
+                            <label className="text-sm font-medium text-muted-foreground">Visibility</label>
                             <p>
-                                <Badge variant={course.isPublished ? "default" : "secondary"}>
-                                    {course.isPublished ? "Published" : "Draft"}
+                                <Badge variant={course.isPublic ? "default" : "secondary"}>
+                                    {course.isPublic ? "Public" : "Private"}
                                 </Badge>
                             </p>
                         </div>
