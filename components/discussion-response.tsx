@@ -337,6 +337,24 @@ export function DiscussionResponse() {
         </Card>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <Alert variant="destructive" className="border-red-300 dark:border-red-800">
+          <AlertTitle>Generation Failed</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setError(null)}
+              className="ml-4 shrink-0"
+            >
+              Dismiss
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Generate Button */}
       <div className="flex justify-center">
         <Button
@@ -360,7 +378,7 @@ export function DiscussionResponse() {
       </div>
 
       {/* Response Section */}
-      {(messages[1] || isResponseLoading) && (
+      {(messages[1] || isResponseLoading || error) && (
         <Card className="transition-all duration-200 hover:shadow-md">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -401,6 +419,10 @@ export function DiscussionResponse() {
                   <RefreshCw className="size-4 animate-spin" />
                   AI is crafting your response...
                 </div>
+              </div>
+            ) : error && !messages[1] ? (
+              <div className="rounded-md border border-dashed border-red-300 bg-red-50 p-4 text-center text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+                {error} — Please try again.
               </div>
             ) : (
               <Textarea

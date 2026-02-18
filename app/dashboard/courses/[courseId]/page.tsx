@@ -46,7 +46,7 @@ export default async function CourseDetailPage({
                 take: 5
             },
             assignments: {
-                orderBy: { dueDate: 'asc' },
+                orderBy: { dueAt: 'asc' },
                 take: 5
             },
             _count: {
@@ -267,15 +267,15 @@ export default async function CourseDetailPage({
                                     <div key={assignment.id} className="flex items-center justify-between rounded-lg border p-3">
                                         <div>
                                             <p className="font-medium">{assignment.title}</p>
-                                            {assignment.dueDate && (
+                                            {assignment.dueAt && (
                                                 <p className="flex items-center gap-1 text-sm text-muted-foreground">
                                                     <Calendar className="size-3" />
-                                                    Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                                                    Due: {new Date(assignment.dueAt).toLocaleDateString()}
                                                 </p>
                                             )}
                                         </div>
                                         <Badge variant="outline">
-                                            {assignment.maxScore ? `${assignment.maxScore} pts` : 'Ungraded'}
+                                            {assignment.points ? `${assignment.points} pts` : 'Ungraded'}
                                         </Badge>
                                     </div>
                                 ))}

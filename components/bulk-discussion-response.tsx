@@ -54,6 +54,7 @@ export function BulkDiscussionResponse() {
     const [isGenerating, setIsGenerating] = useState(false)
     const [progress, setProgress] = useState(0)
     const [scanMode, setScanMode] = useState<"url" | "paste">("paste")
+    const [scanError, setScanError] = useState<string | null>(null)
 
     // Load professor profile from localStorage
     useState(() => {
@@ -74,6 +75,7 @@ export function BulkDiscussionResponse() {
         setIsScanning(true)
         setStudentPosts([])
         setResponses([])
+        setScanError(null)
 
         try {
             const res = await fetch("/api/discussion/scan-web", {
@@ -104,9 +106,11 @@ export function BulkDiscussionResponse() {
                 description: `Found ${data.posts?.length || 0} student posts`,
             })
         } catch (error) {
+            const errMsg = error instanceof Error ? error.message : "Failed to scan content"
+            setScanError(errMsg)
             toast({
                 title: "Scan Failed",
-                description: error instanceof Error ? error.message : "Failed to scan content",
+                description: errMsg,
                 variant: "destructive",
             })
         } finally {
@@ -299,6 +303,25 @@ Professor's Response to this student (personalized, encouraging, and constructiv
                 </Button>
             </div>
 
+            {/* Scan Error Display */}
+            {scanError && (
+                <Alert variant="destructive" className="border-red-300 dark:border-red-800">
+                    <XCircle className="size-4" />
+                    <AlertTitle>Scan Failed</AlertTitle>
+                    <AlertDescription className="flex items-center justify-between">
+                        <span>{scanError}</span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setScanError(null)}
+                            className="ml-4 shrink-0"
+                        >
+                            Dismiss
+                        </Button>
+                    </AlertDescription>
+                </Alert>
+            )}
+
             {/* Input Section */}
             <div className="grid gap-6 lg:grid-cols-2">
                 {/* Left: Professor Profile + Topic */}
@@ -467,6 +490,11 @@ Here is my analysis of the topic..."
                                         <p className="line-clamp-2 mt-1 text-sm text-muted-foreground">
                                             {post.content.substring(0, 150)}...
                                         </p>
+                                        {response?.status === "error" && response.error && (
+                                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                                Error: {response.error}
+                                            </p>
+                                        )}
                                     </div>
                                 )
                             })}
@@ -491,7 +519,7 @@ Here is my analysis of the topic..."
             )}
 
             {/* Generated Responses */}
-            {responses.filter((r) => r.status === "completed").length > 0 && (
+            {responses.filter((r) => r.status === "completed" || r.status === "error").length > 0 && (
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
@@ -518,6 +546,27 @@ Here is my analysis of the topic..."
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {responses
+                            .filter((r) => r.status === "error")
+                            .map((response) => (
+                                <Card key={response.studentId} className="border-dashed border-red-300 dark:border-red-700">
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">
+                                                Failed: {response.studentName}
+                                            </CardTitle>
+                                            <Badge variant="destructive" className="text-xs">
+                                                Error
+                                            </Badge>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm text-red-600 dark:text-red-400">
+                                            {response.error || "Generation failed"}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         {responses
                             .filter((r) => r.status === "completed")
                             .map((response) => (

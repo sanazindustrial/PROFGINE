@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { TailwindIndicator } from "@/components/tailwind-indicator"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/app/auth/Provider"
+import { Toaster } from "@/components/ui/toaster"
 
 import "@radix-ui/themes/styles.css"
 
@@ -63,6 +64,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                   <SiteFooter />
                 </div>
                 <TailwindIndicator />
+                <Toaster />
               </Theme>
             </AuthProvider>
           </ThemeProvider>
