@@ -6,9 +6,9 @@ import { getBillingContext, ensureUserSubscription } from '@/lib/access/getBilli
 import { requireSession } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, UserPlus, Crown, Lock } from 'lucide-react';
+import { Crown, Lock } from 'lucide-react';
+import { EnrollmentActions } from '@/components/enrollment-actions';
 
 /**
  * STUDENT ENROLLMENT PAGE (Professor Feature)
@@ -80,9 +80,11 @@ export default async function EnrollmentPage() {
                                 {enrollmentUpgrade?.upgradeMessage || 'This module is not available in your current plan.'}
                             </p>
                             <div className="flex justify-center gap-2">
-                                <Button className="bg-orange-600 hover:bg-orange-700">
-                                    <Crown className="mr-2 size-4" />
-                                    Upgrade Now
+                                <Button className="bg-orange-600 hover:bg-orange-700" asChild>
+                                    <a href="/subscription/upgrade">
+                                        <Crown className="mr-2 size-4" />
+                                        Upgrade Now
+                                    </a>
                                 </Button>
                                 <Button variant="outline" asChild>
                                     <a href="/dashboard">Back to Dashboard</a>
@@ -129,6 +131,23 @@ export default async function EnrollmentPage() {
         'bulk_enroll'
     );
 
+    // Serialize course data for client component
+    const coursesData = courses.map(course => ({
+        id: course.id,
+        title: course.title,
+        code: course.code,
+        _count: course._count,
+        enrollments: course.enrollments.map(e => ({
+            id: e.id,
+            user: {
+                id: e.user.id,
+                name: e.user.name,
+                email: e.user.email,
+                role: e.user.role,
+            }
+        }))
+    }));
+
     return (
         <div className="container mx-auto space-y-6 py-6">
             {/* Header */}
@@ -138,18 +157,6 @@ export default async function EnrollmentPage() {
                     <p className="text-muted-foreground">
                         Enroll students in your courses (Professor Feature)
                     </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline">
-                        <UserPlus className="mr-2 size-4" />
-                        Add Students
-                    </Button>
-                    {canPerformBulkEnrollment.canPerform && (
-                        <Button>
-                            <Users className="mr-2 size-4" />
-                            Bulk Enroll
-                        </Button>
-                    )}
                 </div>
             </div>
 
@@ -161,88 +168,11 @@ export default async function EnrollmentPage() {
                 </AlertDescription>
             </Alert>
 
-            {/* Courses and Enrollments */}
-            <div className="grid gap-6">
-                {courses.length === 0 ? (
-                    <Card>
-                        <CardContent className="py-12 text-center">
-                            <Users className="mx-auto mb-4 size-12 text-gray-400" />
-                            <h3 className="mb-2 text-lg font-semibold text-gray-900">No Courses Found</h3>
-                            <p className="mb-4 text-gray-600">
-                                Create a course first to start enrolling students.
-                            </p>
-                            <Button asChild>
-                                <a href="/dashboard/courses">Create Course</a>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    courses.map(course => (
-                        <Card key={course.id}>
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <CardTitle className="flex items-center gap-2">
-                                            {course.title}
-                                            {course.code && (
-                                                <Badge variant="secondary">{course.code}</Badge>
-                                            )}
-                                        </CardTitle>
-                                        <CardDescription>
-                                            {course._count.enrollments} students enrolled •
-                                            {course._count.assignments} assignments •
-                                            {course._count.discussions} discussions
-                                        </CardDescription>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" size="sm">
-                                            <UserPlus className="mr-1 size-4" />
-                                            Enroll
-                                        </Button>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                {course.enrollments.length > 0 ? (
-                                    <div className="space-y-2">
-                                        <h4 className="font-medium">Enrolled Students:</h4>
-                                        <div className="grid gap-2">
-                                            {course.enrollments.slice(0, 5).map(enrollment => (
-                                                <div key={enrollment.id} className="flex items-center justify-between rounded bg-gray-50 p-2">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
-                                                            <span className="text-sm font-medium text-blue-600">
-                                                                {enrollment.user.name?.charAt(0) || 'U'}
-                                                            </span>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-sm font-medium">{enrollment.user.name}</div>
-                                                            <div className="text-xs text-gray-600">{enrollment.user.email}</div>
-                                                        </div>
-                                                    </div>
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {enrollment.user.role}
-                                                    </Badge>
-                                                </div>
-                                            ))}
-                                            {course.enrollments.length > 5 && (
-                                                <div className="py-2 text-center text-sm text-gray-600">
-                                                    and {course.enrollments.length - 5} more students...
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="py-8 text-center text-gray-500">
-                                        <Users className="mx-auto mb-2 size-8 text-gray-400" />
-                                        <p>No students enrolled yet</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
-            </div>
+            {/* Client component handles all interactive enrollment UI: header buttons, course cards, and enrollment dialogs */}
+            <EnrollmentActions
+                courses={coursesData}
+                canBulkEnroll={canPerformBulkEnrollment.canPerform}
+            />
 
             {/* Feature Limitations */}
             {!canPerformBulkEnrollment.canPerform && (
@@ -251,8 +181,8 @@ export default async function EnrollmentPage() {
                     <AlertDescription>
                         <strong>Bulk Enrollment:</strong> {canPerformBulkEnrollment.reason}
                         {canPerformBulkEnrollment.upgradeRequired && (
-                            <Button variant="link" className="ml-2 h-auto p-0">
-                                Upgrade Plan
+                            <Button variant="link" className="ml-2 h-auto p-0" asChild>
+                                <a href="/subscription/upgrade">Upgrade Plan</a>
                             </Button>
                         )}
                     </AlertDescription>

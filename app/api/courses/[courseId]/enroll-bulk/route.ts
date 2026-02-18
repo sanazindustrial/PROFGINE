@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
 
-        if (!session?.user || session.user.role !== UserRole.PROFESSOR) {
+        if (!session?.user || (session.user.role !== UserRole.PROFESSOR && session.user.role !== UserRole.ADMIN)) {
             return NextResponse.json(
-                { error: "Only professors can enroll students" },
+                { error: "Only professors and admins can enroll students" },
                 { status: 403 }
             )
         }

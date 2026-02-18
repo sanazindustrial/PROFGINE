@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileText, Plus, Zap, Calendar, Users, Crown } from 'lucide-react';
 import Link from 'next/link';
+import { AssignmentCreateButton, AssignmentCreateFirstButton } from '@/components/assignment-create-button';
 
 // Helper to format the limit display
 function formatLimit(limit: number | null | undefined): string {
@@ -136,18 +137,10 @@ export default async function AssignmentsPage() {
                 </div>
                 <div className="flex gap-2">
                     {canCreateAssignment.canPerform ? (
-                        <Link href="/dashboard/courses">
-                            <Button>
-                                <Plus className="mr-2 size-4" />
-                                Create Assignment
-                            </Button>
-                        </Link>
+                        <AssignmentCreateButton />
                     ) : (
                         <div className="relative">
-                            <Button disabled>
-                                <Plus className="mr-2 size-4" />
-                                Create Assignment
-                            </Button>
+                            <AssignmentCreateButton disabled />
                             <Badge variant="outline" className="absolute -right-2 -top-2 bg-orange-100 text-orange-700">
                                 Limit Reached
                             </Badge>
@@ -228,12 +221,7 @@ export default async function AssignmentsPage() {
                                 Create your first assignment to get started with student assessments.
                             </p>
                             {canCreateAssignment.canPerform && (
-                                <Link href="/dashboard/courses">
-                                    <Button>
-                                        <Plus className="mr-2 size-4" />
-                                        Create First Assignment
-                                    </Button>
-                                </Link>
+                                <AssignmentCreateFirstButton />
                             )}
                         </CardContent>
                     </Card>

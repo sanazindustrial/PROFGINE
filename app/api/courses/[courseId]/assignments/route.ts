@@ -24,14 +24,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ courseI
     });
     if (!course) return NextResponse.json({ error: "Course not found/forbidden" }, { status: 404 });
 
+    const points = body.points ?? body.maxPoints ?? 100;
+    const dueAtRaw = body.dueAt ?? body.dueDate ?? null;
+
     const assignment = await prisma.assignment.create({
         data: {
             courseId: course.id,
             title: body.title,
             type: body.type ?? "OTHER",
-            instructions: body.instructions ?? null,
-            points: body.points ?? 100,
-            dueAt: body.dueAt ? new Date(body.dueAt) : null,
+            instructions: body.instructions ?? body.description ?? null,
+            points: typeof points === "string" ? parseInt(points, 10) || 100 : points,
+            dueAt: dueAtRaw ? new Date(dueAtRaw) : null,
+            lateSubmissionAllowed: body.allowLateSubmissions ?? body.lateSubmissionAllowed ?? false,
         },
     });
 

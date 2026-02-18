@@ -42,7 +42,7 @@ export default async function CourseStudioPage({
         <div className="container mx-auto px-4 py-8 duration-500 animate-in fade-in-50">
             <div className="mb-6">
                 <div className="mb-2 flex items-center gap-3">
-                    <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent">Course Studio Design</h1>
+                    <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent">Presentation Studio</h1>
                     <Badge variant="secondary" className="text-xs">AI-Powered</Badge>
                 </div>
                 <p className="text-gray-900 dark:text-gray-100">

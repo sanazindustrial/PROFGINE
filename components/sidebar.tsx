@@ -41,13 +41,13 @@ const navigationItems: SidebarItem[] = [
         title: "Course Design Studio",
         href: "/dashboard/course-design-studio",
         icon: Star,
-        description: "AI-powered course creation"
+        description: "Design full course structure"
     },
     {
-        title: "Course Studio",
+        title: "Presentation Studio",
         href: "/dashboard/courses",
         icon: Monitor,
-        description: "Create AI-powered presentations"
+        description: "Generate AI slide decks"
     },
     {
         title: "Create Syllabus",

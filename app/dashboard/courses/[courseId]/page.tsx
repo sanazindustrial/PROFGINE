@@ -99,7 +99,7 @@ export default async function CourseDetailPage({
                         <Link href={`/dashboard/courses/${course.id}/studio`}>
                             <Button>
                                 <Layers className="mr-2 size-4" />
-                                Course Studio
+                                Presentation Studio
                             </Button>
                         </Link>
                     </div>
@@ -182,9 +182,9 @@ export default async function CourseDetailPage({
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
                                 <GraduationCap className="size-5 text-purple-600" />
-                                Course Studio
+                                Presentation Studio
                             </CardTitle>
-                            <CardDescription>Design presentations and materials</CardDescription>
+                            <CardDescription>Generate AI-powered slide decks</CardDescription>
                         </CardHeader>
                     </Card>
                 </Link>

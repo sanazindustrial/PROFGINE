@@ -98,9 +98,11 @@ export default function CreateAssignmentForm({
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    ...formData,
-                    maxPoints: parseFloat(formData.maxPoints) || 100,
-                    dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null
+                    title: formData.title,
+                    instructions: formData.instructions || formData.description || null,
+                    points: parseFloat(formData.maxPoints) || 100,
+                    dueAt: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
+                    lateSubmissionAllowed: formData.allowLateSubmissions,
                 })
             });
 
@@ -115,7 +117,7 @@ export default function CreateAssignmentForm({
                 description: `Assignment "${formData.title}" has been created successfully.`
             });
 
-            router.push(`/dashboard/courses/${courseId}/assignments/${data.assignment.id}`);
+            router.push(`/dashboard/assignments`);
         } catch (error) {
             console.error('Error creating assignment:', error);
             toast({
