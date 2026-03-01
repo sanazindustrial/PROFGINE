@@ -110,7 +110,32 @@ export function BulkDiscussionResponse() {
             }
 
             const data = await res.json()
-            if (!res.ok) throw new Error(data.error || "Failed to scan")
+
+            // Handle login required / auth errors with helpful messaging
+            if (data.requiresAuth || data.error === 'Login required') {
+                setScanError(null)
+                toast({
+                    title: `${data.lmsName || 'LMS'} Login Required`,
+                    description: data.suggestion || "Please paste the discussion content manually instead.",
+                    variant: "destructive",
+                })
+                // Switch to paste mode automatically
+                setScanMode("paste")
+                return
+            }
+
+            if (!res.ok) throw new Error(data.message || data.error || "Failed to scan")
+
+            // Check if no posts found with suggestion
+            if (data.posts?.length === 0 && data.suggestion) {
+                toast({
+                    title: "No Posts Found",
+                    description: data.suggestion,
+                    variant: "destructive",
+                })
+                setScanMode("paste")
+                return
+            }
 
             setStudentPosts(data.posts || [])
             toast({
@@ -420,11 +445,18 @@ Professor's Response to this student:`
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {scanMode === "url" ? (
-                            <Input
-                                placeholder="https://your-lms.com/discussion/..."
-                                value={webUrl}
-                                onChange={(e) => setWebUrl(e.target.value)}
-                            />
+                            <>
+                                <Input
+                                    placeholder="https://your-lms.com/discussion/..."
+                                    value={webUrl}
+                                    onChange={(e) => setWebUrl(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    <strong>Note:</strong> Protected LMS pages (Moodle, Canvas, Blackboard) that require login
+                                    cannot be scanned directly. For those, please copy the discussion content and use
+                                    &quot;Paste Content&quot; instead.
+                                </p>
+                            </>
                         ) : (
                             <Textarea
                                 className="min-h-[150px]"
@@ -654,7 +686,7 @@ Here is my analysis of the topic..."
                                                 </Badge>
                                             )}
                                         </div>
-                                        <p className="line-clamp-2 mt-1 text-sm text-muted-foreground">
+                                        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                                             {post.content.substring(0, 150)}...
                                         </p>
                                         {response?.status === "error" && response.error && (

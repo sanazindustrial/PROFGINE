@@ -166,6 +166,74 @@ function isNavigationText(text: string): boolean {
     return navPatterns.some(pattern => pattern.test(lowerText))
 }
 
+// Detect if the fetched content is a login/auth page
+function isLoginPage(html: string, text: string): boolean {
+    const htmlLower = html.toLowerCase()
+    const textLower = text.toLowerCase()
+
+    // Check for common login page indicators in HTML
+    const loginIndicators = [
+        // Form-based indicators
+        /name=["']?password["']?/i,
+        /type=["']?password["']?/i,
+        /name=["']?username["']?/i,
+        /id=["']?login/i,
+        /class=["']?[^"']*login[^"']*["']?/i,
+        // Moodle specific
+        /loginform/i,
+        /loginerrormessage/i,
+        /lost.*password/i,
+        // Canvas specific
+        /ic-Login/i,
+        // Blackboard specific
+        /loginPage/i,
+        /bb-login/i,
+        // Generic LMS
+        /authentication.*required/i,
+        /session.*expired/i,
+        /access.*denied/i,
+    ]
+
+    const htmlHasLoginIndicator = loginIndicators.some(pattern => pattern.test(htmlLower))
+
+    // Check text content for login messages
+    const loginTextPatterns = [
+        /log\s*in\s*to\s*(the\s*)?(site|course|account)/i,
+        /sign\s*in\s*to\s*continue/i,
+        /username\s*(or\s*email)?\s*password/i,
+        /enter\s*(your\s*)?(username|credentials)/i,
+        /you\s*(must|need\s*to)\s*(be\s*)?(logged\s*in|sign\s*in)/i,
+        /please\s*(log\s*in|sign\s*in|authenticate)/i,
+        /session\s*has\s*expired/i,
+        /access\s*denied/i,
+        /not\s*authorized/i,
+        /login\s*required/i,
+    ]
+
+    const textHasLoginMessage = loginTextPatterns.some(pattern => pattern.test(textLower))
+
+    // Check if content is suspiciously short with login indicators
+    const isSuspiciouslyShort = text.length < 1500 && (htmlHasLoginIndicator || textHasLoginMessage)
+
+    // Check for lack of discussion content
+    const hasDiscussionContent = /(?:reply|response|post|discussion|student|wrote|said)/i.test(textLower)
+
+    return (htmlHasLoginIndicator && textHasLoginMessage) ||
+        (isSuspiciouslyShort && !hasDiscussionContent) ||
+        (textHasLoginMessage && !hasDiscussionContent)
+}
+
+// Get specific LMS name from URL
+function detectLMS(url: string): string {
+    const urlLower = url.toLowerCase()
+    if (urlLower.includes('moodle') || urlLower.includes('/mod/forum/')) return 'Moodle'
+    if (urlLower.includes('canvas')) return 'Canvas'
+    if (urlLower.includes('blackboard') || urlLower.includes('bb-')) return 'Blackboard'
+    if (urlLower.includes('brightspace') || urlLower.includes('d2l')) return 'Brightspace/D2L'
+    if (urlLower.includes('schoology')) return 'Schoology'
+    return 'your LMS'
+}
+
 // Clean content by removing common artifacts
 function cleanContent(content: string): string {
     return content
@@ -199,6 +267,7 @@ export async function POST(request: NextRequest) {
         const { url, rawContent } = body
 
         let content: string
+        let html: string = ''
 
         if (rawContent) {
             // Direct content provided (pasted text)
@@ -209,13 +278,45 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: "Invalid URL format" }, { status: 400 })
             }
 
-            const html = await fetchWebpage(url)
+            html = await fetchWebpage(url)
             content = extractTextFromHTML(html)
+
+            // Check if we got a login page instead of discussion content
+            if (isLoginPage(html, content)) {
+                const lmsName = detectLMS(url)
+                return NextResponse.json({
+                    error: `Login required`,
+                    requiresAuth: true,
+                    lmsName,
+                    message: `This ${lmsName} discussion page requires authentication. The scanner cannot access protected content directly.`,
+                    suggestion: `Please log into ${lmsName}, open the discussion page, select all the student posts (Ctrl+A), copy them (Ctrl+C), and paste them in the "Paste Content" tab instead.`,
+                    posts: [],
+                    totalFound: 0,
+                }, { status: 401 })
+            }
         } else {
             return NextResponse.json({ error: "URL or rawContent is required" }, { status: 400 })
         }
 
         const posts = parseStudentPosts(content)
+
+        // If posts found but they look like navigation/UI text, warn the user
+        if (posts.length === 1 && posts[0].studentName === 'Student 1') {
+            const postContent = posts[0].content.toLowerCase()
+            if (postContent.includes('log in') || postContent.includes('sign in') ||
+                postContent.includes('username') || postContent.includes('password')) {
+                const lmsName = url ? detectLMS(url) : 'your LMS'
+                return NextResponse.json({
+                    error: `Could not find student posts`,
+                    requiresAuth: true,
+                    lmsName,
+                    message: `The page content appears to be a login page or navigation content, not student discussions.`,
+                    suggestion: `Please log into ${lmsName}, copy the actual discussion posts manually, and paste them in the "Paste Content" tab.`,
+                    posts: [],
+                    totalFound: 0,
+                }, { status: 200 })
+            }
+        }
 
         return NextResponse.json({
             success: true,
@@ -225,8 +326,20 @@ export async function POST(request: NextRequest) {
         })
     } catch (error) {
         console.error("Web scan error:", error)
+
+        // Provide helpful error messages for common issues
+        const errorMessage = error instanceof Error ? error.message : "Failed to scan web content"
+
+        if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('timeout')) {
+            return NextResponse.json({
+                error: "Could not access the URL",
+                message: "The website might be blocking automated access, or there could be a network issue.",
+                suggestion: "Please copy the discussion content manually and use the 'Paste Content' option instead.",
+            }, { status: 500 })
+        }
+
         return NextResponse.json({
-            error: error instanceof Error ? error.message : "Failed to scan web content",
+            error: errorMessage,
         }, { status: 500 })
     }
 }
