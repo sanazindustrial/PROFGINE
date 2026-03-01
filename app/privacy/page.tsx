@@ -69,7 +69,14 @@ export default function PrivacyPage() {
                             rel="noopener noreferrer"
                         >
                             support@profgenie.ai
-                        </a>.
+                        </a>
+                        {" "}or use our{" "}
+                        <Link 
+                            className="text-blue-600 hover:text-blue-500 underline font-medium"
+                            href="/contact"
+                        >
+                            contact form
+                        </Link>.
                     </p>
                 </section>
             </div>
