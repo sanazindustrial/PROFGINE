@@ -87,7 +87,7 @@ Please respond to: ${body.email}
             // Dynamic import nodemailer only when SMTP is configured
             try {
                 const nodemailer = await import("nodemailer")
-                
+
                 const transporter = nodemailer.default.createTransport({
                     host: smtpHost,
                     port: parseInt(smtpPort),
@@ -142,7 +142,7 @@ Please respond to: ${body.email}
                 })
 
                 console.log(`Support email sent successfully from ${body.email}`)
-                
+
                 return NextResponse.json({
                     success: true,
                     message: "Your message has been sent successfully. We'll respond within 24-48 hours.",

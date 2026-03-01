@@ -60,23 +60,14 @@ export default function PrivacyPage() {
                 <section>
                     <h2 className="mb-2 text-lg font-semibold">7. Contact</h2>
                     <p>
-                        For privacy questions, contact us at
-                        {" "}
-                        <a 
-                            className="text-blue-600 hover:text-blue-500 underline font-medium cursor-pointer" 
-                            href="mailto:support@profgenie.ai"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            support@profgenie.ai
-                        </a>
-                        {" "}or use our{" "}
+                        For privacy questions, please use our{" "}
                         <Link 
                             className="text-blue-600 hover:text-blue-500 underline font-medium"
                             href="/contact"
                         >
                             contact form
-                        </Link>.
+                        </Link>{" "}
+                        to reach us at support@profgenie.ai.
                     </p>
                 </section>
             </div>
