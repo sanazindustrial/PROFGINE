@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, RefreshCw, Star, User, FileText, MessageSquare, Wand2, Key, LogIn } from "lucide-react"
+import { Copy, RefreshCw, Star, User, FileText, MessageSquare, Wand2, Key, LogIn, Settings2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
 import { useUserAISettings, getChatEndpoint } from "@/hooks/use-user-ai"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
 interface Message {
   id: string
@@ -33,6 +35,15 @@ export function DiscussionResponse() {
   const [studentPost, setStudentPost] = useState("")
   const [refineInstructions, setRefineInstructions] = useState("")
   const [showRefinement, setShowRefinement] = useState(false)
+  const [showCustomization, setShowCustomization] = useState(false)
+
+  // Customization options
+  const [responseTone, setResponseTone] = useState("professional")
+  const [responseLength, setResponseLength] = useState("moderate")
+  const [includeFollowUp, setIncludeFollowUp] = useState(true)
+  const [includeEncouragement, setIncludeEncouragement] = useState(true)
+  const [includeQuestions, setIncludeQuestions] = useState(false)
+  const [formalityLevel, setFormalityLevel] = useState("formal")
 
   // Check if user has custom AI settings
   const userAI = useUserAISettings()
@@ -83,6 +94,36 @@ export function DiscussionResponse() {
     setIsResponseLoading(true)
     setError(null)
 
+    // Build customization instructions
+    const toneMap: Record<string, string> = {
+      professional: "Use a professional and academic tone",
+      friendly: "Use a warm, friendly, and approachable tone",
+      encouraging: "Use an encouraging and supportive tone that motivates the student",
+      strict: "Use a firm and direct tone that emphasizes academic standards",
+      conversational: "Use a conversational and casual academic tone"
+    }
+
+    const lengthMap: Record<string, string> = {
+      brief: "Keep the response brief and concise (2-3 sentences)",
+      moderate: "Provide a moderate length response (4-6 sentences)",
+      detailed: "Provide a detailed and comprehensive response (7+ sentences)"
+    }
+
+    const formalityMap: Record<string, string> = {
+      formal: "Maintain formal academic language",
+      semiformal: "Use semi-formal language that balances professionalism with accessibility",
+      casual: "Use casual but respectful language"
+    }
+
+    const customizationInstructions = [
+      toneMap[responseTone],
+      lengthMap[responseLength],
+      formalityMap[formalityLevel],
+      includeEncouragement ? "Include words of encouragement and positive feedback" : "",
+      includeFollowUp ? "Include a follow-up comment or suggestion for further thought" : "",
+      includeQuestions ? "Include a thought-provoking question to extend the discussion" : ""
+    ].filter(Boolean).join(". ")
+
     const content =
       "Professor Writing Style and Background: \n" +
       professorProfile +
@@ -92,7 +133,9 @@ export function DiscussionResponse() {
       "\n" +
       "Student's Response to the Discussion Topic: \n" +
       studentPost +
-      "\n" +
+      "\n\n" +
+      "Response Guidelines: " + customizationInstructions +
+      "\n\n" +
       "Professor's Response to Above Student:"
 
     try {
@@ -138,7 +181,7 @@ export function DiscussionResponse() {
     } finally {
       setIsResponseLoading(false)
     }
-  }, [professorProfile, discussionPrompt, studentPost, userAI.isEnabled])
+  }, [professorProfile, discussionPrompt, studentPost, userAI.isEnabled, responseTone, responseLength, formalityLevel, includeEncouragement, includeFollowUp, includeQuestions])
 
   const refineResponse = useCallback(async () => {
     if (!messages[1] || !refineInstructions.trim()) {
@@ -336,6 +379,129 @@ export function DiscussionResponse() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Customization Section */}
+      <Card className="border-dashed transition-all duration-200 hover:shadow-md">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings2 className="size-5 text-indigo-600" />
+              <CardTitle className="text-base">Response Customization</CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCustomization(!showCustomization)}
+            >
+              {showCustomization ? "Hide Options" : "Customize"}
+            </Button>
+          </div>
+          <CardDescription className="text-sm">
+            Adjust tone, length, and style of the generated response
+          </CardDescription>
+        </CardHeader>
+        {showCustomization && (
+          <CardContent className="space-y-6 pt-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* Response Tone */}
+              <div className="space-y-2">
+                <Label htmlFor="tone">Response Tone</Label>
+                <Select value={responseTone} onValueChange={setResponseTone}>
+                  <SelectTrigger id="tone">
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="friendly">Friendly</SelectItem>
+                    <SelectItem value="encouraging">Encouraging</SelectItem>
+                    <SelectItem value="strict">Strict</SelectItem>
+                    <SelectItem value="conversational">Conversational</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Response Length */}
+              <div className="space-y-2">
+                <Label htmlFor="length">Response Length</Label>
+                <Select value={responseLength} onValueChange={setResponseLength}>
+                  <SelectTrigger id="length">
+                    <SelectValue placeholder="Select length" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="brief">Brief (2-3 sentences)</SelectItem>
+                    <SelectItem value="moderate">Moderate (4-6 sentences)</SelectItem>
+                    <SelectItem value="detailed">Detailed (7+ sentences)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Formality Level */}
+              <div className="space-y-2">
+                <Label htmlFor="formality">Formality Level</Label>
+                <Select value={formalityLevel} onValueChange={setFormalityLevel}>
+                  <SelectTrigger id="formality">
+                    <SelectValue placeholder="Select formality" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="formal">Formal Academic</SelectItem>
+                    <SelectItem value="semiformal">Semi-formal</SelectItem>
+                    <SelectItem value="casual">Casual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Toggle Options */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <Label htmlFor="encouragement" className="text-sm font-medium">Include Encouragement</Label>
+                  <p className="text-xs text-muted-foreground">Add positive feedback</p>
+                </div>
+                <Switch
+                  id="encouragement"
+                  checked={includeEncouragement}
+                  onCheckedChange={setIncludeEncouragement}
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <Label htmlFor="followup" className="text-sm font-medium">Include Follow-up</Label>
+                  <p className="text-xs text-muted-foreground">Add suggestions for improvement</p>
+                </div>
+                <Switch
+                  id="followup"
+                  checked={includeFollowUp}
+                  onCheckedChange={setIncludeFollowUp}
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <Label htmlFor="questions" className="text-sm font-medium">Ask Questions</Label>
+                  <p className="text-xs text-muted-foreground">Include discussion questions</p>
+                </div>
+                <Switch
+                  id="questions"
+                  checked={includeQuestions}
+                  onCheckedChange={setIncludeQuestions}
+                />
+              </div>
+            </div>
+
+            {/* Current Settings Summary */}
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">{responseTone}</Badge>
+              <Badge variant="secondary">{responseLength}</Badge>
+              <Badge variant="secondary">{formalityLevel}</Badge>
+              {includeEncouragement && <Badge variant="outline">+ encouragement</Badge>}
+              {includeFollowUp && <Badge variant="outline">+ follow-up</Badge>}
+              {includeQuestions && <Badge variant="outline">+ questions</Badge>}
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Error Display */}
       {error && (

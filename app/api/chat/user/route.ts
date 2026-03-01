@@ -237,6 +237,37 @@ export async function POST(request: NextRequest) {
         // Remove duplicates
         const uniqueProviders = [...new Set(providersToTry)]
 
+        // If user has no custom keys configured at all, use platform AI directly
+        if (uniqueProviders.length === 0) {
+            console.log("No user API keys configured, using platform AI")
+            try {
+                const { stream, provider: platformProvider, cost } = await multiAI.streamChat(messages)
+
+                const reader = stream.getReader()
+                const decoder = new TextDecoder()
+                let content = ""
+
+                while (true) {
+                    const { value, done } = await reader.read()
+                    if (done) break
+                    if (value) content += decoder.decode(value, { stream: true })
+                }
+                content += decoder.decode()
+
+                return NextResponse.json({
+                    content,
+                    provider: `${platformProvider} (platform)`,
+                    cost,
+                    durationMs: Date.now() - start,
+                })
+            } catch (platformError) {
+                console.error("Platform AI failed:", platformError)
+                return NextResponse.json({
+                    error: "AI service temporarily unavailable. Please try again.",
+                }, { status: 500 })
+            }
+        }
+
         let lastError: Error | null = null
 
         for (const provider of uniqueProviders) {
@@ -304,41 +335,36 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // If user wants platform fallback, use platform AI
-        if (userConfig.usePlatformFallback) {
-            console.log("All user providers failed, falling back to platform AI")
-            try {
-                const { stream, provider: platformProvider, cost } = await multiAI.streamChat(messages)
+        // If user wants platform fallback OR all user keys failed, use platform AI
+        // Always try platform as final fallback for better UX
+        console.log("All user providers failed, falling back to platform AI")
+        try {
+            const { stream, provider: platformProvider, cost } = await multiAI.streamChat(messages)
 
-                // Read the stream
-                const reader = stream.getReader()
-                const decoder = new TextDecoder()
-                let content = ""
+            // Read the stream
+            const reader = stream.getReader()
+            const decoder = new TextDecoder()
+            let content = ""
 
-                while (true) {
-                    const { value, done } = await reader.read()
-                    if (done) break
-                    if (value) content += decoder.decode(value, { stream: true })
-                }
-                content += decoder.decode()
-
-                return NextResponse.json({
-                    content,
-                    provider: `${platformProvider} (platform fallback)`,
-                    cost,
-                    durationMs: Date.now() - start,
-                })
-            } catch (platformError) {
-                console.error("Platform fallback also failed:", platformError)
-                return NextResponse.json({
-                    error: "All AI providers failed including platform fallback. Please try again later.",
-                }, { status: 500 })
+            while (true) {
+                const { value, done } = await reader.read()
+                if (done) break
+                if (value) content += decoder.decode(value, { stream: true })
             }
-        }
+            content += decoder.decode()
 
-        return NextResponse.json({
-            error: "All your custom providers failed. Try enabling 'Fallback to Platform' or check your API keys.",
-        }, { status: 500 })
+            return NextResponse.json({
+                content,
+                provider: `${platformProvider} (platform fallback)`,
+                cost,
+                durationMs: Date.now() - start,
+            })
+        } catch (platformError) {
+            console.error("Platform fallback also failed:", platformError)
+            return NextResponse.json({
+                error: "All AI providers are temporarily unavailable. Please try again later.",
+            }, { status: 500 })
+        }
 
     } catch (error) {
         console.error("User chat route error:", error)
