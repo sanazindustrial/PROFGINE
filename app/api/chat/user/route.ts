@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getUserAIConfig } from "@/lib/user-ai-config"
 import { ChatMessage } from "@/types/ai.types"
+import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import OpenAI from "openai"
 import Anthropic from "@anthropic-ai/sdk"
 
@@ -303,17 +304,40 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // If user wants platform fallback
+        // If user wants platform fallback, use platform AI
         if (userConfig.usePlatformFallback) {
-            // Redirect to platform chat
-            return NextResponse.json({
-                error: "All your custom providers failed. Try enabling 'Fallback to Platform' or check your API keys.",
-                fallbackAvailable: true
-            }, { status: 500 })
+            console.log("All user providers failed, falling back to platform AI")
+            try {
+                const { stream, provider: platformProvider, cost } = await multiAI.streamChat(messages)
+
+                // Read the stream
+                const reader = stream.getReader()
+                const decoder = new TextDecoder()
+                let content = ""
+
+                while (true) {
+                    const { value, done } = await reader.read()
+                    if (done) break
+                    if (value) content += decoder.decode(value, { stream: true })
+                }
+                content += decoder.decode()
+
+                return NextResponse.json({
+                    content,
+                    provider: `${platformProvider} (platform fallback)`,
+                    cost,
+                    durationMs: Date.now() - start,
+                })
+            } catch (platformError) {
+                console.error("Platform fallback also failed:", platformError)
+                return NextResponse.json({
+                    error: "All AI providers failed including platform fallback. Please try again later.",
+                }, { status: 500 })
+            }
         }
 
         return NextResponse.json({
-            error: lastError?.message || "No AI providers available with your custom keys",
+            error: "All your custom providers failed. Try enabling 'Fallback to Platform' or check your API keys.",
         }, { status: 500 })
 
     } catch (error) {
