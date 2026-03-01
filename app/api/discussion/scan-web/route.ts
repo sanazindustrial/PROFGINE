@@ -31,52 +31,148 @@ function extractTextFromHTML(html: string): string {
     return text.trim()
 }
 
-// Parse student posts from text content
+// Parse student posts from text content with improved LMS detection
 function parseStudentPosts(content: string): StudentPost[] {
     const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
 
-    // Common patterns for discussion board posts
-    // Pattern 1: "Student Name" followed by content
-    const namePatterns = [
-        /(?:Posted by|From|Author|Student|By)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/gi,
-        /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:wrote|said|posted|replied)/gi,
+    // Common LMS patterns for detecting student posts
+    const postDelimiters = [
+        // Moodle patterns
+        /(?:Re:|Reply\s+to\s+|In\s+reply\s+to\s+)/gi,
+        // Canvas patterns
+        /(?:Posted\s+by|Author:|From:)\s*/gi,
+        // Blackboard patterns
+        /(?:Student\s+Response|Discussion\s+Post)\s*[:\-]/gi,
+        // Generic patterns
+        /(?:Response\s+\d+|Post\s+\d+|Student\s+\d+)\s*[:\-]/gi,
+        // Name followed by timestamp pattern (e.g., "John Smith - Mar 1, 2024")
+        /\n([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s*[-–]\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/gi,
     ]
 
-    // Split by common delimiters
-    const sections = content.split(/(?:Re:|Reply:|Response:|Post\s+\d+:|Student\s+\d+:)/i)
+    // Try to split by student name patterns first
+    const namePatterns = [
+        // "Name - timestamp" format (Moodle style)
+        /\n([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s*[-–]\s*\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/g,
+        // "by Name" format
+        /(?:by|By|BY)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})(?:\s|,|\n)/g,
+        // "Name wrote:" format
+        /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s+(?:wrote|said|posted|replied)[:\s]/gi,
+        // "Posted by Name" format (Canvas style)
+        /(?:Posted\s+by|Author)\s*[:\s]*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})/gi,
+        // "From: Name" format
+        /From\s*:\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})/gi,
+        // "Name:" at start of line
+        /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s*:/gm,
+        // "Student Name" in discussion format
+        /(?:Student|Learner)\s*[:\-]?\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){1,3})/gi,
+    ]
 
-    sections.forEach((section, index) => {
-        const trimmed = section.trim()
-        if (trimmed.length > 50) { // Only include substantial posts
-            let studentName = `Student ${index + 1}`
+    // First pass: Try to extract named posts using patterns
+    let foundPosts: Array<{ name: string; content: string; index: number }> = []
 
-            // Try to extract student name
-            for (const pattern of namePatterns) {
-                const match = trimmed.match(pattern)
-                if (match && match[1]) {
-                    studentName = match[1].trim()
-                    break
+    for (const pattern of namePatterns) {
+        let match
+        const regex = new RegExp(pattern.source, pattern.flags)
+        while ((match = regex.exec(content)) !== null) {
+            const name = match[1]?.trim()
+            if (name && name.length > 2 && name.length < 50) {
+                foundPosts.push({
+                    name,
+                    content: '',
+                    index: match.index
+                })
+            }
+        }
+    }
+
+    // Sort by index and extract content between posts
+    foundPosts.sort((a, b) => a.index - b.index)
+
+    for (let i = 0; i < foundPosts.length; i++) {
+        const start = foundPosts[i].index
+        const end = i < foundPosts.length - 1 ? foundPosts[i + 1].index : content.length
+        let postContent = content.substring(start, end).trim()
+
+        // Remove the name/header part from the content
+        postContent = postContent.replace(/^[^\n]*\n/, '').trim()
+
+        // Skip if content is too short or is navigation/UI text
+        if (postContent.length > 30 && !isNavigationText(postContent)) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `post-${posts.length}-${Date.now()}`,
+                    studentName: foundPosts[i].name,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    }
+
+    // If no named posts found, try splitting by common delimiters
+    if (posts.length === 0) {
+        // Try splitting by "Re:" or "Reply"
+        const sections = content.split(/(?:\n\s*(?:Re:|Reply(?:\s+to)?:)\s*)/i)
+
+        sections.forEach((section, index) => {
+            const trimmed = section.trim()
+            if (trimmed.length > 50 && !isNavigationText(trimmed)) {
+                let studentName = `Student ${index + 1}`
+
+                // Try to extract name from the section
+                const nameMatch = trimmed.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/)
+                if (nameMatch) {
+                    studentName = nameMatch[1]
+                }
+
+                const contentHash = trimmed.substring(0, 100).toLowerCase()
+                if (!seenContent.has(contentHash)) {
+                    seenContent.add(contentHash)
+                    posts.push({
+                        id: `post-${index}-${Date.now()}`,
+                        studentName,
+                        content: cleanContent(trimmed.substring(0, 3000)),
+                    })
                 }
             }
+        })
+    }
 
-            posts.push({
-                id: `post-${index}-${Date.now()}`,
-                studentName,
-                content: trimmed.substring(0, 2000), // Limit content length
-            })
-        }
-    })
-
-    // If no posts found, treat entire content as one post
+    // If still no posts found, treat entire content as one post
     if (posts.length === 0 && content.length > 50) {
         posts.push({
             id: `post-0-${Date.now()}`,
             studentName: 'Student 1',
-            content: content.substring(0, 2000),
+            content: cleanContent(content.substring(0, 3000)),
         })
     }
 
     return posts
+}
+
+// Check if text is navigation/UI text that should be skipped
+function isNavigationText(text: string): boolean {
+    const navPatterns = [
+        /^(skip to|jump to|log in|sign in|menu|home|back|next|previous)/i,
+        /^(username|password|email|password log)/i,
+        /copyright|all rights reserved/i,
+        /^(loading|please wait)/i,
+        /^\s*(click here|read more|view more|show more)\s*$/i,
+    ]
+
+    const lowerText = text.toLowerCase().substring(0, 200)
+    return navPatterns.some(pattern => pattern.test(lowerText))
+}
+
+// Clean content by removing common artifacts
+function cleanContent(content: string): string {
+    return content
+        .replace(/\s+/g, ' ')
+        .replace(/^\s*[-–—]\s*/, '')
+        .replace(/\s*[-–—]\s*$/, '')
+        .trim()
 }
 
 // Fetch webpage content

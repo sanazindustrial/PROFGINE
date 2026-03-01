@@ -18,6 +18,7 @@ import {
     FileText,
     Zap,
     LogIn,
+    Settings2,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +26,8 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast"
 import { getChatEndpoint } from "@/hooks/use-user-ai"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 
 interface StudentPost {
     id: string
@@ -55,6 +58,15 @@ export function BulkDiscussionResponse() {
     const [progress, setProgress] = useState(0)
     const [scanMode, setScanMode] = useState<"url" | "paste">("paste")
     const [scanError, setScanError] = useState<string | null>(null)
+    const [showCustomization, setShowCustomization] = useState(false)
+
+    // Customization options
+    const [responseTone, setResponseTone] = useState("professional")
+    const [responseLength, setResponseLength] = useState("moderate")
+    const [includeFollowUp, setIncludeFollowUp] = useState(true)
+    const [includeEncouragement, setIncludeEncouragement] = useState(true)
+    const [includeQuestions, setIncludeQuestions] = useState(false)
+    const [formalityLevel, setFormalityLevel] = useState("formal")
 
     // Load professor profile from localStorage
     useState(() => {
@@ -163,6 +175,36 @@ export function BulkDiscussionResponse() {
             )
 
             try {
+                // Build customization instructions
+                const toneMap: Record<string, string> = {
+                    professional: "Use a professional and academic tone",
+                    friendly: "Use a warm, friendly, and approachable tone",
+                    encouraging: "Use an encouraging and supportive tone that motivates the student",
+                    strict: "Use a firm and direct tone that emphasizes academic standards",
+                    conversational: "Use a conversational and casual academic tone"
+                }
+
+                const lengthMap: Record<string, string> = {
+                    brief: "Keep the response brief and concise (2-3 sentences)",
+                    moderate: "Provide a moderate length response (4-6 sentences)",
+                    detailed: "Provide a detailed and comprehensive response (7+ sentences)"
+                }
+
+                const formalityMap: Record<string, string> = {
+                    formal: "Maintain formal academic language",
+                    semiformal: "Use semi-formal language that balances professionalism with accessibility",
+                    casual: "Use casual but respectful language"
+                }
+
+                const customizationInstructions = [
+                    toneMap[responseTone],
+                    lengthMap[responseLength],
+                    formalityMap[formalityLevel],
+                    includeEncouragement ? "Include words of encouragement and positive feedback" : "",
+                    includeFollowUp ? "Include a follow-up comment or suggestion for further thought" : "",
+                    includeQuestions ? "Include a thought-provoking question to extend the discussion" : ""
+                ].filter(Boolean).join(". ")
+
                 const content = `Professor Writing Style and Background:
 ${professorProfile}
 
@@ -172,7 +214,9 @@ ${discussionTopic}
 Student's Post (${post.studentName}):
 ${post.content}
 
-Professor's Response to this student (personalized, encouraging, and constructive):`
+Response Guidelines: ${customizationInstructions}
+
+Professor's Response to this student:`
 
                 const res = await fetch(getChatEndpoint(false), {
                     method: "POST",
@@ -232,7 +276,7 @@ Professor's Response to this student (personalized, encouraging, and constructiv
             title: "Generation Complete",
             description: `Generated responses for ${studentPosts.length} students`,
         })
-    }, [professorProfile, discussionTopic, studentPosts])
+    }, [professorProfile, discussionTopic, studentPosts, responseTone, responseLength, formalityLevel, includeEncouragement, includeFollowUp, includeQuestions])
 
     const copyAllResponses = useCallback(() => {
         const completedResponses = responses.filter((r) => r.status === "completed")
@@ -416,6 +460,129 @@ Here is my analysis of the topic..."
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Response Customization */}
+            <Card className="border-dashed transition-all duration-200 hover:shadow-md">
+                <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Settings2 className="size-5 text-indigo-600" />
+                            <CardTitle className="text-base">Response Customization</CardTitle>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowCustomization(!showCustomization)}
+                        >
+                            {showCustomization ? "Hide Options" : "Customize"}
+                        </Button>
+                    </div>
+                    <CardDescription className="text-sm">
+                        Adjust tone, length, and style for all generated responses
+                    </CardDescription>
+                </CardHeader>
+                {showCustomization && (
+                    <CardContent className="space-y-6 pt-4">
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {/* Response Tone */}
+                            <div className="space-y-2">
+                                <Label htmlFor="bulk-tone">Response Tone</Label>
+                                <Select value={responseTone} onValueChange={setResponseTone}>
+                                    <SelectTrigger id="bulk-tone">
+                                        <SelectValue placeholder="Select tone" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="professional">Professional</SelectItem>
+                                        <SelectItem value="friendly">Friendly</SelectItem>
+                                        <SelectItem value="encouraging">Encouraging</SelectItem>
+                                        <SelectItem value="strict">Strict</SelectItem>
+                                        <SelectItem value="conversational">Conversational</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Response Length */}
+                            <div className="space-y-2">
+                                <Label htmlFor="bulk-length">Response Length</Label>
+                                <Select value={responseLength} onValueChange={setResponseLength}>
+                                    <SelectTrigger id="bulk-length">
+                                        <SelectValue placeholder="Select length" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="brief">Brief (2-3 sentences)</SelectItem>
+                                        <SelectItem value="moderate">Moderate (4-6 sentences)</SelectItem>
+                                        <SelectItem value="detailed">Detailed (7+ sentences)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Formality Level */}
+                            <div className="space-y-2">
+                                <Label htmlFor="bulk-formality">Formality Level</Label>
+                                <Select value={formalityLevel} onValueChange={setFormalityLevel}>
+                                    <SelectTrigger id="bulk-formality">
+                                        <SelectValue placeholder="Select formality" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="formal">Formal Academic</SelectItem>
+                                        <SelectItem value="semiformal">Semi-formal</SelectItem>
+                                        <SelectItem value="casual">Casual</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Toggle Options */}
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="bulk-encouragement" className="text-sm font-medium">Include Encouragement</Label>
+                                    <p className="text-xs text-muted-foreground">Add positive feedback</p>
+                                </div>
+                                <Switch
+                                    id="bulk-encouragement"
+                                    checked={includeEncouragement}
+                                    onCheckedChange={setIncludeEncouragement}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="bulk-followup" className="text-sm font-medium">Include Follow-up</Label>
+                                    <p className="text-xs text-muted-foreground">Add suggestions for improvement</p>
+                                </div>
+                                <Switch
+                                    id="bulk-followup"
+                                    checked={includeFollowUp}
+                                    onCheckedChange={setIncludeFollowUp}
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="bulk-questions" className="text-sm font-medium">Ask Questions</Label>
+                                    <p className="text-xs text-muted-foreground">Include discussion questions</p>
+                                </div>
+                                <Switch
+                                    id="bulk-questions"
+                                    checked={includeQuestions}
+                                    onCheckedChange={setIncludeQuestions}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Current Settings Summary */}
+                        <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary">{responseTone}</Badge>
+                            <Badge variant="secondary">{responseLength}</Badge>
+                            <Badge variant="secondary">{formalityLevel}</Badge>
+                            {includeEncouragement && <Badge variant="outline">+ encouragement</Badge>}
+                            {includeFollowUp && <Badge variant="outline">+ follow-up</Badge>}
+                            {includeQuestions && <Badge variant="outline">+ questions</Badge>}
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
 
             {/* Found Students */}
             {studentPosts.length > 0 && (
