@@ -62,7 +62,12 @@ export default function PrivacyPage() {
                     <p>
                         For privacy questions, contact us at
                         {" "}
-                        <a className="text-blue-600 hover:text-blue-500" href="mailto:support@profgenie.ai">
+                        <a 
+                            className="text-blue-600 hover:text-blue-500 underline font-medium cursor-pointer" 
+                            href="mailto:support@profgenie.ai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
                             support@profgenie.ai
                         </a>.
                     </p>
