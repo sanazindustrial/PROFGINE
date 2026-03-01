@@ -255,13 +255,10 @@ export default function ContactPage() {
 
                     <div className="mt-8 border-t border-gray-200 pt-6 text-center dark:border-gray-700">
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            You can also reach us directly at{" "}
-                            <a
-                                href="mailto:support@profgenie.ai"
-                                className="font-medium text-blue-600 underline hover:text-blue-500"
-                            >
+                            Your message will be sent to{" "}
+                            <span className="font-medium text-gray-900 dark:text-white">
                                 support@profgenie.ai
-                            </a>
+                            </span>
                         </p>
                         <div className="mt-4">
                             <Link

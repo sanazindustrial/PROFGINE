@@ -138,9 +138,9 @@ function AuthErrorContent() {
                         {/* Support */}
                         <div className="pt-4 text-center text-sm text-gray-600">
                             Still having issues?{" "}
-                            <a href="mailto:support@profgenie.ai" className="font-medium text-blue-600 hover:text-blue-500">
+                            <Link href="/contact" className="font-medium text-blue-600 hover:text-blue-500">
                                 Contact Support
-                            </a>
+                            </Link>
                         </div>
                     </CardContent>
                 </Card>

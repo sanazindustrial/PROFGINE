@@ -66,11 +66,11 @@ export default function TermsPage() {
                 <section>
                     <h2 className="mb-2 text-lg font-semibold">8. Contact</h2>
                     <p>
-                        For questions, contact
-                        {" "}
-                        <a className="text-blue-600 hover:text-blue-500" href="mailto:support@profgenie.ai">
-                            support@profgenie.ai
-                        </a>.
+                        For questions, please use our{" "}
+                        <Link className="text-blue-600 hover:text-blue-500 underline" href="/contact">
+                            contact form
+                        </Link>{" "}
+                        to reach us at support@profgenie.ai.
                     </p>
                 </section>
             </div>
