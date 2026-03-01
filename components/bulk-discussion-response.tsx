@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useSession, signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,9 +46,13 @@ interface ResponseResult {
     error?: string
 }
 
-export function BulkDiscussionResponse() {
+interface BulkDiscussionResponseProps {
+    initialContent?: string | null
+}
+
+export function BulkDiscussionResponse({ initialContent }: BulkDiscussionResponseProps) {
     const [webUrl, setWebUrl] = useState("")
-    const [rawContent, setRawContent] = useState("")
+    const [rawContent, setRawContent] = useState(initialContent || "")
     const [professorProfile, setProfessorProfile] = useState("")
     const [discussionTopic, setDiscussionTopic] = useState("")
     const [studentPosts, setStudentPosts] = useState<StudentPost[]>([])
@@ -69,10 +73,18 @@ export function BulkDiscussionResponse() {
     const [formalityLevel, setFormalityLevel] = useState("formal")
 
     // Load professor profile from localStorage
-    useState(() => {
+    useEffect(() => {
         const stored = localStorage.getItem("professorProfile")
         if (stored) setProfessorProfile(stored)
-    })
+    }, [])
+
+    // Handle initialContent from bookmarklet
+    useEffect(() => {
+        if (initialContent) {
+            setRawContent(initialContent)
+            setScanMode("paste")
+        }
+    }, [initialContent])
 
     const scanWebPage = useCallback(async () => {
         if (scanMode === "url" && !webUrl.trim()) {
@@ -451,11 +463,30 @@ Professor's Response to this student:`
                                     value={webUrl}
                                     onChange={(e) => setWebUrl(e.target.value)}
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    <strong>Note:</strong> Protected LMS pages (Moodle, Canvas, Blackboard) that require login
-                                    cannot be scanned directly. For those, please copy the discussion content and use
-                                    &quot;Paste Content&quot; instead.
-                                </p>
+                                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+                                    <p className="mb-2 text-xs font-medium text-amber-800 dark:text-amber-200">
+                                        📌 URL scanning only works for public pages
+                                    </p>
+                                    <p className="text-xs text-amber-700 dark:text-amber-300">
+                                        Protected LMS pages (Moodle, Canvas, Blackboard) require your browser session.
+                                        Since our server cannot access your login cookies, use one of these methods:
+                                    </p>
+                                    <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-amber-700 dark:text-amber-300">
+                                        <li><strong>Quick:</strong> Open discussion in browser → Select all (Ctrl+A) → Copy (Ctrl+C) → Use &quot;Paste Content&quot; tab</li>
+                                        <li><strong>Bookmarklet:</strong> Drag this to your bookmarks bar: <a
+                                            href="javascript:(function(){var t=document.body.innerText;var w=window.open('https://profgenie.ai/discussion?content='+encodeURIComponent(t.substring(0,50000)),'_blank');})();"
+                                            className="inline-block rounded bg-amber-600 px-2 py-0.5 text-white hover:bg-amber-700"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                toast({
+                                                    title: "Drag to Bookmark Bar",
+                                                    description: "Drag this link to your bookmarks bar, then click it while on your LMS discussion page",
+                                                });
+                                            }}
+                                            draggable="true"
+                                        >📋 Grab Posts</a></li>
+                                    </ul>
+                                </div>
                             </>
                         ) : (
                             <Textarea

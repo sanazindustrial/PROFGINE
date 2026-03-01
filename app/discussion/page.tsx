@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { DiscussionResponse } from "@/components/discussion-response"
 import { BulkDiscussionResponse } from "@/components/bulk-discussion-response"
 import { FeatureLayout } from "@/components/feature-layout"
@@ -8,7 +9,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessageSquare, Users } from "lucide-react"
 
 export default function DiscussionGeneratorPage() {
+    const searchParams = useSearchParams()
     const [activeTab, setActiveTab] = useState("single")
+    const [initialContent, setInitialContent] = useState<string | null>(null)
+
+    // Check for content from bookmarklet
+    useEffect(() => {
+        const content = searchParams.get("content")
+        if (content) {
+            setInitialContent(content)
+            setActiveTab("bulk")
+        }
+    }, [searchParams])
 
     return (
         <FeatureLayout
@@ -30,7 +42,7 @@ export default function DiscussionGeneratorPage() {
                     <DiscussionResponse />
                 </TabsContent>
                 <TabsContent value="bulk">
-                    <BulkDiscussionResponse />
+                    <BulkDiscussionResponse initialContent={initialContent} />
                 </TabsContent>
             </Tabs>
         </FeatureLayout>
