@@ -11,6 +11,7 @@ function isPublicPath(pathname: string) {
     pathname === "/auth/success" ||
     pathname === "/privacy" ||
     pathname === "/terms" ||
+    pathname === "/contact" ||
     pathname === "/discussion" ||
     pathname === "/grade" ||
     pathname === "/docs" ||
@@ -25,6 +26,7 @@ function isPublicPath(pathname: string) {
     pathname.startsWith("/api/redirect") ||
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/chat") ||
+    pathname.startsWith("/api/contact") ||
     pathname.startsWith("/api/discussion/") ||
     pathname.startsWith("/api/ai/")
   );

@@ -249,10 +249,10 @@ export default async function IndexPage() {
                   Get Started For Free
                 </Link>
                 <Link
-                  href="/auth/signin"
+                  href="/contact"
                   className="text-sm font-semibold leading-6 text-white hover:text-blue-100"
                 >
-                  Already have an account? Sign in
+                  Contact Us
                 </Link>
               </div>
             </div>
