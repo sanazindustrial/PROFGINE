@@ -463,29 +463,46 @@ Professor's Response to this student:`
                                     value={webUrl}
                                     onChange={(e) => setWebUrl(e.target.value)}
                                 />
-                                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
-                                    <p className="mb-2 text-xs font-medium text-amber-800 dark:text-amber-200">
-                                        📌 URL scanning only works for public pages
+                                <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+                                    <p className="mb-3 text-sm font-semibold text-blue-800 dark:text-blue-200">
+                                        🔐 For Protected LMS Pages (Moodle, Canvas, Blackboard)
                                     </p>
-                                    <p className="text-xs text-amber-700 dark:text-amber-300">
-                                        Protected LMS pages (Moodle, Canvas, Blackboard) require your browser session.
-                                        Since our server cannot access your login cookies, use one of these methods:
-                                    </p>
-                                    <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-amber-700 dark:text-amber-300">
-                                        <li><strong>Quick:</strong> Open discussion in browser → Select all (Ctrl+A) → Copy (Ctrl+C) → Use &quot;Paste Content&quot; tab</li>
-                                        <li><strong>Bookmarklet:</strong> Drag this to your bookmarks bar: <a
-                                            href="javascript:(function(){var t=document.body.innerText;var w=window.open('https://profgenie.ai/discussion?content='+encodeURIComponent(t.substring(0,50000)),'_blank');})();"
-                                            className="inline-block rounded bg-amber-600 px-2 py-0.5 text-white hover:bg-amber-700"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                toast({
-                                                    title: "Drag to Bookmark Bar",
-                                                    description: "Drag this link to your bookmarks bar, then click it while on your LMS discussion page",
-                                                });
-                                            }}
-                                            draggable="true"
-                                        >📋 Grab Posts</a></li>
-                                    </ul>
+                                    <div className="space-y-3">
+                                        <div className="rounded border border-blue-300 bg-white p-3 dark:border-blue-700 dark:bg-blue-900">
+                                            <p className="mb-2 text-xs font-medium text-blue-700 dark:text-blue-300">
+                                                Option 1: One-Click Bookmarklet (Recommended)
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <a
+                                                    href={`javascript:(function(){var d=document,s=d.createElement('script');s.src='https://profgenie.ai/bookmarklet.js?v=${Date.now()}';d.body.appendChild(s);})();`}
+                                                    className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:from-blue-700 hover:to-purple-700"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        toast({
+                                                            title: "📚 Drag to Bookmark Bar",
+                                                            description: "Drag this button to your bookmarks bar. Then click it while viewing any LMS discussion page!",
+                                                        });
+                                                    }}
+                                                    draggable="true"
+                                                >
+                                                    📋 ProfGenie Grab Posts
+                                                </a>
+                                                <span className="text-xs text-blue-600 dark:text-blue-400">← Drag to bookmarks</span>
+                                            </div>
+                                            <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                                                Works with: Moodle, Canvas, Blackboard, Brightspace/D2L, Schoology
+                                            </p>
+                                        </div>
+                                        <div className="text-xs text-blue-700 dark:text-blue-300">
+                                            <p className="font-medium">Option 2: Manual Copy/Paste</p>
+                                            <ol className="mt-1 list-inside list-decimal space-y-0.5 text-blue-600 dark:text-blue-400">
+                                                <li>Log into your LMS discussion page</li>
+                                                <li>Select all content (Ctrl+A / Cmd+A)</li>
+                                                <li>Copy (Ctrl+C / Cmd+C)</li>
+                                                <li>Switch to &quot;Paste Content&quot; tab above</li>
+                                            </ol>
+                                        </div>
+                                    </div>
                                 </div>
                             </>
                         ) : (
