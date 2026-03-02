@@ -19,6 +19,7 @@ function isPublicPath(pathname: string) {
     pathname.startsWith("/google") && pathname.endsWith(".html") ||
     pathname === "/subscription/upgrade" ||
     pathname === "/trial-dashboard" ||
+    pathname === "/bookmarklet.js" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/debug/") ||
     pathname.startsWith("/test/") ||
