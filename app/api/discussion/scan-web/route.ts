@@ -127,17 +127,411 @@ function parseMoodleHTML(html: string): StudentPost[] {
     return posts
 }
 
+// Parse Canvas HTML structure to extract posts
+function parseCanvasHTML(html: string): StudentPost[] {
+    const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
+
+    // Canvas discussion entry patterns
+    const entryPatterns = [
+        // Canvas discussion entry
+        /<div[^>]*class="[^"]*discussion-entry[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*discussion-entry|$)/gi,
+        // Canvas entry content
+        /<article[^>]*class="[^"]*discussion_entry[^"]*"[^>]*>([\s\S]*?)<\/article>/gi,
+        // Reply container
+        /<div[^>]*id="entry-[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*id="entry-|$)/gi,
+    ]
+
+    let matches: RegExpMatchArray[] = []
+    for (const pattern of entryPatterns) {
+        matches = Array.from(html.matchAll(pattern))
+        if (matches.length > 0) break
+    }
+
+    matches.forEach((match, index) => {
+        const postHtml = match[1] || match[0]
+
+        // Extract author
+        let authorName = `Student ${index + 1}`
+        const authorPatterns = [
+            /<span[^>]*class="[^"]*author[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<a[^>]*class="[^"]*author[^"]*"[^>]*>([^<]+)<\/a>/i,
+            /<span[^>]*class="[^"]*display_name[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<a[^>]*href="[^"]*\/users\/[^"]*"[^>]*>([^<]+)<\/a>/i,
+        ]
+
+        for (const pattern of authorPatterns) {
+            const authorMatch = postHtml.match(pattern)
+            if (authorMatch && authorMatch[1]) {
+                const name = authorMatch[1].trim()
+                if (name.length > 2 && name.length < 60) {
+                    authorName = name
+                    break
+                }
+            }
+        }
+
+        // Extract content
+        let postContent = ''
+        const contentPatterns = [
+            /<div[^>]*class="[^"]*message[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+            /<div[^>]*class="[^"]*entry-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+            /<div[^>]*class="[^"]*user_content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        ]
+
+        for (const pattern of contentPatterns) {
+            const contentMatch = postHtml.match(pattern)
+            if (contentMatch && contentMatch[1]) {
+                postContent = extractTextFromHTML(contentMatch[1])
+                if (postContent.length > 20) break
+            }
+        }
+
+        if (postContent.length < 20) {
+            postContent = extractTextFromHTML(postHtml)
+        }
+
+        if (postContent.length > 30) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `canvas-${index}-${Date.now()}`,
+                    studentName: authorName,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    })
+
+    return posts
+}
+
+// Parse Blackboard HTML structure to extract posts
+function parseBlackboardHTML(html: string): StudentPost[] {
+    const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
+
+    const entryPatterns = [
+        // Blackboard Ultra discussion
+        /<div[^>]*class="[^"]*js-post[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*js-post|$)/gi,
+        // Classic Blackboard
+        /<li[^>]*class="[^"]*dbThread[^"]*"[^>]*>([\s\S]*?)<\/li>/gi,
+        // Discussion message
+        /<div[^>]*class="[^"]*vtbegenerated[^"]*"[^>]*>([\s\S]*?)<\/div>/gi,
+        // Post container
+        /<div[^>]*id="message_[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*id="message_|$)/gi,
+    ]
+
+    let matches: RegExpMatchArray[] = []
+    for (const pattern of entryPatterns) {
+        matches = Array.from(html.matchAll(pattern))
+        if (matches.length > 0) break
+    }
+
+    matches.forEach((match, index) => {
+        const postHtml = match[1] || match[0]
+
+        let authorName = `Student ${index + 1}`
+        const authorPatterns = [
+            /<span[^>]*class="[^"]*author[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<a[^>]*class="[^"]*username[^"]*"[^>]*>([^<]+)<\/a>/i,
+            /<span[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<strong[^>]*>([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)<\/strong>/i,
+        ]
+
+        for (const pattern of authorPatterns) {
+            const authorMatch = postHtml.match(pattern)
+            if (authorMatch && authorMatch[1]) {
+                const name = authorMatch[1].trim()
+                if (name.length > 2 && name.length < 60) {
+                    authorName = name
+                    break
+                }
+            }
+        }
+
+        let postContent = ''
+        const contentPatterns = [
+            /<div[^>]*class="[^"]*vtbegenerated[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+            /<div[^>]*class="[^"]*postBody[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+            /<div[^>]*class="[^"]*message-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        ]
+
+        for (const pattern of contentPatterns) {
+            const contentMatch = postHtml.match(pattern)
+            if (contentMatch && contentMatch[1]) {
+                postContent = extractTextFromHTML(contentMatch[1])
+                if (postContent.length > 20) break
+            }
+        }
+
+        if (postContent.length < 20) {
+            postContent = extractTextFromHTML(postHtml)
+        }
+
+        if (postContent.length > 30) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `blackboard-${index}-${Date.now()}`,
+                    studentName: authorName,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    })
+
+    return posts
+}
+
+// Parse Brightspace/D2L HTML structure to extract posts
+function parseBrightspaceHTML(html: string): StudentPost[] {
+    const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
+
+    const entryPatterns = [
+        // D2L discussion post
+        /<div[^>]*class="[^"]*d2l-htmlblock[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*d2l-htmlblock|$)/gi,
+        // Discussion thread
+        /<div[^>]*class="[^"]*d2l-discussion-post[^"]*"[^>]*>([\s\S]*?)<\/div>/gi,
+        // Post wrapper
+        /<article[^>]*class="[^"]*d2l-post[^"]*"[^>]*>([\s\S]*?)<\/article>/gi,
+    ]
+
+    let matches: RegExpMatchArray[] = []
+    for (const pattern of entryPatterns) {
+        matches = Array.from(html.matchAll(pattern))
+        if (matches.length > 0) break
+    }
+
+    matches.forEach((match, index) => {
+        const postHtml = match[1] || match[0]
+
+        let authorName = `Student ${index + 1}`
+        const authorPatterns = [
+            /<span[^>]*class="[^"]*d2l-username[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<a[^>]*class="[^"]*d2l-link[^"]*"[^>]*>([^<]+)<\/a>/i,
+            /<span[^>]*class="[^"]*poster-name[^"]*"[^>]*>([^<]+)<\/span>/i,
+        ]
+
+        for (const pattern of authorPatterns) {
+            const authorMatch = postHtml.match(pattern)
+            if (authorMatch && authorMatch[1]) {
+                const name = authorMatch[1].trim()
+                if (name.length > 2 && name.length < 60) {
+                    authorName = name
+                    break
+                }
+            }
+        }
+
+        let postContent = extractTextFromHTML(postHtml)
+
+        if (postContent.length > 30) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `brightspace-${index}-${Date.now()}`,
+                    studentName: authorName,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    })
+
+    return posts
+}
+
+// Parse Schoology HTML structure to extract posts
+function parseSchoologyHTML(html: string): StudentPost[] {
+    const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
+
+    const entryPatterns = [
+        // Schoology discussion
+        /<div[^>]*class="[^"]*discussion-card[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*discussion-card|$)/gi,
+        // Comment/reply
+        /<div[^>]*class="[^"]*comment[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*comment|$)/gi,
+        // Post wrapper
+        /<article[^>]*class="[^"]*s-post[^"]*"[^>]*>([\s\S]*?)<\/article>/gi,
+    ]
+
+    let matches: RegExpMatchArray[] = []
+    for (const pattern of entryPatterns) {
+        matches = Array.from(html.matchAll(pattern))
+        if (matches.length > 0) break
+    }
+
+    matches.forEach((match, index) => {
+        const postHtml = match[1] || match[0]
+
+        let authorName = `Student ${index + 1}`
+        const authorPatterns = [
+            /<span[^>]*class="[^"]*s-user-name[^"]*"[^>]*>([^<]+)<\/span>/i,
+            /<a[^>]*class="[^"]*sAuthorLink[^"]*"[^>]*>([^<]+)<\/a>/i,
+            /<span[^>]*class="[^"]*name[^"]*"[^>]*>([^<]+)<\/span>/i,
+        ]
+
+        for (const pattern of authorPatterns) {
+            const authorMatch = postHtml.match(pattern)
+            if (authorMatch && authorMatch[1]) {
+                const name = authorMatch[1].trim()
+                if (name.length > 2 && name.length < 60) {
+                    authorName = name
+                    break
+                }
+            }
+        }
+
+        let postContent = extractTextFromHTML(postHtml)
+
+        if (postContent.length > 30) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `schoology-${index}-${Date.now()}`,
+                    studentName: authorName,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    })
+
+    return posts
+}
+
+// Generic HTML parser for unknown LMS systems
+function parseGenericHTML(html: string): StudentPost[] {
+    const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
+
+    // Generic patterns that work across many platforms
+    const entryPatterns = [
+        // Article elements (common pattern)
+        /<article[^>]*>([\s\S]*?)<\/article>/gi,
+        // Post/comment class patterns
+        /<div[^>]*class="[^"]*(?:post|comment|reply|message|entry)[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*(?:post|comment|reply|message|entry)|$)/gi,
+        // List items for threaded discussions
+        /<li[^>]*class="[^"]*(?:post|thread|message)[^"]*"[^>]*>([\s\S]*?)<\/li>/gi,
+    ]
+
+    let matches: RegExpMatchArray[] = []
+    for (const pattern of entryPatterns) {
+        matches = Array.from(html.matchAll(pattern))
+        if (matches.length > 1) break  // Need at least 2 to be meaningful
+    }
+
+    matches.forEach((match, index) => {
+        const postHtml = match[1] || match[0]
+
+        let authorName = `Student ${index + 1}`
+        // Generic author patterns
+        const authorPatterns = [
+            /<[^>]*class="[^"]*(?:author|user|name|poster)[^"]*"[^>]*>([^<]+)<\/[^>]+>/i,
+            /<a[^>]*href="[^"]*(?:user|profile|member)[^"]*"[^>]*>([^<]+)<\/a>/i,
+            /<strong[^>]*>([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)<\/strong>/i,
+        ]
+
+        for (const pattern of authorPatterns) {
+            const authorMatch = postHtml.match(pattern)
+            if (authorMatch && authorMatch[1]) {
+                const name = authorMatch[1].trim()
+                if (name.length > 2 && name.length < 60 && /[A-Z]/.test(name)) {
+                    authorName = name
+                    break
+                }
+            }
+        }
+
+        let postContent = extractTextFromHTML(postHtml)
+
+        if (postContent.length > 50) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `generic-${index}-${Date.now()}`,
+                    studentName: authorName,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    })
+
+    return posts
+}
+
+// Detect LMS type from HTML content
+function detectLMSFromHTML(html: string): string {
+    const htmlLower = html.toLowerCase()
+    
+    if (htmlLower.includes('moodle') || htmlLower.includes('/mod/forum/') || htmlLower.includes('forumpost')) {
+        return 'moodle'
+    }
+    if (htmlLower.includes('canvas') || htmlLower.includes('instructure') || htmlLower.includes('ic-app')) {
+        return 'canvas'
+    }
+    if (htmlLower.includes('blackboard') || htmlLower.includes('bb-') || htmlLower.includes('learn.bb')) {
+        return 'blackboard'
+    }
+    if (htmlLower.includes('brightspace') || htmlLower.includes('d2l') || htmlLower.includes('desire2learn')) {
+        return 'd2l'
+    }
+    if (htmlLower.includes('schoology') || htmlLower.includes('sgy-')) {
+        return 'schoology'
+    }
+    return 'generic'
+}
+
 // Parse student posts from text content with improved LMS detection
 function parseStudentPosts(content: string, html?: string): StudentPost[] {
     const posts: StudentPost[] = []
     const seenContent = new Set<string>()
 
-    // First: Try HTML-based parsing for Moodle if HTML is available
-    if (html && (html.includes('moodle') || html.includes('/mod/forum/') || html.includes('forumpost'))) {
-        const moodlePosts = parseMoodleHTML(html)
-        if (moodlePosts.length > 0) {
-            console.log(`Parsed ${moodlePosts.length} posts from Moodle HTML structure`)
-            return moodlePosts
+    // First: Try HTML-based parsing if HTML is available
+    if (html) {
+        const lmsType = detectLMSFromHTML(html)
+        console.log(`Detected LMS type: ${lmsType}`)
+
+        let htmlPosts: StudentPost[] = []
+
+        // Try LMS-specific parser first
+        switch (lmsType) {
+            case 'moodle':
+                htmlPosts = parseMoodleHTML(html)
+                break
+            case 'canvas':
+                htmlPosts = parseCanvasHTML(html)
+                break
+            case 'blackboard':
+                htmlPosts = parseBlackboardHTML(html)
+                break
+            case 'd2l':
+                htmlPosts = parseBrightspaceHTML(html)
+                break
+            case 'schoology':
+                htmlPosts = parseSchoologyHTML(html)
+                break
+            default:
+                htmlPosts = parseGenericHTML(html)
+        }
+
+        if (htmlPosts.length > 0) {
+            console.log(`Parsed ${htmlPosts.length} posts from ${lmsType} HTML structure`)
+            return htmlPosts
+        }
+
+        // If LMS-specific parser failed, try generic parser
+        if (lmsType !== 'generic') {
+            htmlPosts = parseGenericHTML(html)
+            if (htmlPosts.length > 0) {
+                console.log(`Parsed ${htmlPosts.length} posts from generic HTML structure`)
+                return htmlPosts
+            }
         }
     }
 
