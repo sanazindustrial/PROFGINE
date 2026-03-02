@@ -19,18 +19,18 @@ function DiscussionContent() {
         const content = searchParams.get("content")
         const lms = searchParams.get("lms")
         const count = searchParams.get("count")
-        
+
         if (content) {
             setInitialContent(content)
             setActiveTab("bulk")
-            
+
             // Show success toast from bookmarklet
             const postCount = count ? parseInt(count) : 0
             const lmsName = lms ? lms.charAt(0).toUpperCase() + lms.slice(1) : 'LMS'
-            
+
             toast({
                 title: `📋 Content Received from ${lmsName}`,
-                description: postCount > 0 
+                description: postCount > 0
                     ? `Extracted ${postCount} discussion post(s). Click "Find Student Posts" to parse them.`
                     : `Content loaded. Click "Find Student Posts" to parse student discussions.`,
             })

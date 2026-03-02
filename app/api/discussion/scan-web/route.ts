@@ -36,6 +36,41 @@ function parseStudentPosts(content: string): StudentPost[] {
     const posts: StudentPost[] = []
     const seenContent = new Set<string>()
 
+    // First: Check for bookmarklet format (posts separated by ---)
+    if (content.includes('---')) {
+        const sections = content.split(/\n*-{3,}\n*/g).filter(s => s.trim().length > 20)
+
+        if (sections.length > 1) {
+            sections.forEach((section, index) => {
+                const trimmed = section.trim()
+                if (trimmed.length > 20 && !isNavigationText(trimmed)) {
+                    // Try to extract name from "Name - Date" format at start
+                    const headerMatch = trimmed.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,3})\s*[-–]\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|[A-Za-z]+\s+\d)/i)
+                    let studentName = `Student ${index + 1}`
+                    let postContent = trimmed
+
+                    if (headerMatch) {
+                        studentName = headerMatch[1].trim()
+                        // Remove the header line from content
+                        postContent = trimmed.replace(/^[^\n]+\n?/, '').trim()
+                    }
+
+                    const contentHash = postContent.substring(0, 100).toLowerCase()
+                    if (!seenContent.has(contentHash) && postContent.length > 10) {
+                        seenContent.add(contentHash)
+                        posts.push({
+                            id: `post-${index}-${Date.now()}`,
+                            studentName,
+                            content: cleanContent(postContent.substring(0, 3000)),
+                        })
+                    }
+                }
+            })
+
+            if (posts.length > 0) return posts
+        }
+    }
+
     // Common LMS patterns for detecting student posts
     const postDelimiters = [
         // Moodle patterns
