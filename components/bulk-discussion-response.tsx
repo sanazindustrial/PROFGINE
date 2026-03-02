@@ -48,14 +48,15 @@ interface ResponseResult {
 
 interface BulkDiscussionResponseProps {
     initialContent?: string | null
+    initialPosts?: StudentPost[] | null
 }
 
-export function BulkDiscussionResponse({ initialContent }: BulkDiscussionResponseProps) {
+export function BulkDiscussionResponse({ initialContent, initialPosts }: BulkDiscussionResponseProps) {
     const [webUrl, setWebUrl] = useState("")
     const [rawContent, setRawContent] = useState(initialContent || "")
     const [professorProfile, setProfessorProfile] = useState("")
     const [discussionTopic, setDiscussionTopic] = useState("")
-    const [studentPosts, setStudentPosts] = useState<StudentPost[]>([])
+    const [studentPosts, setStudentPosts] = useState<StudentPost[]>(initialPosts || [])
     const [responses, setResponses] = useState<ResponseResult[]>([])
     const [isScanning, setIsScanning] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
@@ -85,6 +86,17 @@ export function BulkDiscussionResponse({ initialContent }: BulkDiscussionRespons
             setScanMode("paste")
         }
     }, [initialContent])
+
+    // Handle pre-parsed posts from bookmarklet import
+    useEffect(() => {
+        if (initialPosts && initialPosts.length > 0) {
+            setStudentPosts(initialPosts)
+            toast({
+                title: "Posts Ready",
+                description: `${initialPosts.length} student posts loaded. Configure settings and generate responses.`,
+            })
+        }
+    }, [initialPosts])
 
     const scanWebPage = useCallback(async () => {
         if (scanMode === "url" && !webUrl.trim()) {
@@ -504,7 +516,7 @@ Professor's Response to this student:`
                                                 <span className="text-xs text-blue-600 dark:text-blue-400">← Drag to bookmarks</span>
                                             </div>
                                             <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-                                                <strong>Grab:</strong> Direct DOM extraction | <strong>Auth Scan:</strong> Uses your session cookies
+                                                <strong>Grab:</strong> Direct DOM extraction | <strong>Auth Scan:</strong> Captures authenticated LMS page content
                                             </p>
                                         </div>
                                         <div className="text-xs text-blue-700 dark:text-blue-300">

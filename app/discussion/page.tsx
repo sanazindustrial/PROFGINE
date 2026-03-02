@@ -9,16 +9,69 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessageSquare, Users } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 
+interface StudentPost {
+    id: string
+    studentName: string
+    content: string
+    timestamp?: string
+}
+
 function DiscussionContent() {
     const searchParams = useSearchParams()
     const [activeTab, setActiveTab] = useState("single")
     const [initialContent, setInitialContent] = useState<string | null>(null)
+    const [initialPosts, setInitialPosts] = useState<StudentPost[] | null>(null)
 
-    // Check for content from bookmarklet
+    // Check for content from bookmarklet or localStorage import
     useEffect(() => {
         const content = searchParams.get("content")
         const lms = searchParams.get("lms")
         const count = searchParams.get("count")
+        const imported = searchParams.get("imported")
+
+        // Check localStorage for imported discussion (from bookmarklet)
+        if (imported === "true") {
+            try {
+                const stored = localStorage.getItem("profgenie_imported_discussion")
+                if (stored) {
+                    const data = JSON.parse(stored)
+                    // Only use if less than 5 minutes old
+                    if (data.timestamp && Date.now() - data.timestamp < 300000) {
+                        // If we have pre-parsed posts, use them directly
+                        if (data.posts && Array.isArray(data.posts) && data.posts.length > 0) {
+                            // Convert to expected format with IDs
+                            const postsWithIds = data.posts.map((p: { studentName?: string; author?: string; content: string }, i: number) => ({
+                                id: `imported-${i + 1}`,
+                                studentName: p.studentName || p.author || `Student ${i + 1}`,
+                                content: p.content,
+                            }))
+                            setInitialPosts(postsWithIds)
+                            setActiveTab("bulk")
+
+                            toast({
+                                title: `✅ ${data.posts.length} Posts Imported from ${data.lmsType || 'LMS'}`,
+                                description: "Posts loaded and ready! Configure settings and generate responses.",
+                            })
+                        } else {
+                            // Fallback to raw content if no posts
+                            setInitialContent(data.content)
+                            setActiveTab("bulk")
+
+                            toast({
+                                title: `✅ Discussion Imported from ${data.lmsType || 'LMS'}`,
+                                description: `Successfully imported content. Click "Find Student Posts" to parse them.`,
+                            })
+                        }
+
+                        // Clear after reading
+                        localStorage.removeItem("profgenie_imported_discussion")
+                        return
+                    }
+                }
+            } catch (e) {
+                console.error("Error reading imported discussion:", e)
+            }
+        }
 
         if (content) {
             setInitialContent(content)
@@ -53,7 +106,7 @@ function DiscussionContent() {
                 <DiscussionResponse />
             </TabsContent>
             <TabsContent value="bulk">
-                <BulkDiscussionResponse initialContent={initialContent} />
+                <BulkDiscussionResponse initialContent={initialContent} initialPosts={initialPosts} />
             </TabsContent>
         </Tabs>
     )
