@@ -31,10 +31,115 @@ function extractTextFromHTML(html: string): string {
     return text.trim()
 }
 
-// Parse student posts from text content with improved LMS detection
-function parseStudentPosts(content: string): StudentPost[] {
+// Parse Moodle HTML structure to extract posts
+function parseMoodleHTML(html: string): StudentPost[] {
     const posts: StudentPost[] = []
     const seenContent = new Set<string>()
+
+    // Moodle forum post patterns - look for common class structures
+    // Pattern 1: forumpost class with author and content sections
+    const forumPostRegex = /<article[^>]*class="[^"]*forum-post[^"]*"[^>]*>([\s\S]*?)<\/article>/gi
+    let matches = Array.from(html.matchAll(forumPostRegex))
+
+    // Pattern 2: Older Moodle with div.forumpost
+    if (matches.length === 0) {
+        const oldForumRegex = /<div[^>]*class="[^"]*forumpost[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?=<div[^>]*class="[^"]*forumpost|$)/gi
+        matches = Array.from(html.matchAll(oldForumRegex))
+    }
+
+    // Pattern 3: Table-based forum (very old Moodle)
+    if (matches.length === 0) {
+        const tableRegex = /<tr[^>]*class="[^"]*discussion[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi
+        matches = Array.from(html.matchAll(tableRegex))
+    }
+
+    matches.forEach((match, index) => {
+        const postHtml = match[1] || match[0]
+
+        // Extract author name - look for various patterns
+        let authorName = `Student ${index + 1}`
+        const authorPatterns = [
+            // Moodle 4.x author element
+            /<a[^>]*class="[^"]*author[^"]*"[^>]*>([^<]+)<\/a>/i,
+            // User profile link
+            /<a[^>]*href="[^"]*user\/view\.php[^"]*"[^>]*>([^<]+)<\/a>/i,
+            // Author info div
+            /<div[^>]*class="[^"]*author[^"]*"[^>]*>[\s\S]*?<a[^>]*>([^<]+)<\/a>/i,
+            // Username span
+            /<span[^>]*class="[^"]*username[^"]*"[^>]*>([^<]+)<\/span>/i,
+            // Fullname link
+            /<a[^>]*title="[^"]*"[^>]*>([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)<\/a>/i,
+        ]
+
+        for (const pattern of authorPatterns) {
+            const authorMatch = postHtml.match(pattern)
+            if (authorMatch && authorMatch[1]) {
+                const name = authorMatch[1].trim()
+                if (name.length > 2 && name.length < 60) {
+                    authorName = name
+                    break
+                }
+            }
+        }
+
+        // Extract post content
+        const contentPatterns = [
+            // Moodle 4.x content
+            /<div[^>]*class="[^"]*post-content-container[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<div[^>]*class="[^"]*attachments|$)/i,
+            // Post content div
+            /<div[^>]*class="[^"]*posting[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+            // Content body
+            /<div[^>]*class="[^"]*content[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<div[^>]*class="[^"]*footer|$)/i,
+            // Message text
+            /<div[^>]*class="[^"]*message[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+            // Text content
+            /<div[^>]*class="[^"]*text_to_html[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+        ]
+
+        let postContent = ''
+        for (const pattern of contentPatterns) {
+            const contentMatch = postHtml.match(pattern)
+            if (contentMatch && contentMatch[1]) {
+                postContent = extractTextFromHTML(contentMatch[1])
+                if (postContent.length > 20) break
+            }
+        }
+
+        // Fallback: extract all text from the post
+        if (postContent.length < 20) {
+            postContent = extractTextFromHTML(postHtml)
+        }
+
+        // Skip if content is too short or duplicate
+        if (postContent.length > 30) {
+            const contentHash = postContent.substring(0, 100).toLowerCase()
+            if (!seenContent.has(contentHash)) {
+                seenContent.add(contentHash)
+                posts.push({
+                    id: `moodle-${index}-${Date.now()}`,
+                    studentName: authorName,
+                    content: cleanContent(postContent.substring(0, 3000)),
+                })
+            }
+        }
+    })
+
+    return posts
+}
+
+// Parse student posts from text content with improved LMS detection
+function parseStudentPosts(content: string, html?: string): StudentPost[] {
+    const posts: StudentPost[] = []
+    const seenContent = new Set<string>()
+
+    // First: Try HTML-based parsing for Moodle if HTML is available
+    if (html && (html.includes('moodle') || html.includes('/mod/forum/') || html.includes('forumpost'))) {
+        const moodlePosts = parseMoodleHTML(html)
+        if (moodlePosts.length > 0) {
+            console.log(`Parsed ${moodlePosts.length} posts from Moodle HTML structure`)
+            return moodlePosts
+        }
+    }
 
     // First: Check for bookmarklet format (posts separated by ---)
     if (content.includes('---')) {
@@ -313,12 +418,17 @@ export async function POST(request: NextRequest) {
         let html: string = ''
 
         if (rawContent) {
-            // Direct content provided (pasted text)
+            // Direct content provided from bookmarklet (HTML content)
             content = rawContent
+            // If rawContent looks like HTML, set it as html for parsing
+            if (rawContent.trim().startsWith('<') || rawContent.includes('<html') || rawContent.includes('<body')) {
+                html = rawContent
+                content = extractTextFromHTML(rawContent)
+            }
         } else if (url) {
             // Fetch from URL
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                return NextResponse.json({ error: "Invalid URL format" }, { status: 400 })
+                return NextResponse.json({ error: "Invalild URL format" }, { status: 400 })
             }
 
             // Use cookies if provided for authenticated LMS access
@@ -357,7 +467,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "URL or rawContent is required" }, { status: 400 })
         }
 
-        const posts = parseStudentPosts(content)
+        const posts = parseStudentPosts(content, html)
 
         // If posts found but they look like navigation/UI text, warn the user
         if (posts.length === 1 && posts[0].studentName === 'Student 1') {
