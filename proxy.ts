@@ -20,6 +20,7 @@ function isPublicPath(pathname: string) {
     pathname === "/subscription/upgrade" ||
     pathname === "/trial-dashboard" ||
     pathname === "/bookmarklet.js" ||
+    pathname === "/bookmarklet-auth.js" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/debug/") ||
     pathname.startsWith("/test/") ||

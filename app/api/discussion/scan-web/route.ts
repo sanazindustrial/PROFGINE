@@ -278,14 +278,22 @@ function cleanContent(content: string): string {
         .trim()
 }
 
-// Fetch webpage content
-async function fetchWebpage(url: string): Promise<string> {
+// Fetch webpage content with optional cookies for authenticated requests
+async function fetchWebpage(url: string, cookies?: string): Promise<string> {
+    const headers: Record<string, string> = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    }
+
+    // If cookies provided, add them to the request for authenticated access
+    if (cookies) {
+        headers['Cookie'] = cookies
+    }
+
     const response = await fetch(url, {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
+        headers,
         signal: AbortSignal.timeout(15000),
+        redirect: 'follow',
     })
 
     if (!response.ok) {
@@ -299,7 +307,7 @@ export async function POST(request: NextRequest) {
     try {
         // Public API - no auth required for discussion tools
         const body = await request.json()
-        const { url, rawContent } = body
+        const { url, rawContent, cookies } = body
 
         let content: string
         let html: string = ''
@@ -313,18 +321,34 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: "Invalid URL format" }, { status: 400 })
             }
 
-            html = await fetchWebpage(url)
+            // Use cookies if provided for authenticated LMS access
+            html = await fetchWebpage(url, cookies)
             content = extractTextFromHTML(html)
 
             // Check if we got a login page instead of discussion content
             if (isLoginPage(html, content)) {
                 const lmsName = detectLMS(url)
+
+                // If cookies were provided but still got login page, session may be expired
+                if (cookies) {
+                    return NextResponse.json({
+                        error: `Session expired`,
+                        requiresAuth: true,
+                        lmsName,
+                        message: `Your ${lmsName} session appears to have expired. Please refresh the LMS page in your browser and try again.`,
+                        suggestion: `Go back to ${lmsName}, refresh the page to restore your session, then use the bookmarklet again.`,
+                        posts: [],
+                        totalFound: 0,
+                    }, { status: 401 })
+                }
+
                 return NextResponse.json({
                     error: `Login required`,
                     requiresAuth: true,
                     lmsName,
-                    message: `This ${lmsName} discussion page requires authentication. The scanner cannot access protected content directly.`,
-                    suggestion: `Please log into ${lmsName}, open the discussion page, select all the student posts (Ctrl+A), copy them (Ctrl+C), and paste them in the "Paste Content" tab instead.`,
+                    message: `This ${lmsName} discussion page requires authentication. Use the bookmarklet to scan with your login session.`,
+                    suggestion: `Use the "Authenticated Scan" bookmarklet while logged into ${lmsName} to capture your session and scan the page.`,
+                    supportsCookies: true,
                     posts: [],
                     totalFound: 0,
                 }, { status: 401 })

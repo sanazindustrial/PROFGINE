@@ -247,24 +247,78 @@
     const posts = extractPosts(lmsType);
     const formatted = formatPosts(posts);
 
-    // Store in sessionStorage for larger content
-    sessionStorage.setItem('profgenie_posts', formatted);
-    sessionStorage.setItem('profgenie_count', posts.length.toString());
-    sessionStorage.setItem('profgenie_lms', lmsType);
+    // Check if we got meaningful content
+    const hasGoodContent = posts.length > 0 && posts.some(p => p.content.length > 100);
 
-    // Build URL
-    const baseUrl = 'https://profgenie.ai/discussion';
-    const params = new URLSearchParams({
-      content: formatted.substring(0, 50000),
-      lms: lmsType,
-      count: posts.length.toString()
-    });
+    if (hasGoodContent) {
+      // Direct extraction worked - use it
+      sessionStorage.setItem('profgenie_posts', formatted);
+      sessionStorage.setItem('profgenie_count', posts.length.toString());
+      sessionStorage.setItem('profgenie_lms', lmsType);
 
-    // Open ProfGenie
-    window.open(baseUrl + '?' + params.toString(), '_blank');
+      // Build URL
+      const baseUrl = 'https://profgenie.ai/discussion';
+      const params = new URLSearchParams({
+        content: formatted.substring(0, 50000),
+        lms: lmsType,
+        count: posts.length.toString()
+      });
 
-    // Show confirmation
-    alert(`ProfGenie: Extracted ${posts.length} discussion post(s) from ${lmsType.toUpperCase()}`);
+      // Open ProfGenie
+      window.open(baseUrl + '?' + params.toString(), '_blank');
+
+      // Show confirmation
+      alert(`ProfGenie: Extracted ${posts.length} discussion post(s) from ${lmsType.toUpperCase()}`);
+    } else {
+      // DOM extraction didn't work well - try authenticated API scan
+      const useAuthScan = confirm(
+        `ProfGenie: Could not extract discussion posts directly.\n\n` +
+        `Would you like to try authenticated scanning?\n` +
+        `This will send your session cookies to scan this page server-side.`
+      );
+
+      if (useAuthScan) {
+        // Capture cookies and URL for authenticated scan
+        const authData = {
+          url: window.location.href,
+          cookies: document.cookie,
+          lms: lmsType
+        };
+
+        // Send to API for authenticated scanning
+        fetch('https://profgenie.ai/api/discussion/scan-web', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(authData)
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert(`ProfGenie: ${data.message || data.error}\n\n${data.suggestion || ''}`);
+          } else if (data.posts && data.posts.length > 0) {
+            // Format posts and open ProfGenie
+            const content = data.posts.map(p => `${p.author || 'Student'}\n${p.content}`).join('\n\n---\n\n');
+            const params = new URLSearchParams({
+              content: content.substring(0, 50000),
+              lms: lmsType,
+              count: data.posts.length.toString()
+            });
+            window.open('https://profgenie.ai/discussion?' + params.toString(), '_blank');
+            alert(`ProfGenie: Extracted ${data.posts.length} posts via authenticated scan!`);
+          } else {
+            alert('ProfGenie: No posts found. Try copying and pasting the content manually.');
+          }
+        })
+        .catch(err => {
+          alert('ProfGenie: Scan failed. Try copying and pasting the content manually.');
+          console.error('ProfGenie error:', err);
+        });
+      } else {
+        // Fall back to copying page text
+        const fallback = document.body.innerText.substring(0, 50000);
+        window.open('https://profgenie.ai/discussion?content=' + encodeURIComponent(fallback), '_blank');
+      }
+    }
 
   } catch (error) {
     alert('ProfGenie: Error extracting posts. Copying page text instead.');

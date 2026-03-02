@@ -470,9 +470,9 @@ Professor's Response to this student:`
                                     <div className="space-y-3">
                                         <div className="rounded border border-blue-300 bg-white p-3 dark:border-blue-700 dark:bg-blue-900">
                                             <p className="mb-2 text-xs font-medium text-blue-700 dark:text-blue-300">
-                                                Option 1: One-Click Bookmarklet (Recommended)
+                                                Option 1: Smart Bookmarklet (Recommended)
                                             </p>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <a
                                                     href={`javascript:(function(){var d=document,s=d.createElement('script');s.src='https://profgenie.ai/bookmarklet.js?v=${Date.now()}';d.body.appendChild(s);})();`}
                                                     className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:from-blue-700 hover:to-purple-700"
@@ -485,12 +485,26 @@ Professor's Response to this student:`
                                                     }}
                                                     draggable="true"
                                                 >
-                                                    📋 ProfGenie Grab Posts
+                                                    📋 ProfGenie Grab
+                                                </a>
+                                                <a
+                                                    href={`javascript:(function(){var d=document,s=d.createElement('script');s.src='https://profgenie.ai/bookmarklet-auth.js?v=${Date.now()}';d.body.appendChild(s);})();`}
+                                                    className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-green-600 to-teal-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:from-green-700 hover:to-teal-700"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        toast({
+                                                            title: "🔐 Authenticated Scanner",
+                                                            description: "Drag this button to your bookmarks. Uses your LMS session for server-side scanning.",
+                                                        });
+                                                    }}
+                                                    draggable="true"
+                                                >
+                                                    🔐 Auth Scan
                                                 </a>
                                                 <span className="text-xs text-blue-600 dark:text-blue-400">← Drag to bookmarks</span>
                                             </div>
                                             <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-                                                Works with: Moodle, Canvas, Blackboard, Brightspace/D2L, Schoology
+                                                <strong>Grab:</strong> Direct DOM extraction | <strong>Auth Scan:</strong> Uses your session cookies
                                             </p>
                                         </div>
                                         <div className="text-xs text-blue-700 dark:text-blue-300">
