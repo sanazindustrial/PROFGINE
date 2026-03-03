@@ -1,6 +1,6 @@
 // ProfGenie Authenticated LMS Scanner Bookmarklet
-// This script captures cookies and sends to API for authenticated scanning
-// Use this when direct DOM extraction doesn't work
+// This script extracts the FULL page content from the already-rendered page
+// Since you're logged in, the browser has the authenticated view - we extract that directly
 
 (function () {
   'use strict';
@@ -48,7 +48,7 @@
       <div style="background: white; padding: 30px 50px; border-radius: 10px; text-align: center;">
         <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
         <div style="font-size: 18px; color: #333;">ProfGenie</div>
-        <div style="font-size: 14px; color: #666; margin-top: 10px;">Scanning with your session...</div>
+        <div style="font-size: 14px; color: #666; margin-top: 10px;">Extracting page content...</div>
         <div style="margin-top: 15px; width: 200px; height: 4px; background: #eee; border-radius: 2px; overflow: hidden;">
           <div style="width: 30%; height: 100%; background: #4f46e5; animation: profgenie-load 1s infinite;"></div>
         </div>
@@ -70,80 +70,136 @@
     }
   }
 
+  // Extract the full rendered page content
+  function extractPageContent() {
+    // Get all visible text from the page
+    // This captures the authenticated view since you're logged in
+
+    // Clone body to avoid modifying the actual page
+    const clone = document.body.cloneNode(true);
+
+    // Remove scripts, styles, and hidden elements
+    const elementsToRemove = clone.querySelectorAll('script, style, noscript, svg, [hidden], [aria-hidden="true"]');
+    elementsToRemove.forEach(el => el.remove());
+
+    // Get text content
+    let text = clone.innerText || clone.textContent || '';
+
+    // Also include the full HTML for better parsing
+    const html = document.documentElement.outerHTML;
+
+    return {
+      text,
+      html
+    };
+  }
+
   // Main execution
   try {
     const lmsType = detectLMS();
     const pageUrl = window.location.href;
-    const cookies = document.cookie;
-
-    if (!cookies) {
-      alert('ProfGenie: No session cookies found.\n\nMake sure you are logged into the LMS.');
-      return;
-    }
 
     const loading = showLoading();
 
-    // Send authenticated request to API
+    // Extract the page content directly from the DOM
+    const {
+      text,
+      html
+    } = extractPageContent();
+
+    if (!text || text.trim().length < 100) {
+      hideLoading(loading);
+      alert('ProfGenie: Could not extract page content.\n\nMake sure the discussion page is fully loaded.');
+      return;
+    }
+
+    // Send the extracted content to API (not cookies)
     fetch('https://profgenie.ai/api/discussion/scan-web', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: pageUrl,
-        cookies: cookies
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rawContent: html.substring(0, 500000), // Send raw HTML for parsing
+          sourceUrl: pageUrl,
+          lmsType: lmsType,
+          authenticated: true
+        })
       })
-    })
-    .then(res => res.json())
-    .then(data => {
-      hideLoading(loading);
+      .then(res => res.json())
+      .then(data => {
+        hideLoading(loading);
 
-      if (data.error) {
-        if (data.requiresAuth) {
-          alert(
-            `ProfGenie: ${data.message}\n\n` +
-            `Suggestion: ${data.suggestion}\n\n` +
-            `Your session may have expired. Please refresh the LMS page and try again.`
-          );
-        } else {
-          alert(`ProfGenie Error: ${data.error}`);
+        if (data.error) {
+          alert(`ProfGenie: ${data.message || data.error}`);
+          return;
         }
-        return;
-      }
 
-      if (data.posts && data.posts.length > 0) {
-        // Format posts
-        const content = data.posts.map(p => {
-          const header = p.author || 'Student';
-          return `${header}\n${p.content}`;
-        }).join('\n\n---\n\n');
+        if (data.posts && data.posts.length > 0) {
+          // Format posts
+          const content = data.posts.map(p => {
+            const name = p.studentName || p.author || 'Student';
+            return `${name}\n${p.content}`;
+          }).join('\n\n---\n\n');
 
-        // Open ProfGenie with extracted content
-        const params = new URLSearchParams({
-          content: content.substring(0, 50000),
-          lms: lmsType,
-          count: data.posts.length.toString(),
-          auth: 'true'
-        });
+          // Store in localStorage for ProfGenie to pick up
+          try {
+            localStorage.setItem('profgenie_imported_discussion', JSON.stringify({
+              content: content.substring(0, 100000),
+              lmsType: lmsType,
+              posts: data.posts,
+              count: data.posts.length,
+              sourceUrl: pageUrl,
+              timestamp: Date.now()
+            }));
+          } catch (e) {
+            console.log('Could not save to localStorage:', e);
+          }
 
-        window.open('https://profgenie.ai/discussion?' + params.toString(), '_blank');
-        alert(`ProfGenie: Successfully extracted ${data.posts.length} posts via authenticated scan!`);
-      } else {
+          // If opened from ProfGenie, send message back
+          if (window.opener) {
+            try {
+              window.opener.postMessage({
+                type: 'PROFGENIE_DISCUSSION_DATA',
+                posts: data.posts,
+                lmsType: lmsType,
+                sourceUrl: pageUrl
+              }, 'https://profgenie.ai');
+            } catch (e) {
+              console.log('Could not post message:', e);
+            }
+          }
+
+          // Show success and redirect to ProfGenie
+          const count = data.posts.length;
+          const redirect = confirm(
+            `✅ ProfGenie: Successfully extracted ${count} posts!\n\n` +
+            `Click OK to go to ProfGenie and generate responses.\n` +
+            `Click Cancel to stay on this page.`
+          );
+
+          if (redirect) {
+            window.location.href = 'https://profgenie.ai/discussion?imported=true';
+          }
+        } else {
+          alert(
+            'ProfGenie: No discussion posts found on this page.\n\n' +
+            'Tips:\n' +
+            '• Make sure you are on a discussion thread page (not the list)\n' +
+            '• Try scrolling down to load all posts first\n' +
+            '• Try the "Grab Posts" bookmarklet instead\n' +
+            '• Or copy/paste the content manually'
+          );
+        }
+      })
+      .catch(err => {
+        hideLoading(loading);
+        console.error('ProfGenie error:', err);
         alert(
-          'ProfGenie: No discussion posts found on this page.\n\n' +
-          'Tips:\n' +
-          '• Make sure you are on a discussion thread page\n' +
-          '• Try scrolling to load all posts first\n' +
-          '• Try copying and pasting the content manually'
+          'ProfGenie: Connection failed.\n\n' +
+          'Please check your internet connection and try again.'
         );
-      }
-    })
-    .catch(err => {
-      hideLoading(loading);
-      console.error('ProfGenie error:', err);
-      alert(
-        'ProfGenie: Connection failed.\n\n' +
-        'Please check your internet connection and try again.'
-      );
-    });
+      });
 
   } catch (error) {
     console.error('ProfGenie error:', error);

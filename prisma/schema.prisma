@@ -151,7 +151,7 @@ model ModuleSection {
 
 model Presentation {
   id             String                   @id @default(cuid())
-  courseId       String
+  courseId       String?                  // Optional - null for general presentations
   userId         String
   title          String
   description    String?
@@ -166,7 +166,7 @@ model Presentation {
   metadata       String? // JSON metadata
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
-  course         Course                   @relation(fields: [courseId], references: [id])
+  course         Course?                  @relation(fields: [courseId], references: [id])
   user           User                     @relation("UserPresentations", fields: [userId], references: [id])
   slides         PresentationSlide[]
   sources        PresentationSourceFile[]

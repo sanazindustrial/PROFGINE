@@ -24,7 +24,7 @@ import {
 
 interface PresentationResultsProps {
     presentation: any
-    course: any
+    course?: any  // Optional for general presentations
 }
 
 export function PresentationResults({ presentation, course }: PresentationResultsProps) {
@@ -42,6 +42,11 @@ export function PresentationResults({ presentation, course }: PresentationResult
 
     const currentStatusColor = statusColor[presentation.status] || "bg-gray-100 text-gray-800 border-gray-200"
 
+    // Redirect destination after delete
+    const deleteRedirectUrl = course
+        ? `/dashboard/courses/${course.id}/studio`
+        : "/dashboard/presentation-studio"
+
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this presentation?")) return
 
@@ -57,7 +62,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
                 // Show success message before redirect
                 alert("Presentation deleted successfully.")
                 setTimeout(() => {
-                    window.location.href = `/dashboard/courses/${course.id}/studio`
+                    window.location.href = deleteRedirectUrl
                 }, 500)
             } else {
                 setDeleteError("Failed to delete presentation")

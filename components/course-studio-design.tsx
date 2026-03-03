@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Upload, FileText, Monitor, Download, CheckCircle2 } from "lucide-react"
 
 interface CourseStudioDesignProps {
-    courseId: string
+    courseId?: string  // Optional - if not provided, creates general presentation
     headerTitle?: string
     headerDescription?: string
     enableSectionNumber?: boolean
     includeSectionInTitle?: boolean
     sectionLabel?: string
+    isGeneralMode?: boolean  // When true, shows "General Presentation" mode
 }
 
 export function CourseStudioDesign({
@@ -24,7 +25,8 @@ export function CourseStudioDesign({
     headerDescription = "Upload lecture notes and materials, then generate slide decks with speaker notes for each class session",
     enableSectionNumber = false,
     includeSectionInTitle = false,
-    sectionLabel = "Section / Week Number"
+    sectionLabel = "Section / Week Number",
+    isGeneralMode = false
 }: CourseStudioDesignProps) {
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
@@ -40,6 +42,12 @@ export function CourseStudioDesign({
     const [error, setError] = useState("")
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
     const [isUploading, setIsUploading] = useState(false)
+
+    // Use appropriate header based on mode
+    const displayTitle = isGeneralMode ? "General Presentation Studio" : headerTitle
+    const displayDescription = isGeneralMode
+        ? "Create standalone presentations without linking to a specific course"
+        : headerDescription
 
     const handleGenerate = async () => {
         if (!title.trim()) {
@@ -85,7 +93,7 @@ export function CourseStudioDesign({
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    courseId,
+                    ...(courseId ? { courseId } : {}),  // Only include courseId if provided
                     title: finalTitle,
                     sources: uploadedFileUrls,
                     settings: {
@@ -113,9 +121,13 @@ export function CourseStudioDesign({
             // Clear uploaded files after successful generation
             setUploadedFiles([])
 
-            // Smooth redirect to results page with appropriate delay for user to see success message
+            // Redirect based on mode - course-specific or general
             setTimeout(() => {
-                window.location.href = `/dashboard/courses/${courseId}/studio/results/${data.presentationId}`
+                if (courseId) {
+                    window.location.href = `/dashboard/courses/${courseId}/studio/results/${data.presentationId}`
+                } else {
+                    window.location.href = `/dashboard/presentation-studio/results/${data.presentationId}`
+                }
             }, 1500)
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred")
@@ -129,9 +141,9 @@ export function CourseStudioDesign({
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>{headerTitle}</CardTitle>
+                    <CardTitle>{displayTitle}</CardTitle>
                     <CardDescription>
-                        {headerDescription}
+                        {displayDescription}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">

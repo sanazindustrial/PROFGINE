@@ -468,7 +468,7 @@ function parseGenericHTML(html: string): StudentPost[] {
 // Detect LMS type from HTML content
 function detectLMSFromHTML(html: string): string {
     const htmlLower = html.toLowerCase()
-    
+
     if (htmlLower.includes('moodle') || htmlLower.includes('/mod/forum/') || htmlLower.includes('forumpost')) {
         return 'moodle'
     }
@@ -806,7 +806,7 @@ export async function POST(request: NextRequest) {
     try {
         // Public API - no auth required for discussion tools
         const body = await request.json()
-        const { url, rawContent, cookies } = body
+        const { url, rawContent, cookies, authenticated } = body
 
         let content: string
         let html: string = ''
@@ -864,7 +864,8 @@ export async function POST(request: NextRequest) {
         const posts = parseStudentPosts(content, html)
 
         // If posts found but they look like navigation/UI text, warn the user
-        if (posts.length === 1 && posts[0].studentName === 'Student 1') {
+        // Skip this check if bookmarklet confirmed user is authenticated
+        if (!authenticated && posts.length === 1 && posts[0].studentName === 'Student 1') {
             const postContent = posts[0].content.toLowerCase()
             if (postContent.includes('log in') || postContent.includes('sign in') ||
                 postContent.includes('username') || postContent.includes('password')) {

@@ -287,32 +287,34 @@
 
         // Send to API for authenticated scanning
         fetch('https://profgenie.ai/api/discussion/scan-web', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(authData)
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
-            alert(`ProfGenie: ${data.message || data.error}\n\n${data.suggestion || ''}`);
-          } else if (data.posts && data.posts.length > 0) {
-            // Format posts and open ProfGenie
-            const content = data.posts.map(p => `${p.author || 'Student'}\n${p.content}`).join('\n\n---\n\n');
-            const params = new URLSearchParams({
-              content: content.substring(0, 50000),
-              lms: lmsType,
-              count: data.posts.length.toString()
-            });
-            window.open('https://profgenie.ai/discussion?' + params.toString(), '_blank');
-            alert(`ProfGenie: Extracted ${data.posts.length} posts via authenticated scan!`);
-          } else {
-            alert('ProfGenie: No posts found. Try copying and pasting the content manually.');
-          }
-        })
-        .catch(err => {
-          alert('ProfGenie: Scan failed. Try copying and pasting the content manually.');
-          console.error('ProfGenie error:', err);
-        });
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(authData)
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.error) {
+              alert(`ProfGenie: ${data.message || data.error}\n\n${data.suggestion || ''}`);
+            } else if (data.posts && data.posts.length > 0) {
+              // Format posts and open ProfGenie
+              const content = data.posts.map(p => `${p.author || 'Student'}\n${p.content}`).join('\n\n---\n\n');
+              const params = new URLSearchParams({
+                content: content.substring(0, 50000),
+                lms: lmsType,
+                count: data.posts.length.toString()
+              });
+              window.open('https://profgenie.ai/discussion?' + params.toString(), '_blank');
+              alert(`ProfGenie: Extracted ${data.posts.length} posts via authenticated scan!`);
+            } else {
+              alert('ProfGenie: No posts found. Try copying and pasting the content manually.');
+            }
+          })
+          .catch(err => {
+            alert('ProfGenie: Scan failed. Try copying and pasting the content manually.');
+            console.error('ProfGenie error:', err);
+          });
       } else {
         // Fall back to copying page text
         const fallback = document.body.innerText.substring(0, 50000);

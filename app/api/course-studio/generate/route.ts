@@ -20,33 +20,36 @@ export async function POST(req: NextRequest) {
       settings,
     } = body
 
-    // Validate required fields
-    if (!courseId || !title) {
+    // Validate required fields - only title is truly required
+    if (!title) {
       return NextResponse.json(
-        { error: "Course ID and title are required" },
+        { error: "Presentation title is required" },
         { status: 400 }
       )
     }
 
-    // Check if user has access to course
-    const course = await prisma.course.findFirst({
-      where: {
-        id: courseId,
-        instructorId: session.user.id,
-      },
-    })
+    // If courseId provided, verify user has access to the course
+    if (courseId) {
+      const course = await prisma.course.findFirst({
+        where: {
+          id: courseId,
+          instructorId: session.user.id,
+        },
+      })
 
-    if (!course) {
-      return NextResponse.json(
-        { error: "Course not found or access denied" },
-        { status: 403 }
-      )
+      if (!course) {
+        return NextResponse.json(
+          { error: "Course not found or access denied" },
+          { status: 403 }
+        )
+      }
     }
+    // If no courseId, this is a general presentation (allowed)
 
-    // Create presentation record
+    // Create presentation record (courseId is optional for general presentations)
     const presentation = await prisma.presentation.create({
       data: {
-        courseId,
+        ...(courseId ? { courseId } : {}),
         userId: session.user.id,
         title,
         description: settings?.description,
@@ -59,6 +62,7 @@ export async function POST(req: NextRequest) {
           includeDiscussions: settings?.includeDiscussions || false,
           difficultyLevel: settings?.difficultyLevel || "intermediate",
           targetSlides: settings?.targetSlides || 25,
+          isGeneralPresentation: !courseId,
         }),
       },
     })

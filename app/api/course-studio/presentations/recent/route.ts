@@ -1,0 +1,52 @@
+import { NextRequest, NextResponse } from "next/server"
+import { requireSession } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { UserRole } from "@prisma/client"
+
+export const runtime = "nodejs"
+
+export async function GET(req: NextRequest) {
+    try {
+        const session = await requireSession()
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        // Get recent presentations for the user (both course-linked and general)
+        const presentations = await prisma.presentation.findMany({
+            where: session.user.role === UserRole.ADMIN
+                ? {}  // Admin can see all
+                : { userId: session.user.id },  // Users see their own
+            orderBy: { createdAt: "desc" },
+            take: 10,
+            select: {
+                id: true,
+                title: true,
+                status: true,
+                slideCount: true,
+                createdAt: true,
+                courseId: true,
+                course: {
+                    select: {
+                        title: true,
+                        code: true
+                    }
+                }
+            }
+        })
+
+        return NextResponse.json({
+            presentations: presentations.map(p => ({
+                ...p,
+                courseName: p.course?.title || null,
+                courseCode: p.course?.code || null
+            }))
+        })
+    } catch (error) {
+        console.error("Error fetching recent presentations:", error)
+        return NextResponse.json(
+            { error: "Failed to fetch presentations" },
+            { status: 500 }
+        )
+    }
+}

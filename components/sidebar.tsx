@@ -45,7 +45,7 @@ const navigationItems: SidebarItem[] = [
     },
     {
         title: "Presentation Studio",
-        href: "/dashboard/courses",
+        href: "/dashboard/presentation-studio",
         icon: Monitor,
         description: "Generate AI slide decks"
     },
@@ -96,6 +96,12 @@ const navigationItems: SidebarItem[] = [
         href: "/discussion",
         icon: MessageSquare,
         description: "AI-powered discussion responses"
+    },
+    {
+        title: "Quick Import",
+        href: "/dashboard/quick-import",
+        icon: ClipboardCheck,
+        description: "Import discussions from URL"
     },
     {
         title: "Grading Assistant",
