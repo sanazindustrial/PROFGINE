@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { ChatMessage } from "@/types/ai.types"
 
-export const runtime = "edge"
+export const runtime = "nodejs"
 
 const DISCUSSION_SYSTEM_PROMPT =
     "You are Professor GENIE, an AI assistant for educators. Provide clear, concise, helpful responses with a professional academic tone."

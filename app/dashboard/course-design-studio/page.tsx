@@ -324,10 +324,16 @@ function CourseDesignStudioContent() {
                     messages: [{ role: "user", content: agentQuestion }],
                 }),
             })
+            if (!res.ok) {
+                const errData = await res.json().catch(() => null)
+                setAgentResponse(errData?.error || `Server error (${res.status}). Please try again.`)
+                return
+            }
             const data = await res.json()
             setAgentResponse(data.content || data.message || "I can help you with course design!")
         } catch (error) {
-            setAgentResponse("Sorry, I'm having trouble connecting. Please try again.")
+            console.error("Ask GENIE error:", error)
+            setAgentResponse("Sorry, I'm having trouble connecting. Please check your network and try again.")
         } finally {
             setIsAgentLoading(false)
         }

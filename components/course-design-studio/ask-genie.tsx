@@ -195,7 +195,7 @@ export function AskGenie({
                 body: JSON.stringify({
                     action: "ask-genie",
                     courseId,
-                    question: content.trim(),
+                    message: content.trim(),
                     conversationId,
                     context: phaseContext,
                 }),
