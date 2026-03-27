@@ -16,6 +16,7 @@ import { EvidenceKit } from "@/components/course-design-studio/evidence-kit"
 import { ContentAnalysis } from "@/components/course-design-studio/content-analysis"
 import { SectionBuilder } from "@/components/course-design-studio/section-builder"
 import { ReadyCheck } from "@/components/course-design-studio/ready-check"
+import ReactMarkdown from "react-markdown"
 import {
     BookOpen,
     ClipboardList,
@@ -32,7 +33,12 @@ import {
     Send,
     Layout,
     Monitor,
+    Copy,
+    Check,
+    Loader2,
+    Wand2,
 } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import type {
     ContentAnalysis as ContentAnalysisType,
     CourseDesignSection,
@@ -56,6 +62,9 @@ function CourseDesignStudioContent() {
     const [agentQuestion, setAgentQuestion] = useState("")
     const [agentResponse, setAgentResponse] = useState("")
     const [isAgentLoading, setIsAgentLoading] = useState(false)
+    const [agentProvider, setAgentProvider] = useState("")
+    const [agentDuration, setAgentDuration] = useState(0)
+    const [copied, setCopied] = useState(false)
     const [activeTab, setActiveTab] = useState("course-info")
     const [designLoading, setDesignLoading] = useState(false)
     const [designError, setDesignError] = useState<string | null>(null)
@@ -311,10 +320,18 @@ function CourseDesignStudioContent() {
 
     const progress = (completedTools.length / aiFeatures.length) * 100
 
+    const copyResponse = () => {
+        navigator.clipboard.writeText(agentResponse)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
     const askAgent = async () => {
         if (!agentQuestion.trim()) return
         setIsAgentLoading(true)
         setAgentResponse("")
+        setAgentProvider("")
+        setAgentDuration(0)
 
         try {
             const res = await fetch("/api/chat", {
@@ -344,6 +361,8 @@ function CourseDesignStudioContent() {
 
             const data = await res.json()
             setAgentResponse(data.content || data.message || "I can help you with course design!")
+            setAgentProvider(data.provider || "")
+            setAgentDuration(data.durationMs || 0)
         } catch (error) {
             console.error("Ask GENIE error:", error)
             setAgentResponse("Sorry, I'm having trouble connecting. Please check your network and try again.")
@@ -423,44 +442,133 @@ function CourseDesignStudioContent() {
                 <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-pink-50/50 dark:border-purple-800 dark:from-purple-950/20 dark:to-pink-950/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <MessageCircle className="size-5 text-purple-600" />
+                            <Wand2 className="size-5 text-purple-600" />
                             Ask Professor GENIE
                         </CardTitle>
                         <CardDescription>
-                            Your AI teaching assistant for instant course design help
+                            Your AI teaching assistant — get detailed, structured answers on course design, pedagogy, assessments, and more
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Textarea
-                            placeholder="Ask anything about course design... e.g., 'What's the best way to structure a 12-week programming course?' or 'How do I design assessments for Bloom's higher-order thinking?'"
-                            value={agentQuestion}
-                            onChange={(e) => setAgentQuestion(e.target.value)}
-                            className="min-h-[100px]"
-                        />
+                        {/* Suggested Prompts */}
+                        {!agentResponse && !isAgentLoading && (
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    "Design a 15-week course schedule with assessments",
+                                    "Create learning objectives using Bloom's Taxonomy",
+                                    "Build a rubric for a research paper assignment",
+                                    "Suggest active learning strategies for large lectures",
+                                    "Create a comprehensive syllabus template",
+                                    "Design a flipped classroom model for my course",
+                                ].map((prompt) => (
+                                    <button
+                                        key={prompt}
+                                        type="button"
+                                        onClick={() => { setAgentQuestion(prompt); }}
+                                        className="rounded-full border border-purple-200 bg-white px-3 py-1.5 text-xs text-purple-700 transition-colors hover:border-purple-400 hover:bg-purple-50 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-300 dark:hover:bg-purple-950/30"
+                                    >
+                                        {prompt}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="flex gap-2">
+                            <Textarea
+                                placeholder="Ask anything about course design... e.g., 'Design a 12-week programming course with weekly topics and assessments'"
+                                value={agentQuestion}
+                                onChange={(e) => setAgentQuestion(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && agentQuestion.trim()) { e.preventDefault(); askAgent() } }}
+                                className="min-h-[80px] flex-1 resize-none"
+                            />
+                        </div>
                         <Button
                             onClick={askAgent}
                             disabled={isAgentLoading || !agentQuestion.trim()}
-                            className="w-full"
+                            className="w-full bg-purple-600 hover:bg-purple-700"
                         >
                             {isAgentLoading ? (
                                 <>
-                                    <span className="mr-2 animate-spin">Loading...</span>
-                                    Thinking...
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                    Professor GENIE is thinking...
                                 </>
                             ) : (
                                 <>
                                     <Send className="mr-2 size-4" />
-                                    Ask Agent
+                                    Ask Professor GENIE
                                 </>
                             )}
                         </Button>
-                        {agentResponse && (
-                            <Alert className="bg-white dark:bg-gray-900">
-                                <Zap className="size-4" />
-                                <AlertDescription className="mt-2">
-                                    {agentResponse}
-                                </AlertDescription>
-                            </Alert>
+
+                        {isAgentLoading && (
+                            <div className="space-y-3 rounded-lg border border-purple-200 bg-purple-50/50 p-4 dark:border-purple-800 dark:bg-purple-950/20">
+                                <div className="flex items-center gap-3">
+                                    <Loader2 className="size-4 animate-spin text-purple-600" />
+                                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Professor GENIE is generating a detailed response...</span>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="h-4 w-3/4 animate-pulse rounded bg-purple-200/50 dark:bg-purple-800/30" />
+                                    <div className="h-4 w-full animate-pulse rounded bg-purple-200/50 dark:bg-purple-800/30" />
+                                    <div className="h-4 w-5/6 animate-pulse rounded bg-purple-200/50 dark:bg-purple-800/30" />
+                                    <div className="h-4 w-2/3 animate-pulse rounded bg-purple-200/50 dark:bg-purple-800/30" />
+                                </div>
+                            </div>
+                        )}
+
+                        {agentResponse && !isAgentLoading && (
+                            <div className="rounded-lg border bg-white shadow-sm dark:bg-gray-950">
+                                {/* Response Header */}
+                                <div className="flex items-center justify-between border-b px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <Wand2 className="size-4 text-purple-600" />
+                                        <span className="text-sm font-semibold">Professor GENIE&apos;s Response</span>
+                                        {agentProvider && (
+                                            <Badge variant="secondary" className="text-xs">
+                                                {agentProvider}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {agentDuration > 0 && (
+                                            <span className="text-xs text-muted-foreground">
+                                                {(agentDuration / 1000).toFixed(1)}s
+                                            </span>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={copyResponse}
+                                            className="h-8 gap-1.5 text-xs"
+                                        >
+                                            {copied ? (
+                                                <><Check className="size-3.5 text-green-600" /> Copied</>
+                                            ) : (
+                                                <><Copy className="size-3.5" /> Copy</>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Markdown Response Body */}
+                                <ScrollArea className="max-h-[600px]">
+                                    <div className="prose prose-sm dark:prose-invert prose-headings:mb-2 prose-headings:mt-4 prose-headings:text-purple-900 prose-h2:border-b prose-h2:pb-1 prose-h2:text-lg prose-h3:text-base prose-p:leading-relaxed prose-li:my-0.5 prose-table:w-full prose-th:border prose-th:bg-purple-50 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-td:border prose-td:px-3 prose-td:py-2 prose-blockquote:border-purple-300 prose-blockquote:bg-purple-50/50 prose-blockquote:py-1 prose-blockquote:not-italic prose-strong:text-purple-800 prose-hr:my-6 dark:prose-headings:text-purple-300 dark:prose-th:bg-purple-950/30 dark:prose-blockquote:border-purple-700 dark:prose-blockquote:bg-purple-950/30 dark:prose-strong:text-purple-300 max-w-none px-5 py-4">
+                                        <ReactMarkdown>{agentResponse}</ReactMarkdown>
+                                    </div>
+                                </ScrollArea>
+
+                                {/* Ask Another */}
+                                <div className="border-t px-4 py-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => { setAgentResponse(""); setAgentQuestion(""); }}
+                                        className="gap-1.5 text-xs"
+                                    >
+                                        <MessageCircle className="size-3.5" />
+                                        Ask Another Question
+                                    </Button>
+                                </div>
+                            </div>
                         )}
                     </CardContent>
                 </Card>

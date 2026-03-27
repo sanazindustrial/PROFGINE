@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { CourseStudioDesign } from "@/components/course-studio-design"
 import { Badge } from "@/components/ui/badge"
 import { UserRole } from "@prisma/client"
@@ -73,10 +74,10 @@ export default async function CourseStudioPage({
                         ) : (
                             <div className="space-y-2">
                                 {presentations.map((pres) => (
-                                    <div
+                                    <Link
                                         key={pres.id}
-                                        className="cursor-pointer rounded border border-gray-200 p-3 transition-colors hover:border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-                                        onClick={() => window.location.href = `/dashboard/courses/${courseId}/studio/results/${pres.id}`}
+                                        href={`/dashboard/courses/${courseId}/studio/results/${pres.id}`}
+                                        className="block cursor-pointer rounded border border-gray-200 p-3 transition-colors hover:border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
                                     >
                                         <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{pres.title}</div>
                                         <div className="mt-1 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200">
@@ -89,7 +90,7 @@ export default async function CourseStudioPage({
                                         <div className="mt-1 text-xs text-gray-600 dark:text-gray-300">
                                             {new Date(pres.createdAt).toLocaleDateString()}
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         )}
