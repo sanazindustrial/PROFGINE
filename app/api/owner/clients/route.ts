@@ -7,7 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 const OWNER_EMAILS = [
-    'rjassaf12@gmail.com',
+    'rjassaf13@gmail.com',
     'ohaddad12@gmail.com',
     'sanazindustrial@gmail.com',
     'versorabusiness@gmail.com'

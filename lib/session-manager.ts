@@ -26,7 +26,7 @@ export interface SessionCheckResult {
 
 // Platform owner emails - hardcoded for security
 const OWNER_EMAILS = [
-    'rjassaf12@gmail.com',
+    'rjassaf13@gmail.com',
     'ohaddad12@gmail.com',
     'sanazindustrial@gmail.com',
     'versorabusiness@gmail.com'

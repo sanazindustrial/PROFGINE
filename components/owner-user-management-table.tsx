@@ -56,6 +56,54 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
   const [loadingCredits, setLoadingCredits] = useState<string | null>(null);
   const [creditDetails, setCreditDetails] = useState<Record<string, CreditDetails | null>>({});
 
+  // Manual user creation state
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserRole, setNewUserRole] = useState<string>("PROFESSOR");
+  const [newUserIsOwner, setNewUserIsOwner] = useState(false);
+  const [newUserSubType, setNewUserSubType] = useState<string>("FREE");
+
+  const handleCreateUser = async () => {
+    if (!newUserEmail.trim()) {
+      setCreateError("Email is required");
+      return;
+    }
+    setCreateLoading(true);
+    setCreateError(null);
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: newUserEmail.trim(),
+          name: newUserName.trim() || null,
+          role: newUserRole,
+          isOwner: newUserIsOwner,
+          subscriptionType: newUserSubType,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setCreateError(data.error || "Failed to create user");
+        return;
+      }
+      setUsers((prev) => [data.user, ...prev]);
+      setNewUserEmail("");
+      setNewUserName("");
+      setNewUserRole("PROFESSOR");
+      setNewUserIsOwner(false);
+      setNewUserSubType("FREE");
+      setShowCreateForm(false);
+    } catch {
+      setCreateError("Network error — could not create user");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const applyRolePreset = async (userId: string, preset: "OWNER" | "ADMIN" | "PROFESSOR" | "STUDENT") => {
     const nextRole: UserRole = preset === "OWNER" || preset === "ADMIN" ? UserRole.ADMIN : (preset as UserRole);
     const nextIsOwner = preset === "OWNER";
@@ -135,6 +183,82 @@ export function OwnerUserManagementTable({ initialUsers, currentUserId }: OwnerU
 
   return (
     <div className="space-y-4">
+      {/* Create User Section */}
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <div className="flex items-center justify-between">
+          <div className="font-semibold">Add User Manually</div>
+          <Button size="2" onClick={() => { setShowCreateForm(!showCreateForm); setCreateError(null); }}>
+            {showCreateForm ? "Cancel" : "+ Create User"}
+          </Button>
+        </div>
+
+        {showCreateForm && (
+          <div className="mt-4 space-y-3">
+            {createError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {createError}
+              </div>
+            )}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <label className="text-sm">
+                Email *
+                <TextField.Root
+                  type="email"
+                  placeholder="user@example.com"
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                />
+              </label>
+              <label className="text-sm">
+                Full Name
+                <TextField.Root
+                  type="text"
+                  placeholder="Dr. John Doe"
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                />
+              </label>
+              <label className="text-sm">
+                Role
+                <Select.Root value={newUserRole} onValueChange={(v) => setNewUserRole(v)}>
+                  <Select.Trigger />
+                  <Select.Content>
+                    {roles.map((r) => (
+                      <Select.Item key={r} value={r}>{r}</Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+              </label>
+              <label className="text-sm">
+                Subscription Type
+                <Select.Root value={newUserSubType} onValueChange={(v) => setNewUserSubType(v)}>
+                  <Select.Trigger />
+                  <Select.Content>
+                    {subscriptionTypes.map((t) => (
+                      <Select.Item key={t} value={t}>{t}</Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+              </label>
+              <label className="text-sm">
+                Owner Access
+                <Select.Root value={newUserIsOwner ? "true" : "false"} onValueChange={(v) => setNewUserIsOwner(v === "true")}>
+                  <Select.Trigger />
+                  <Select.Content>
+                    <Select.Item value="false">Not Owner</Select.Item>
+                    <Select.Item value="true">Owner (Full Access)</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+              </label>
+            </div>
+            <Button disabled={createLoading} onClick={handleCreateUser}>
+              {createLoading ? "Creating..." : "Create User"}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* User List */}
       {users.map((user) => (
         <div key={user.id} className="rounded-lg border border-gray-200 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">

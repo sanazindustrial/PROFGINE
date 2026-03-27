@@ -1,8 +1,8 @@
-import { string, z } from "zod"
+import { z } from "zod"
 
 const createInvitationSchema = z.object({
   email: z.string().email(),
-  role: z.enum(["ADMIN", "PROF", "STUDENT"]).optional(),
+  role: z.enum(["ADMIN", "PROFESSOR", "STUDENT"]).optional(),
 })
 
 export { createInvitationSchema }

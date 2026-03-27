@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 // Platform owner emails - these users get OWNER role with full access
 const OWNER_EMAILS = [
-  'rjassaf12@gmail.com',
+  'rjassaf13@gmail.com',
   'ohaddad12@gmail.com',
   'sanazindustrial@gmail.com',
   'versorabusiness@gmail.com'
@@ -45,7 +45,19 @@ async function setupOwners() {
 
         console.log(`✅ Updated ${email} to OWNER role (id: ${updatedUser.id})`);
       } else {
-        console.log(`⏭️  User ${email} does not exist yet - will be promoted on first login`);
+        // Create the user with OWNER access so they're ready on first login
+        const newUser = await prisma.user.create({
+          data: {
+            email,
+            role: 'ADMIN',
+            isOwner: true,
+            subscriptionType: 'PREMIUM',
+            creditBalance: 999999,
+            monthlyCredits: 999999
+          }
+        });
+
+        console.log(`✅ Created ${email} as OWNER (id: ${newUser.id})`);
       }
 
       // Log owner setup
