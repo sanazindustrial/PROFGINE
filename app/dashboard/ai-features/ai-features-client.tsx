@@ -32,7 +32,11 @@ import {
     Globe,
     Cpu,
     MessageSquare,
-    GraduationCap
+    GraduationCap,
+    ImageIcon,
+    Download,
+    Palette,
+    Search,
 } from 'lucide-react'
 
 interface AIAgentConfig {
@@ -128,12 +132,12 @@ const externalServices: ExternalService[] = [
     },
     {
         id: 'gamma',
-        name: 'Gamma AI (Presentation Enhancement)',
-        description: 'AI-powered slide enhancement integrated into the content pipeline. Improves visual layout suggestions, content quality, and professional formatting of generated presentations.',
+        name: 'Nano Banana (Gamma AI Image & Content)',
+        description: 'AI-powered image creation, slide enhancement, and visual content generation. Creates diagrams, infographics, and educational visuals for presentations and lectures.',
         icon: <Monitor className="size-6 text-purple-500" />,
         status: 'connected',
         docsUrl: 'https://gamma.app',
-        features: ['Slide enhancement', 'Visual suggestions', 'Image descriptions', 'Quality scoring', 'PPTX & PDF export'],
+        features: ['Image generation', 'Slide enhancement', 'Visual diagrams', 'Infographics', 'Quality scoring', 'SVG export'],
     },
     {
         id: 'openai-assistants',
@@ -177,6 +181,74 @@ export function AIFeaturesClient() {
     const [autoEnhance, setAutoEnhance] = useState(true)
     const [multiPassReview, setMultiPassReview] = useState(true)
 
+    // Nano Banana Image Generation state
+    const [imagePrompt, setImagePrompt] = useState('')
+    const [imageStyle, setImageStyle] = useState<string>('academic')
+    const [generatedImage, setGeneratedImage] = useState<{ svg: string; altText: string; refinedPrompt: string; palette: string[] } | null>(null)
+    const [imageLoading, setImageLoading] = useState(false)
+
+    // NotebookLM Research state
+    const [researchTopic, setResearchTopic] = useState('')
+    const [researchDepth, setResearchDepth] = useState<string>('intermediate')
+    const [researchResult, setResearchResult] = useState<{ synthesis: string; keyInsights: string[]; suggestedTopics: string[] } | null>(null)
+    const [researchLoading, setResearchLoading] = useState(false)
+
+    // Nano Banana: Generate Image
+    const handleGenerateImage = async () => {
+        if (!imagePrompt.trim()) return
+        setImageLoading(true)
+        setGeneratedImage(null)
+        try {
+            const res = await fetch('/api/ai/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: imagePrompt, style: imageStyle }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setGeneratedImage(data.image)
+                setMessage({ type: 'success', text: 'Image generated successfully!' })
+            } else {
+                setMessage({ type: 'error', text: 'Image generation failed' })
+            }
+        } catch {
+            setMessage({ type: 'error', text: 'Network error during image generation' })
+        } finally {
+            setImageLoading(false)
+            setTimeout(() => setMessage(null), 3000)
+        }
+    }
+
+    // NotebookLM: Research Synthesis
+    const handleResearch = async () => {
+        if (!researchTopic.trim()) return
+        setResearchLoading(true)
+        setResearchResult(null)
+        try {
+            const res = await fetch('/api/ai-features', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'research',
+                    topic: researchTopic,
+                    depth: researchDepth,
+                }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setResearchResult(data.result)
+                setMessage({ type: 'success', text: 'Research synthesis complete!' })
+            } else {
+                setMessage({ type: 'error', text: 'Research synthesis failed' })
+            }
+        } catch {
+            setMessage({ type: 'error', text: 'Network error during research' })
+        } finally {
+            setResearchLoading(false)
+            setTimeout(() => setMessage(null), 3000)
+        }
+    }
+
     const handleSaveSettings = async () => {
         setSaving(true)
         try {
@@ -219,12 +291,15 @@ export function AIFeaturesClient() {
 
     return (
         <Tabs defaultValue="agents" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="agents">
                     <Bot className="mr-2 size-4" /> AI Agents
                 </TabsTrigger>
                 <TabsTrigger value="services">
                     <Star className="mr-2 size-4" /> External Services
+                </TabsTrigger>
+                <TabsTrigger value="studio">
+                    <ImageIcon className="mr-2 size-4" /> AI Studio
                 </TabsTrigger>
                 <TabsTrigger value="quality">
                     <Shield className="mr-2 size-4" /> Quality Control
@@ -393,6 +468,231 @@ export function AIFeaturesClient() {
                 </div>
             </TabsContent>
 
+            {/* AI Studio Tab - NotebookLM Research + Nano Banana Image Generation */}
+            <TabsContent value="studio" className="space-y-6">
+                <Alert>
+                    <ImageIcon className="size-4" />
+                    <AlertDescription>
+                        Use NotebookLM for deep research synthesis and Nano Banana for AI-powered image and visual content creation.
+                    </AlertDescription>
+                </Alert>
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {/* NotebookLM Research Panel */}
+                    <Card className="border-blue-200 dark:border-blue-800">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Search className="size-5 text-blue-500" />
+                                NotebookLM Research
+                            </CardTitle>
+                            <CardDescription>
+                                Deep research synthesis for academic topics. Generates key insights and suggested sub-topics.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Research Topic</Label>
+                                <Textarea
+                                    placeholder="e.g., Machine Learning in Healthcare: Applications and Ethical Considerations"
+                                    value={researchTopic}
+                                    onChange={(e) => setResearchTopic(e.target.value)}
+                                    rows={3}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Academic Depth</Label>
+                                <Select value={researchDepth} onValueChange={setResearchDepth}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="introductory">Introductory</SelectItem>
+                                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                                        <SelectItem value="advanced">Advanced</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button
+                                onClick={handleResearch}
+                                disabled={researchLoading || !researchTopic.trim()}
+                                className="w-full"
+                            >
+                                {researchLoading ? (
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                ) : (
+                                    <Lightbulb className="mr-2 size-4" />
+                                )}
+                                {researchLoading ? 'Synthesizing...' : 'Research & Synthesize'}
+                            </Button>
+
+                            {researchResult && (
+                                <div className="space-y-3 rounded-lg border bg-blue-50/50 p-4 dark:bg-blue-950/20">
+                                    <div className="max-h-60 overflow-y-auto text-sm whitespace-pre-wrap">
+                                        {researchResult.synthesis.substring(0, 1000)}
+                                        {researchResult.synthesis.length > 1000 && '...'}
+                                    </div>
+                                    {researchResult.keyInsights.length > 0 && (
+                                        <div>
+                                            <h4 className="mb-1 text-xs font-semibold text-blue-700 dark:text-blue-300">Key Insights</h4>
+                                            <ul className="space-y-1">
+                                                {researchResult.keyInsights.map((insight, i) => (
+                                                    <li key={i} className="flex items-start gap-2 text-xs">
+                                                        <CheckCircle className="mt-0.5 size-3 shrink-0 text-blue-500" />
+                                                        {insight}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {researchResult.suggestedTopics.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {researchResult.suggestedTopics.map((topic, i) => (
+                                                <Badge
+                                                    key={i}
+                                                    variant="outline"
+                                                    className="cursor-pointer text-xs hover:bg-blue-100"
+                                                    onClick={() => setResearchTopic(topic)}
+                                                >
+                                                    {topic}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Nano Banana Image Generation Panel */}
+                    <Card className="border-purple-200 dark:border-purple-800">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Palette className="size-5 text-purple-500" />
+                                Nano Banana Image Creator
+                            </CardTitle>
+                            <CardDescription>
+                                AI-powered visual generation for slides, lectures, and educational content.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Image Description</Label>
+                                <Textarea
+                                    placeholder="e.g., A diagram showing the layers of a neural network with labeled input, hidden, and output layers"
+                                    value={imagePrompt}
+                                    onChange={(e) => setImagePrompt(e.target.value)}
+                                    rows={3}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Visual Style</Label>
+                                <Select value={imageStyle} onValueChange={setImageStyle}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="academic">Academic</SelectItem>
+                                        <SelectItem value="infographic">Infographic</SelectItem>
+                                        <SelectItem value="diagram">Diagram</SelectItem>
+                                        <SelectItem value="photo-realistic">Photo-Realistic</SelectItem>
+                                        <SelectItem value="illustration">Illustration</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button
+                                onClick={handleGenerateImage}
+                                disabled={imageLoading || !imagePrompt.trim()}
+                                className="w-full"
+                                variant="default"
+                            >
+                                {imageLoading ? (
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                ) : (
+                                    <ImageIcon className="mr-2 size-4" />
+                                )}
+                                {imageLoading ? 'Generating...' : 'Generate Visual'}
+                            </Button>
+
+                            {generatedImage && (
+                                <div className="space-y-3 rounded-lg border bg-purple-50/50 p-4 dark:bg-purple-950/20">
+                                    <div
+                                        className="flex items-center justify-center rounded-md border bg-white p-2 dark:bg-gray-900"
+                                        dangerouslySetInnerHTML={{ __html: generatedImage.svg }}
+                                    />
+                                    <p className="text-xs text-muted-foreground">{generatedImage.altText}</p>
+                                    {generatedImage.palette && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground">Palette:</span>
+                                            {generatedImage.palette.map((color, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="size-5 rounded-full border"
+                                                    style={{ backgroundColor: color }}
+                                                    title={color}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                const blob = new Blob([generatedImage.svg], { type: 'image/svg+xml' })
+                                                const url = URL.createObjectURL(blob)
+                                                const a = document.createElement('a')
+                                                a.href = url
+                                                a.download = 'nano-banana-visual.svg'
+                                                a.click()
+                                                URL.revokeObjectURL(url)
+                                            }}
+                                        >
+                                            <Download className="mr-1 size-3" /> Download SVG
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* How it works */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Zap className="size-5" />
+                            How These Tools Enhance Your Content
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2 rounded-lg border-l-4 border-blue-400 bg-blue-50/50 p-4 dark:bg-blue-950/20">
+                                <h4 className="flex items-center gap-2 text-sm font-semibold">
+                                    <Lightbulb className="size-4 text-blue-500" /> NotebookLM in Content Pipeline
+                                </h4>
+                                <ul className="space-y-1 text-xs text-muted-foreground">
+                                    <li>• Automatically runs in Course Studio when generating presentations</li>
+                                    <li>• Synthesizes uploaded source materials into research-backed content</li>
+                                    <li>• Extracts key insights to enrich lecture outlines</li>
+                                    <li>• Multi-pass quality review ensures academic rigor</li>
+                                </ul>
+                            </div>
+                            <div className="space-y-2 rounded-lg border-l-4 border-purple-400 bg-purple-50/50 p-4 dark:bg-purple-950/20">
+                                <h4 className="flex items-center gap-2 text-sm font-semibold">
+                                    <Palette className="size-4 text-purple-500" /> Nano Banana in Content Pipeline
+                                </h4>
+                                <ul className="space-y-1 text-xs text-muted-foreground">
+                                    <li>• Enhances slide layout and visual hierarchy during generation</li>
+                                    <li>• Generates AI visuals and diagrams for presentation slides</li>
+                                    <li>• Suggests image descriptions for each content section</li>
+                                    <li>• Professional color schemes and formatting applied automatically</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
             {/* Quality Control Tab */}
             <TabsContent value="quality" className="space-y-6">
                 <Alert>
@@ -440,11 +740,10 @@ export function AIFeaturesClient() {
                                 <button
                                     key={mode.value}
                                     onClick={() => setQualityMode(mode.value)}
-                                    className={`rounded-lg border-2 p-4 text-left transition-all ${
-                                        qualityMode === mode.value
+                                    className={`rounded-lg border-2 p-4 text-left transition-all ${qualityMode === mode.value
                                             ? 'border-primary bg-primary/5'
                                             : 'border-muted hover:border-muted-foreground/30'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="font-medium">{mode.title}</span>

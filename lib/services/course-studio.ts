@@ -93,8 +93,29 @@ export class CourseStudioService {
             console.error('Slide enhancement skipped:', error)
         }
 
+        // Step 3.7: Nano Banana - Generate AI images for slides
+        let slideImages: Map<number, string> = new Map()
+        try {
+            const imageResults = await aiQualityService.generateSlideImages(
+                enhancedSlides.map(s => ({
+                    title: s.title,
+                    content: s.content,
+                    imageDescriptions: [],
+                })),
+                settings.title,
+                (settings.templateStyle?.includes('academic') ? 'academic' : 'infographic') as 'academic' | 'infographic'
+            )
+            for (const result of imageResults) {
+                if (result.images.length > 0 && result.images[0].svg) {
+                    slideImages.set(result.slideIndex, result.images[0].svg)
+                }
+            }
+        } catch (error) {
+            console.error('Image generation skipped:', error)
+        }
+
         // Step 4: Create PowerPoint file
-        const pptxFile = await this.createPowerPoint(enhancedSlides, settings)
+        const pptxFile = await this.createPowerPoint(enhancedSlides, settings, slideImages)
 
         // Step 5: Save slides to database
         await this.saveSlides(presentationId, enhancedSlides)
@@ -240,7 +261,8 @@ Format as JSON array with this structure:
      */
     private async createPowerPoint(
         slides: SlideContent[],
-        settings: PresentationSettings
+        settings: PresentationSettings,
+        slideImages: Map<number, string> = new Map()
     ): Promise<{ url: string; pdfUrl: string; previewUrl: string }> {
         const pptx = new PptxGenJS()
 
@@ -327,6 +349,9 @@ Format as JSON array with this structure:
                 })
 
                 // Add bullet points with better formatting
+                const hasImage = slideImages.has(slideData.slideNumber - 1)
+                const contentWidth = hasImage ? 5.5 : 8.8
+
                 if (slideData.content && slideData.content.length > 0) {
                     slide.addText(
                         slideData.content.map(point => ({
@@ -340,7 +365,7 @@ Format as JSON array with this structure:
                         {
                             x: 0.6,
                             y: 1.3,
-                            w: 8.8,
+                            w: contentWidth,
                             h: 3.8,
                             fontSize: 17,
                             color: colors.body,
@@ -349,6 +374,29 @@ Format as JSON array with this structure:
                             lineSpacingMultiple: 1.3,
                         }
                     )
+                }
+
+                // Add AI-generated image placeholder indicator if available
+                if (hasImage) {
+                    slide.addShape(pptx.ShapeType.rect, {
+                        x: 6.4,
+                        y: 1.3,
+                        w: 3,
+                        h: 3,
+                        fill: { color: colors.accent, transparency: 95 },
+                        line: { color: colors.accent, width: 1, dashType: 'dash' },
+                        rectRadius: 0.1,
+                    })
+                    slide.addText('AI Visual', {
+                        x: 6.4,
+                        y: 2.5,
+                        w: 3,
+                        h: 0.5,
+                        fontSize: 12,
+                        color: colors.accent,
+                        align: 'center',
+                        fontFace: colors.bodyFont,
+                    })
                 }
             }
 

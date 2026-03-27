@@ -31,20 +31,20 @@ export async function GET(req: NextRequest) {
         // Build course access filter
         const courseFilter = courseId
             ? {
-                  id: courseId,
-                  OR: [
-                      { instructorId: user.id },
-                      { enrollments: { some: { userId: user.id } } },
-                      ...(user.role === "ADMIN" ? [{}] : []),
-                  ],
-              }
+                id: courseId,
+                OR: [
+                    { instructorId: user.id },
+                    { enrollments: { some: { userId: user.id } } },
+                    ...(user.role === "ADMIN" ? [{}] : []),
+                ],
+            }
             : {
-                  OR: [
-                      { instructorId: user.id },
-                      { enrollments: { some: { userId: user.id } } },
-                      ...(user.role === "ADMIN" ? [{}] : []),
-                  ],
-              }
+                OR: [
+                    { instructorId: user.id },
+                    { enrollments: { some: { userId: user.id } } },
+                    ...(user.role === "ADMIN" ? [{}] : []),
+                ],
+            }
 
         const result: Record<string, unknown> = {}
         const contentType = type || "all"
@@ -85,8 +85,8 @@ export async function GET(req: NextRequest) {
                             ? { courseId }
                             : {}
                         : courseId
-                        ? { courseId, userId: user.id }
-                        : { userId: user.id },
+                            ? { courseId, userId: user.id }
+                            : { userId: user.id },
                 orderBy: { createdAt: "desc" },
                 include: {
                     slides: {

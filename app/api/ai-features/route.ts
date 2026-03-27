@@ -6,10 +6,20 @@ export async function POST(request: NextRequest) {
         const session = await requireSession()
         const body = await request.json()
 
+        // Handle research synthesis action (NotebookLM)
+        if (body.action === 'research') {
+            const { aiQualityService } = await import('@/lib/services/ai-quality.service')
+            const result = await aiQualityService.researchSynthesize(
+                body.topic,
+                body.context || '',
+                body.depth || 'intermediate'
+            )
+            return NextResponse.json({ result })
+        }
+
         const { agents, qualityMode, autoEnhance, multiPassReview } = body
 
         // Store settings (in a real implementation, save to database)
-        // For now, we return success as settings are managed client-side
         console.log(`AI Features updated by ${session.user.email}:`, {
             qualityMode,
             autoEnhance,

@@ -504,6 +504,6 @@ export const authOptions: NextAuthOptions = {
 
 export async function requireSession() {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) throw new Error("UNAUTHORIZED");
+    if (!session?.user?.email) throw new Error("Not authenticated");
     return session;
 }

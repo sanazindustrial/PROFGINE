@@ -40,6 +40,15 @@ export interface EnhancedSlide {
     imageDescriptions: string[]
 }
 
+export interface ImageGenerationResult {
+    svg: string
+    altText: string
+    refinedPrompt: string
+    palette: string[]
+    style: 'academic' | 'infographic' | 'diagram' | 'photo-realistic' | 'illustration'
+    provider: string
+}
+
 class AIQualityService {
     /**
      * NotebookLM-style deep research synthesis
@@ -402,6 +411,153 @@ Return the enhanced content only.`,
 Return the enhanced content only.`,
         }
         return prompts[contentType] || prompts.lecture
+    }
+
+    /**
+     * Nano Banana (Gamma AI-style) image generation
+     * Generates descriptive image prompts and SVG/placeholder visuals for slides and content
+     */
+    async generateImage(
+        description: string,
+        context: string = '',
+        style: 'academic' | 'infographic' | 'diagram' | 'photo-realistic' | 'illustration' = 'academic'
+    ): Promise<ImageGenerationResult> {
+        const messages: ChatMessage[] = [
+            {
+                role: "system",
+                content: `You are an expert visual content creator for educational materials (Nano Banana / Gamma AI style).
+Generate a detailed, production-ready SVG image based on the description.
+
+Style: ${style}
+Purpose: Educational presentation or lecture material
+
+Guidelines:
+- Create clean, professional SVG graphics
+- Use appropriate colors for the style (academic = blues/grays, infographic = vibrant, diagram = structured)
+- Include labels and annotations where helpful
+- Keep text readable at presentation sizes
+- Use proper SVG elements (rect, circle, text, path, line, polygon)
+- Ensure the SVG is well-structured with viewBox="0 0 800 600"
+
+Also provide:
+1. An alt-text description for accessibility
+2. A refined prompt that could be used with external image generation APIs (DALL-E, Midjourney, etc.)
+3. Color palette used
+
+Output as JSON:
+{
+  "svg": "<svg viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'>...</svg>",
+  "altText": "Descriptive alt text for screen readers",
+  "refinedPrompt": "A detailed prompt for external AI image generation",
+  "palette": ["#color1", "#color2", "#color3"],
+  "style": "${style}"
+}`
+            },
+            {
+                role: "user",
+                content: `Create a visual for: ${description}${context ? `\n\nContext: ${context}` : ''}`
+            }
+        ]
+
+        try {
+            const { stream, provider } = await multiAI.streamChat(messages)
+            const text = await this.readStream(stream)
+
+            try {
+                const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+                const parsed = JSON.parse(cleaned)
+
+                // Sanitize SVG to prevent XSS
+                const safeSvg = this.sanitizeSvg(parsed.svg || '')
+
+                return {
+                    svg: safeSvg,
+                    altText: parsed.altText || description,
+                    refinedPrompt: parsed.refinedPrompt || description,
+                    palette: parsed.palette || ['#4F46E5', '#6B7280', '#F3F4F6'],
+                    style,
+                    provider,
+                }
+            } catch {
+                return this.generateFallbackImage(description, style)
+            }
+        } catch (error) {
+            console.error('Image generation failed:', error)
+            return this.generateFallbackImage(description, style)
+        }
+    }
+
+    /**
+     * Generate multiple images for a set of slides
+     */
+    async generateSlideImages(
+        slides: Array<{ title: string; content: string[]; imageDescriptions?: string[] }>,
+        topic: string,
+        style: 'academic' | 'infographic' | 'diagram' | 'photo-realistic' | 'illustration' = 'academic'
+    ): Promise<Array<{ slideIndex: number; images: ImageGenerationResult[] }>> {
+        const results: Array<{ slideIndex: number; images: ImageGenerationResult[] }> = []
+
+        for (let i = 0; i < slides.length; i++) {
+            const slide = slides[i]
+            const descriptions = slide.imageDescriptions?.length
+                ? slide.imageDescriptions
+                : [`Visual representation of: ${slide.title} - ${slide.content.slice(0, 3).join(', ')}`]
+
+            const images: ImageGenerationResult[] = []
+            for (const desc of descriptions.slice(0, 2)) { // Max 2 images per slide
+                const image = await this.generateImage(desc, `Topic: ${topic}, Slide: ${slide.title}`, style)
+                images.push(image)
+            }
+            results.push({ slideIndex: i, images })
+        }
+
+        return results
+    }
+
+    private sanitizeSvg(svg: string): string {
+        // Remove any script tags, event handlers, and dangerous elements
+        return svg
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/\bon\w+\s*=/gi, 'data-removed=')
+            .replace(/<iframe\b[^>]*>.*?<\/iframe>/gi, '')
+            .replace(/<object\b[^>]*>.*?<\/object>/gi, '')
+            .replace(/<embed\b[^>]*>/gi, '')
+            .replace(/javascript\s*:/gi, '')
+            .replace(/data\s*:\s*text\/html/gi, '')
+    }
+
+    private generateFallbackImage(description: string, style: string): ImageGenerationResult {
+        const colors: Record<string, { bg: string; accent: string; text: string }> = {
+            academic: { bg: '#EEF2FF', accent: '#4F46E5', text: '#1E1B4B' },
+            infographic: { bg: '#FFF7ED', accent: '#EA580C', text: '#431407' },
+            diagram: { bg: '#F0FDF4', accent: '#16A34A', text: '#14532D' },
+            'photo-realistic': { bg: '#F8FAFC', accent: '#0EA5E9', text: '#0C4A6E' },
+            illustration: { bg: '#FDF4FF', accent: '#A855F7', text: '#3B0764' },
+        }
+        const c = colors[style] || colors.academic
+
+        const svg = `<svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="${c.bg}" rx="12"/>
+  <rect x="40" y="40" width="720" height="520" fill="white" rx="8" stroke="${c.accent}" stroke-width="2" opacity="0.8"/>
+  <rect x="40" y="40" width="720" height="80" fill="${c.accent}" rx="8 8 0 0"/>
+  <text x="400" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">${this.escapeXml(description.substring(0, 60))}</text>
+  <circle cx="400" cy="340" r="100" fill="${c.accent}" opacity="0.15"/>
+  <text x="400" y="345" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="${c.text}">Visual Placeholder</text>
+  <text x="400" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="${c.accent}">AI-generated visual • Nano Banana</text>
+</svg>`
+
+        return {
+            svg,
+            altText: description,
+            refinedPrompt: description,
+            palette: [c.bg, c.accent, c.text],
+            style: style as ImageGenerationResult['style'],
+            provider: 'fallback',
+        }
+    }
+
+    private escapeXml(text: string): string {
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
     }
 
     private async readStream(stream: ReadableStream<Uint8Array>): Promise<string> {
