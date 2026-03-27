@@ -14,16 +14,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import {
     Bot,
-    Sparkles,
+    Star,
     Zap,
     Settings,
     ExternalLink,
     CheckCircle,
     AlertCircle,
     Loader2,
-    Brain,
+    Lightbulb,
     FileText,
-    Presentation,
+    Monitor,
     BookOpen,
     Wand2,
     RefreshCw,
@@ -120,7 +120,7 @@ const externalServices: ExternalService[] = [
         id: 'google-gemini',
         name: 'Google Gemini (NotebookLM Engine)',
         description: 'Powers NotebookLM-style deep research, content synthesis, and document analysis. Uses Google\'s Gemini AI for understanding complex academic materials.',
-        icon: <Brain className="size-6 text-blue-500" />,
+        icon: <Lightbulb className="size-6 text-blue-500" />,
         status: 'disconnected',
         apiKeyField: 'GEMINI_API_KEY',
         docsUrl: 'https://aistudio.google.com/app/apikey',
@@ -130,7 +130,7 @@ const externalServices: ExternalService[] = [
         id: 'gamma',
         name: 'Gamma AI (Presentation Generation)',
         description: 'AI-powered presentation, document, and webpage creation. Generates beautiful, professional slides with smart layouts and design.',
-        icon: <Presentation className="size-6 text-purple-500" />,
+        icon: <Monitor className="size-6 text-purple-500" />,
         status: 'coming_soon',
         docsUrl: 'https://gamma.app',
         features: ['Auto-designed slides', 'Smart layouts', 'Image generation', 'PDF & PPTX export'],
@@ -224,7 +224,7 @@ export function AIFeaturesClient() {
                     <Bot className="mr-2 size-4" /> AI Agents
                 </TabsTrigger>
                 <TabsTrigger value="services">
-                    <Sparkles className="mr-2 size-4" /> External Services
+                    <Star className="mr-2 size-4" /> External Services
                 </TabsTrigger>
                 <TabsTrigger value="quality">
                     <Shield className="mr-2 size-4" /> Quality Control
@@ -234,7 +234,7 @@ export function AIFeaturesClient() {
             {/* AI Agents Tab */}
             <TabsContent value="agents" className="space-y-6">
                 <Alert>
-                    <Brain className="size-4" />
+                    <Lightbulb className="size-4" />
                     <AlertDescription>
                         AI Agents enhance content generation quality. Each agent specializes in a specific area and can review, improve, and optimize generated content.
                     </AlertDescription>
@@ -247,7 +247,7 @@ export function AIFeaturesClient() {
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="flex items-center gap-2 text-lg">
                                         {id === 'content-enhancer' && <Wand2 className="size-5 text-blue-500" />}
-                                        {id === 'presentation-designer' && <Presentation className="size-5 text-purple-500" />}
+                                        {id === 'presentation-designer' && <Monitor className="size-5 text-purple-500" />}
                                         {id === 'assessment-generator' && <GraduationCap className="size-5 text-green-500" />}
                                         {id === 'discussion-facilitator' && <MessageSquare className="size-5 text-orange-500" />}
                                         {agent.name}
@@ -319,7 +319,7 @@ export function AIFeaturesClient() {
             {/* External Services Tab */}
             <TabsContent value="services" className="space-y-6">
                 <Alert>
-                    <Sparkles className="size-4" />
+                    <Star className="size-4" />
                     <AlertDescription>
                         Connect external AI services to enhance content generation. Services are used based on the type of content being created.
                     </AlertDescription>
@@ -503,7 +503,7 @@ export function AIFeaturesClient() {
                                 {multiPassReview && (
                                     <>
                                         <div className="flex shrink-0 items-center gap-2 rounded-lg bg-purple-50 px-3 py-2 dark:bg-purple-950/30">
-                                            <Brain className="size-4 text-purple-500" />
+                                            <Lightbulb className="size-4 text-purple-500" />
                                             <span className="text-xs font-medium">Review</span>
                                         </div>
                                         <span className="text-muted-foreground">→</span>
@@ -531,7 +531,7 @@ export function AIFeaturesClient() {
                     <CardContent>
                         <div className="grid gap-3 md:grid-cols-2">
                             {[
-                                { label: 'Lecture Presentations', icon: Presentation, enabled: true },
+                                { label: 'Lecture Presentations', icon: Monitor, enabled: true },
                                 { label: 'Lecture Notes', icon: FileText, enabled: true },
                                 { label: 'Syllabi', icon: BookOpen, enabled: true },
                                 { label: 'Assessments & Quizzes', icon: GraduationCap, enabled: true },
