@@ -10,6 +10,7 @@ interface RouteParams {
 
 // GET /api/courses/:id/students
 export async function GET(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { courseId } = await params;
 
@@ -57,4 +58,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     }));
 
     return NextResponse.json({ students });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/courses/:id/students]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

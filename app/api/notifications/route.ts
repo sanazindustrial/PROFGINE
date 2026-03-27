@@ -12,6 +12,7 @@ import { notificationService, type NotificationType } from "@/lib/services/notif
 // =============================================================================
 
 export async function GET(request: NextRequest) {
+    try {
     const session = await requireSession()
 
     if (!session?.user?.id) {
@@ -21,15 +22,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    try {
-        const notifications = await notificationService.getUserNotifications(session.user.id, limit)
+    const notifications = await notificationService.getUserNotifications(session.user.id, limit)
 
-        return NextResponse.json({
-            success: true,
-            notifications,
-            count: notifications.length
-        })
-    } catch (error) {
+    return NextResponse.json({
+        success: true,
+        notifications,
+        count: notifications.length
+    })
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         console.error('[Notifications API] Error:', error)
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Failed to fetch notifications' },
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
 // =============================================================================
 
 export async function POST(request: NextRequest) {
+    try {
     const session = await requireSession()
 
     if (!session?.user?.id) {
@@ -54,31 +56,30 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    try {
-        const body = await request.json()
-        const { type, recipientEmail, recipientName, subject, message, data, courseId, userId } = body
+    const body = await request.json()
+    const { type, recipientEmail, recipientName, subject, message, data, courseId, userId } = body
 
-        if (!type || !recipientEmail || !subject || !message) {
-            return NextResponse.json(
-                { error: 'Missing required fields: type, recipientEmail, subject, message' },
-                { status: 400 }
-            )
-        }
+    if (!type || !recipientEmail || !subject || !message) {
+        return NextResponse.json(
+            { error: 'Missing required fields: type, recipientEmail, subject, message' },
+            { status: 400 }
+        )
+    }
 
-        const result = await notificationService.sendNotification({
-            type: type as NotificationType,
-            recipientEmail,
-            recipientName,
-            subject,
-            message,
-            data,
-            courseId,
-            userId,
-        })
+    const result = await notificationService.sendNotification({
+        type: type as NotificationType,
+        recipientEmail,
+        recipientName,
+        subject,
+        message,
+        data,
+        courseId,
+        userId,
+    })
 
-        return NextResponse.json(result)
-
-    } catch (error) {
+    return NextResponse.json(result)
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         console.error('[Notifications API] Error:', error)
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Failed to send notification' },
@@ -92,28 +93,28 @@ export async function POST(request: NextRequest) {
 // =============================================================================
 
 export async function PATCH(request: NextRequest) {
+    try {
     const session = await requireSession()
 
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    try {
-        const body = await request.json()
-        const { notificationId } = body
+    const body = await request.json()
+    const { notificationId } = body
 
-        if (!notificationId) {
-            return NextResponse.json(
-                { error: 'Missing required field: notificationId' },
-                { status: 400 }
-            )
-        }
+    if (!notificationId) {
+        return NextResponse.json(
+            { error: 'Missing required field: notificationId' },
+            { status: 400 }
+        )
+    }
 
-        const success = await notificationService.markAsRead(notificationId)
+    const success = await notificationService.markAsRead(notificationId)
 
-        return NextResponse.json({ success })
-
-    } catch (error) {
+    return NextResponse.json({ success })
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         console.error('[Notifications API] Error:', error)
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Failed to update notification' },

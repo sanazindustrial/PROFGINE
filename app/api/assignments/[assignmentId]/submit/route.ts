@@ -11,6 +11,7 @@ interface RouteParams {
 
 // POST /api/assignments/:id/submit
 export async function POST(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { assignmentId } = await params;
     const body = await req.json();
@@ -80,5 +81,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         });
 
         return NextResponse.json({ submission }, { status: 201 });
+    }
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/assignments/:id/submit]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

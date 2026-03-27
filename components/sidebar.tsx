@@ -20,7 +20,8 @@ import {
     Key,
     Target,
     ClipboardCheck,
-    Lightbulb
+    Lightbulb,
+    Sparkles
 } from "lucide-react"
 
 interface SidebarItem {
@@ -108,6 +109,12 @@ const navigationItems: SidebarItem[] = [
         href: "/grade",
         icon: GraduationCap,
         description: "Smart grading and feedback"
+    },
+    {
+        title: "AI Features",
+        href: "/dashboard/ai-features",
+        icon: Sparkles,
+        description: "AI agents & quality control"
     },
     {
         title: "AI Settings",

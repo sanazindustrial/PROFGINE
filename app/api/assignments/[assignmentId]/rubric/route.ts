@@ -11,6 +11,7 @@ interface RouteParams {
 
 // POST /api/assignments/:id/rubric
 export async function POST(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { assignmentId } = await params;
     const body = await req.json();
@@ -48,10 +49,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ rubric }, { status: 201 });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/assignments/:id/rubric]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // GET /api/assignments/:id/rubric
 export async function GET(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { assignmentId } = await params;
 
@@ -84,4 +91,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({ rubric: assignment.rubric });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/assignments/:id/rubric]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

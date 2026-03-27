@@ -6,9 +6,9 @@ import path from "path";
 
 // POST /api/uploads
 export async function POST(req: NextRequest) {
-    const session = await requireSession();
-
     try {
+        const session = await requireSession();
+
         // Create uploads directory if it doesn't exist
         const uploadsDir = path.join(process.cwd(), "public/uploads");
         await fs.mkdir(uploadsDir, { recursive: true });

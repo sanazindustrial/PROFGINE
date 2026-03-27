@@ -11,6 +11,7 @@ interface RouteParams {
 
 // PUT /api/rubric/:id
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { rubricId } = await params;
     const body = await req.json();
@@ -49,4 +50,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ rubric: updatedRubric });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[PUT /api/rubric/:id]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

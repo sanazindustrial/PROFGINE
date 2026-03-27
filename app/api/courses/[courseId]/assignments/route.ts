@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 
 export async function POST(req: Request, { params }: { params: Promise<{ courseId: string }> }) {
+    try {
     const session = await requireSession();
     const body = await req.json();
     const { courseId } = await params;
@@ -40,10 +41,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ courseI
     });
 
     return NextResponse.json({ assignment }, { status: 201 });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/courses/:id/assignments]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // GET /api/courses/:id/assignments
 export async function GET(req: Request, { params }: { params: Promise<{ courseId: string }> }) {
+    try {
     const session = await requireSession();
     const { courseId } = await params;
 
@@ -89,4 +96,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ courseId
     });
 
     return NextResponse.json({ assignments });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/courses/:id/assignments]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

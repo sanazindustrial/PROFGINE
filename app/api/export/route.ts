@@ -13,13 +13,13 @@ import { exportService, type SyllabusExportData, type LectureExportData } from "
 // =============================================================================
 
 export async function POST(request: NextRequest) {
-    const session = await requireSession()
-
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     try {
+        const session = await requireSession()
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
         const body = await request.json()
         const { type, format, courseId, syllabusId, lectureData, presentationData } = body
 
@@ -384,24 +384,24 @@ function parseLectureContent(content: string): { title: string; content: string;
 // =============================================================================
 
 export async function GET(request: NextRequest) {
-    const session = await requireSession()
-
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { searchParams } = new URL(request.url)
-    const courseId = searchParams.get('courseId')
-    const syllabusId = searchParams.get('syllabusId')
-
-    if (!courseId && !syllabusId) {
-        return NextResponse.json(
-            { error: 'courseId or syllabusId parameter required' },
-            { status: 400 }
-        )
-    }
-
     try {
+        const session = await requireSession()
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const { searchParams } = new URL(request.url)
+        const courseId = searchParams.get('courseId')
+        const syllabusId = searchParams.get('syllabusId')
+
+        if (!courseId && !syllabusId) {
+            return NextResponse.json(
+                { error: 'courseId or syllabusId parameter required' },
+                { status: 400 }
+            )
+        }
+
         let syllabus
 
         if (syllabusId) {

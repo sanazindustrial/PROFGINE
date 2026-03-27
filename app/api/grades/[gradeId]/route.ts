@@ -11,6 +11,7 @@ interface RouteParams {
 
 // PUT /api/grades/:id (regrade)
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { gradeId } = await params;
     const body = await req.json();
@@ -78,4 +79,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         message: "Grade updated successfully",
         grade: updatedGrade
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[PUT /api/grades/:id]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

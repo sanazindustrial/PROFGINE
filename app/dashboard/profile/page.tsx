@@ -424,6 +424,346 @@ export default async function ProfilePage() {
                         </CardContent>
                     </Card>
                 </TabsContent>
+
+                {/* Privacy Tab */}
+                <TabsContent value="privacy" className="space-y-6">
+                    <Alert>
+                        <Lock className="size-4" />
+                        <AlertDescription>
+                            Control how your data is used and what information is shared across the platform.
+                        </AlertDescription>
+                    </Alert>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Eye className="size-5" />
+                                    Profile Visibility
+                                </CardTitle>
+                                <CardDescription>
+                                    Control who can see your information
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium">Show Email to Students</Label>
+                                        <p className="text-xs text-muted-foreground">Allow enrolled students to see your email</p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium">Public Profile</Label>
+                                        <p className="text-xs text-muted-foreground">Show your profile in the professor directory</p>
+                                    </div>
+                                    <Switch />
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium">Show Activity Status</Label>
+                                        <p className="text-xs text-muted-foreground">Let others see when you were last active</p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Database className="size-5" />
+                                    AI & Data Usage
+                                </CardTitle>
+                                <CardDescription>
+                                    Control how AI features use your data
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium">AI Content Generation</Label>
+                                        <p className="text-xs text-muted-foreground">Allow AI to use your course data for generating content</p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium">Analytics Collection</Label>
+                                        <p className="text-xs text-muted-foreground">Help improve the platform with usage analytics</p>
+                                    </div>
+                                    <Switch defaultChecked />
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium">Third-party Integrations</Label>
+                                        <p className="text-xs text-muted-foreground">Share data with connected services (e.g., LMS)</p>
+                                    </div>
+                                    <Switch />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Settings className="size-5" />
+                                Communication Preferences
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium">Email Notifications</Label>
+                                    <p className="text-xs text-muted-foreground">Receive updates about courses and submissions</p>
+                                </div>
+                                <Switch defaultChecked />
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium">Marketing Emails</Label>
+                                    <p className="text-xs text-muted-foreground">Receive news about new features and promotions</p>
+                                </div>
+                                <Switch />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Usage Tab */}
+                <TabsContent value="usage" className="space-y-6">
+                    <Alert>
+                        <TrendingUp className="size-4" />
+                        <AlertDescription>
+                            Track your platform usage and resource consumption against your plan limits.
+                        </AlertDescription>
+                    </Alert>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Zap className="size-5" />
+                                Resource Usage
+                            </CardTitle>
+                            <CardDescription>
+                                Current billing period usage for your <Badge className={getPlanColor(billingContext.tier)} variant="secondary">{billingContext.tier}</Badge> plan
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="flex items-center gap-2">
+                                            <BookOpen className="size-4 text-blue-500" />
+                                            Courses
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {usage.courses} / {limits.courses === -1 ? '∞' : limits.courses}
+                                        </span>
+                                    </div>
+                                    <Progress value={getUsagePercentage(usage.courses, limits.courses)} className="h-2" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="flex items-center gap-2">
+                                            <Users className="size-4 text-green-500" />
+                                            Students
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {usage.students} / {limits.students === -1 ? '∞' : limits.students}
+                                        </span>
+                                    </div>
+                                    <Progress value={getUsagePercentage(usage.students, limits.students)} className="h-2" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="flex items-center gap-2">
+                                            <FileText className="size-4 text-purple-500" />
+                                            Assignments
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {usage.assignments} / {limits.assignments === -1 ? '∞' : limits.assignments}
+                                        </span>
+                                    </div>
+                                    <Progress value={getUsagePercentage(usage.assignments, limits.assignments)} className="h-2" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="flex items-center gap-2">
+                                            <Zap className="size-4 text-orange-500" />
+                                            AI Grades Used
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                            {usage.aiGrades} / {limits.aiGrades === -1 ? '∞' : limits.aiGrades}
+                                        </span>
+                                    </div>
+                                    <Progress value={getUsagePercentage(usage.aiGrades, limits.aiGrades)} className="h-2" />
+                                </div>
+                            </div>
+
+                            {billingContext.tier === 'FREE_TRIAL' && (
+                                <Alert>
+                                    <AlertTriangle className="size-4" />
+                                    <AlertDescription>
+                                        You&apos;re on the Free Trial. <Link href="/dashboard/billing" className="font-medium underline">Upgrade</Link> to increase your limits.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <TrendingUp className="size-5" />
+                                Account Details
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                                <div className="rounded-lg border p-4 text-center">
+                                    <div className="text-2xl font-bold">{user.courses.length}</div>
+                                    <div className="text-sm text-muted-foreground">Total Courses</div>
+                                </div>
+                                <div className="rounded-lg border p-4 text-center">
+                                    <div className="text-2xl font-bold">{user.submissions.length}</div>
+                                    <div className="text-sm text-muted-foreground">Submissions</div>
+                                </div>
+                                <div className="rounded-lg border p-4 text-center">
+                                    <div className="text-2xl font-bold">{user.gradesGiven.length}</div>
+                                    <div className="text-sm text-muted-foreground">Grades Given</div>
+                                </div>
+                                <div className="rounded-lg border p-4 text-center">
+                                    <div className="text-2xl font-bold">{Math.floor((Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24))}</div>
+                                    <div className="text-sm text-muted-foreground">Days Active</div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* Security Tab */}
+                <TabsContent value="security" className="space-y-6">
+                    <Alert>
+                        <Shield className="size-4" />
+                        <AlertDescription>
+                            Manage your account security settings and monitor active sessions.
+                        </AlertDescription>
+                    </Alert>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Key className="size-5" />
+                                    Authentication
+                                </CardTitle>
+                                <CardDescription>
+                                    How you sign in to your account
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                    <div className="flex items-center gap-3">
+                                        <CheckCircle className="size-5 text-green-500" />
+                                        <div>
+                                            <p className="text-sm font-medium">Google OAuth</p>
+                                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant="outline" className="text-green-600">Connected</Badge>
+                                </div>
+
+                                <div className="flex items-center justify-between rounded-lg border p-3">
+                                    <div className="flex items-center gap-3">
+                                        <Lock className="size-5 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-sm font-medium">Two-Factor Authentication</p>
+                                            <p className="text-xs text-muted-foreground">Add an extra layer of security</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant="outline" className="text-yellow-600">Not Enabled</Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Shield className="size-5" />
+                                    Account Security
+                                </CardTitle>
+                                <CardDescription>
+                                    Security status and recommendations
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="size-4 text-green-500" />
+                                        <span className="text-sm">Email verified</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle className="size-4 text-green-500" />
+                                        <span className="text-sm">Google OAuth connected</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="size-4 text-yellow-500" />
+                                        <span className="text-sm">Two-factor authentication not enabled</span>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium">Last Sign-in</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {user.updatedAt?.toLocaleDateString()} at {user.updatedAt?.toLocaleTimeString()}
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Unlock className="size-5" />
+                                Active Sessions
+                            </CardTitle>
+                            <CardDescription>
+                                Devices currently signed in to your account
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex items-center justify-between rounded-lg border p-3">
+                                <div className="flex items-center gap-3">
+                                    <CheckCircle className="size-5 text-green-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Current Session</p>
+                                        <p className="text-xs text-muted-foreground">This device &bull; Active now</p>
+                                    </div>
+                                </div>
+                                <Badge variant="outline" className="text-green-600">Active</Badge>
+                            </div>
+
+                            <Button variant="outline" className="w-full">
+                                <EyeOff className="mr-2 size-4" />
+                                Sign Out All Other Sessions
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
             </Tabs>
         </div>
     );

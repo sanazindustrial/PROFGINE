@@ -10,6 +10,7 @@ interface RouteParams {
 
 // PUT /api/modules/:id
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+  try {
   const session = await requireSession();
   const { moduleId } = await params;
   const body = await req.json();
@@ -48,10 +49,16 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   });
 
   return NextResponse.json({ module: updatedModule });
+  } catch (error: any) {
+    if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    console.error('[PUT /api/modules/:id]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // DELETE /api/modules/:id
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  try {
   const session = await requireSession();
   const { moduleId } = await params;
 
@@ -84,4 +91,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   });
 
   return NextResponse.json({ message: "Module deleted successfully" });
+  } catch (error: any) {
+    if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    console.error('[DELETE /api/modules/:id]', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }

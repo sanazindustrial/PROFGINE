@@ -22,6 +22,7 @@ async function requireOwnerAdmin() {
 }
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
+    try {
     const adminUser = await requireOwnerAdmin();
     if (!adminUser) {
         return NextResponse.json({ error: "Owner admin access required" }, { status: 403 });
@@ -76,4 +77,9 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
         })),
         recentTransactions: user.creditTransactions,
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/admin/users/:id/credits]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

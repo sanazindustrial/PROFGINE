@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 
 export async function POST(req: Request, { params }: { params: Promise<{ submissionId: string }> }) {
+    try {
     const session = await requireSession();
     const body = await req.json();
     const { submissionId } = await params;
@@ -49,10 +50,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ submiss
     });
 
     return NextResponse.json({ grade }, { status: 201 });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/submissions/:id/grade]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // GET /api/submissions/:id/grade
 export async function GET(req: Request, { params }: { params: Promise<{ submissionId: string }> }) {
+    try {
     const session = await requireSession();
     const { submissionId } = await params;
 
@@ -94,4 +101,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ submissi
         },
         grade: submission.grade
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/submissions/:id/grade]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

@@ -11,6 +11,7 @@ interface RouteParams {
 
 // POST /api/courses/:id/discussions
 export async function POST(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { courseId } = await params;
     const body = await req.json();
@@ -51,10 +52,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ discussion }, { status: 201 });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/courses/:id/discussions]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // GET /api/courses/:id/discussions
 export async function GET(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { courseId } = await params;
 
@@ -96,4 +103,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ discussions });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/courses/:id/discussions]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

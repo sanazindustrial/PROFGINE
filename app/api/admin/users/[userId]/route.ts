@@ -24,6 +24,7 @@ async function requireOwnerAdmin() {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
+    try {
     const adminUser = await requireOwnerAdmin();
     if (!adminUser) {
         return NextResponse.json({ error: "Owner admin access required" }, { status: 403 });
@@ -116,6 +117,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         message: "User updated",
         user: updatedUser,
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[PATCH /api/admin/users/:id]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {

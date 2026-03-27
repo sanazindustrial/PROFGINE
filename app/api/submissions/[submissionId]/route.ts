@@ -11,6 +11,7 @@ interface RouteParams {
 
 // GET /api/submissions/:id
 export async function GET(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { submissionId } = await params;
 
@@ -50,10 +51,16 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({ submission });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/submissions/:id]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // PUT /api/submissions/:id (student update draft)
 export async function PUT(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { submissionId } = await params;
     const body = await req.json();
@@ -96,4 +103,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ submission: updatedSubmission });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[PUT /api/submissions/:id]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

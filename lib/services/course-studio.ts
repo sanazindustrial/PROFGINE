@@ -1,5 +1,7 @@
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import PptxGenJS from "pptxgenjs"
+import { promises as fs } from "fs"
+import path from "path"
 
 interface GenerationParams {
     presentationId: string
@@ -238,17 +240,19 @@ Format as JSON array with this structure:
             }
         }
 
-        // In production, save to cloud storage (S3, Azure Blob, etc.)
-        // For now, return mock URLs
+        // Save the PPTX file to public/uploads/presentations
         const fileName = `presentation-${Date.now()}.pptx`
+        const uploadsDir = path.join(process.cwd(), "public/uploads/presentations")
+        await fs.mkdir(uploadsDir, { recursive: true })
 
-        // Generate the file (this would be saved to storage in production)
-        // await pptx.writeFile({ fileName })
+        const filePath = path.join(uploadsDir, fileName)
+        const buffer = await pptx.write({ outputType: "nodebuffer" }) as Buffer
+        await fs.writeFile(filePath, buffer)
 
         return {
-            url: `/downloads/${fileName}`,
-            pdfUrl: `/downloads/${fileName.replace(".pptx", ".pdf")}`,
-            previewUrl: `/preview/${fileName}`,
+            url: `/uploads/presentations/${fileName}`,
+            pdfUrl: `/uploads/presentations/${fileName.replace(".pptx", ".pdf")}`,
+            previewUrl: `/uploads/presentations/${fileName}`,
         }
     }
 

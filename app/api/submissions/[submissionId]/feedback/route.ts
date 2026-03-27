@@ -11,6 +11,7 @@ interface RouteParams {
 
 // POST /api/submissions/:id/feedback
 export async function POST(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { submissionId } = await params;
     const body = await req.json();
@@ -59,10 +60,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ feedback: grade.feedback, author: grade.grader }, { status: 201 });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/submissions/:id/feedback]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // GET /api/submissions/:id/feedback
 export async function GET(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { submissionId } = await params;
 
@@ -98,4 +105,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ feedback: grade?.feedback || null, grader: grade?.grader || null });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/submissions/:id/feedback]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

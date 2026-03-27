@@ -4,44 +4,54 @@ import { requireSession } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 
 export async function GET() {
-  const session = await requireSession();
+  try {
+    const session = await requireSession();
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email! },
-    select: { id: true, role: true },
-  });
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email! },
+      select: { id: true, role: true },
+    });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  const courses = await prisma.course.findMany({
-    where: user.role === UserRole.ADMIN ? undefined : { instructorId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
+    const courses = await prisma.course.findMany({
+      where: user.role === UserRole.ADMIN ? undefined : { instructorId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return NextResponse.json({ courses });
+    return NextResponse.json({ courses });
+  } catch (error) {
+    console.error("Courses GET error:", error);
+    return NextResponse.json({ error: "Failed to fetch courses" }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const session = await requireSession();
-  const body = await req.json();
+  try {
+    const session = await requireSession();
+    const body = await req.json();
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email! },
-    select: { id: true, role: true },
-  });
-  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-  if (user.role !== UserRole.PROFESSOR && user.role !== UserRole.ADMIN) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email! },
+      select: { id: true, role: true },
+    });
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (user.role !== UserRole.PROFESSOR && user.role !== UserRole.ADMIN) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const course = await prisma.course.create({
+      data: {
+        title: body.title,
+        code: body.code ?? null,
+        term: body.term ?? null,
+        description: body.description ?? null,
+        instructorId: user.id,
+      },
+    });
+
+    return NextResponse.json({ course }, { status: 201 });
+  } catch (error) {
+    console.error("Courses POST error:", error);
+    return NextResponse.json({ error: "Failed to create course" }, { status: 500 });
   }
-
-  const course = await prisma.course.create({
-    data: {
-      title: body.title,
-      code: body.code ?? null,
-      term: body.term ?? null,
-      description: body.description ?? null,
-      instructorId: user.id,
-    },
-  });
-
-  return NextResponse.json({ course }, { status: 201 });
 }

@@ -11,6 +11,7 @@ interface RouteParams {
 
 // POST /api/admin/users/:id/role
 export async function POST(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { userId } = await params;
     const body = await req.json();
@@ -60,4 +61,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         message: "User role updated successfully",
         user: updatedUser
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/admin/users/:id/role]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

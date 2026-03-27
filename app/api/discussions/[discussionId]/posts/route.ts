@@ -11,6 +11,7 @@ interface RouteParams {
 
 // POST /api/discussions/:id/posts
 export async function POST(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { discussionId } = await params;
     const body = await req.json();
@@ -52,10 +53,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     });
 
     return NextResponse.json({ post }, { status: 201 });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[POST /api/discussions/:id/posts]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
 
 // GET /api/discussions/:id/posts
 export async function GET(req: NextRequest, { params }: RouteParams) {
+    try {
     const session = await requireSession();
     const { discussionId } = await params;
 
@@ -104,4 +111,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         },
         posts
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/discussions/:id/posts]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }

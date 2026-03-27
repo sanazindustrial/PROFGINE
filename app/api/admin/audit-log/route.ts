@@ -5,6 +5,7 @@ import { UserRole } from "@prisma/client";
 
 // GET /api/admin/audit-log
 export async function GET(req: NextRequest) {
+    try {
     const session = await requireSession();
 
     const user = await prisma.user.findUnique({
@@ -56,4 +57,9 @@ export async function GET(req: NextRequest) {
             pages: Math.ceil(totalUsers / limit),
         },
     });
+    } catch (error: any) {
+        if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+        console.error('[GET /api/admin/audit-log]', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
