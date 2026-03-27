@@ -17,6 +17,7 @@ import { ContentAnalysis } from "@/components/course-design-studio/content-analy
 import { SectionBuilder } from "@/components/course-design-studio/section-builder"
 import { ReadyCheck } from "@/components/course-design-studio/ready-check"
 import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import {
     BookOpen,
     ClipboardList,
@@ -551,8 +552,103 @@ function CourseDesignStudioContent() {
 
                                 {/* Markdown Response Body */}
                                 <ScrollArea className="max-h-[600px]">
-                                    <div className="prose prose-sm dark:prose-invert prose-headings:mb-2 prose-headings:mt-4 prose-headings:text-purple-900 prose-h2:border-b prose-h2:pb-1 prose-h2:text-lg prose-h3:text-base prose-p:leading-relaxed prose-li:my-0.5 prose-table:w-full prose-th:border prose-th:bg-purple-50 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-td:border prose-td:px-3 prose-td:py-2 prose-blockquote:border-purple-300 prose-blockquote:bg-purple-50/50 prose-blockquote:py-1 prose-blockquote:not-italic prose-strong:text-purple-800 prose-hr:my-6 dark:prose-headings:text-purple-300 dark:prose-th:bg-purple-950/30 dark:prose-blockquote:border-purple-700 dark:prose-blockquote:bg-purple-950/30 dark:prose-strong:text-purple-300 max-w-none px-5 py-4">
-                                        <ReactMarkdown>{agentResponse}</ReactMarkdown>
+                                    <div className="px-5 py-4 text-[13px] leading-relaxed text-gray-800 dark:text-gray-200">
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                h1: ({ children }) => (
+                                                    <h1 className="mb-3 mt-5 border-b border-purple-200 pb-2 text-xl font-bold text-purple-900 first:mt-0 dark:border-purple-800 dark:text-purple-300">{children}</h1>
+                                                ),
+                                                h2: ({ children }) => (
+                                                    <h2 className="mb-2 mt-5 border-b border-purple-100 pb-1.5 text-base font-bold text-purple-900 first:mt-0 dark:border-purple-800 dark:text-purple-300">{children}</h2>
+                                                ),
+                                                h3: ({ children }) => (
+                                                    <h3 className="mb-1.5 mt-4 text-sm font-semibold text-purple-800 dark:text-purple-300">{children}</h3>
+                                                ),
+                                                h4: ({ children }) => (
+                                                    <h4 className="mb-1 mt-3 text-sm font-semibold text-gray-800 dark:text-gray-200">{children}</h4>
+                                                ),
+                                                p: ({ children }) => (
+                                                    <p className="my-2 text-[13px] leading-relaxed">{children}</p>
+                                                ),
+                                                strong: ({ children }) => (
+                                                    <strong className="font-semibold text-purple-800 dark:text-purple-300">{children}</strong>
+                                                ),
+                                                em: ({ children }) => (
+                                                    <em className="text-gray-600 dark:text-gray-400">{children}</em>
+                                                ),
+                                                ul: ({ children }) => (
+                                                    <ul className="my-2 ml-4 list-disc space-y-0.5 text-[13px]">{children}</ul>
+                                                ),
+                                                ol: ({ children }) => (
+                                                    <ol className="my-2 ml-4 list-decimal space-y-0.5 text-[13px]">{children}</ol>
+                                                ),
+                                                li: ({ children }) => (
+                                                    <li className="text-[13px] leading-relaxed">{children}</li>
+                                                ),
+                                                blockquote: ({ children }) => (
+                                                    <blockquote className="border-l-3 my-3 rounded-r-md border-purple-400 bg-purple-50/60 py-2 pl-4 pr-3 text-[13px] italic text-purple-800 dark:border-purple-600 dark:bg-purple-950/30 dark:text-purple-200">
+                                                        {children}
+                                                    </blockquote>
+                                                ),
+                                                code: ({ className, children }) => {
+                                                    const isBlock = className?.includes("language-")
+                                                    if (isBlock) {
+                                                        return (
+                                                            <pre className="my-3 overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs dark:border-gray-700 dark:bg-gray-900">
+                                                                <code className="text-xs">{children}</code>
+                                                            </pre>
+                                                        )
+                                                    }
+                                                    return (
+                                                        <code className="rounded bg-purple-100/60 px-1.5 py-0.5 font-mono text-xs text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                },
+                                                pre: ({ children }) => <>{children}</>,
+                                                table: ({ children }) => (
+                                                    <div className="my-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                                        <table className="w-full border-collapse text-[12px]">{children}</table>
+                                                    </div>
+                                                ),
+                                                thead: ({ children }) => (
+                                                    <thead className="bg-purple-50 text-purple-900 dark:bg-purple-950/40 dark:text-purple-200">{children}</thead>
+                                                ),
+                                                tbody: ({ children }) => (
+                                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">{children}</tbody>
+                                                ),
+                                                tr: ({ children }) => (
+                                                    <tr className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30">{children}</tr>
+                                                ),
+                                                th: ({ children }) => (
+                                                    <th className="border-b border-purple-200 px-3 py-2 text-left text-xs font-semibold dark:border-purple-800">{children}</th>
+                                                ),
+                                                td: ({ children }) => (
+                                                    <td className="px-3 py-2 text-[12px]">{children}</td>
+                                                ),
+                                                img: ({ src, alt }) => (
+                                                    <figure className="my-4">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
+                                                            src={src || ""}
+                                                            alt={alt || ""}
+                                                            className="max-h-80 rounded-lg border border-gray-200 shadow-sm dark:border-gray-700"
+                                                            loading="lazy"
+                                                        />
+                                                        {alt && <figcaption className="mt-1.5 text-center text-xs text-gray-500 dark:text-gray-400">{alt}</figcaption>}
+                                                    </figure>
+                                                ),
+                                                a: ({ href, children }) => (
+                                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 underline decoration-purple-300 underline-offset-2 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300">
+                                                        {children}
+                                                    </a>
+                                                ),
+                                                hr: () => <hr className="my-5 border-gray-200 dark:border-gray-700" />,
+                                            }}
+                                        >
+                                            {agentResponse}
+                                        </ReactMarkdown>
                                     </div>
                                 </ScrollArea>
 
