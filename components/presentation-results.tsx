@@ -133,16 +133,18 @@ export function PresentationResults({ presentation, course }: PresentationResult
             {/* Header with Back Button */}
             <div className="flex items-center justify-between">
                 <div>
-                    <Link href={`/dashboard/courses/${course.id}/studio`}>
+                    <Link href={course ? `/dashboard/courses/${course.id}/studio` : '/dashboard/presentation-studio'}>
                         <Button variant="ghost" size="sm">
                             <ArrowLeft className="mr-2 size-4" />
                             Back to Studio
                         </Button>
                     </Link>
                     <h1 className="mt-2 text-3xl font-bold">{presentation.title}</h1>
-                    <p className="mt-1 text-gray-600">
-                        Course: {course.title} {course.code ? `(${course.code})` : ""}
-                    </p>
+                    {course && (
+                        <p className="mt-1 text-gray-600">
+                            Course: {course.title} {course.code ? `(${course.code})` : ""}
+                        </p>
+                    )}
                 </div>
                 <Badge className={currentStatusColor}>
                     {presentation.status}

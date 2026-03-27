@@ -9,8 +9,9 @@ import { BarChart3, Lightbulb, Star } from "lucide-react"
 export default async function CourseStudioPage({
     params,
 }: {
-    params: { courseId: string }
+    params: Promise<{ courseId: string }>
 }) {
+    const { courseId } = await params
     const session = await requireSession()
     if (!session) {
         redirect("/login")
@@ -19,8 +20,8 @@ export default async function CourseStudioPage({
     // Verify user has access to this course
     const course = await prisma.course.findFirst({
         where: session.user.role === UserRole.ADMIN
-            ? { id: params.courseId }
-            : { id: params.courseId, instructorId: session.user.id },
+            ? { id: courseId }
+            : { id: courseId, instructorId: session.user.id },
     })
 
     if (!course) {
@@ -30,7 +31,7 @@ export default async function CourseStudioPage({
     // Get existing presentations for this course
     const presentations = await prisma.presentation.findMany({
         where: {
-            courseId: params.courseId,
+            courseId: courseId,
         },
         orderBy: {
             createdAt: "desc",
@@ -53,7 +54,7 @@ export default async function CourseStudioPage({
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {/* Main Studio Panel */}
                 <div className="lg:col-span-2">
-                    <CourseStudioDesign courseId={params.courseId} />
+                    <CourseStudioDesign courseId={courseId} />
                 </div>
 
                 {/* Sidebar - Recent Presentations */}
@@ -75,7 +76,7 @@ export default async function CourseStudioPage({
                                     <div
                                         key={pres.id}
                                         className="cursor-pointer rounded border border-gray-200 p-3 transition-colors hover:border-blue-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-                                        onClick={() => window.location.href = `/dashboard/courses/${params.courseId}/studio/results/${pres.id}`}
+                                        onClick={() => window.location.href = `/dashboard/courses/${courseId}/studio/results/${pres.id}`}
                                     >
                                         <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{pres.title}</div>
                                         <div className="mt-1 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200">

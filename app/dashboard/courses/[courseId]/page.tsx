@@ -22,8 +22,9 @@ import Link from "next/link"
 export default async function CourseDetailPage({
     params,
 }: {
-    params: { courseId: string }
+    params: Promise<{ courseId: string }>
 }) {
+    const { courseId } = await params
     const session = await requireSession()
     if (!session) {
         redirect("/login")
@@ -32,8 +33,8 @@ export default async function CourseDetailPage({
     // Get course with all related data
     const course = await prisma.course.findFirst({
         where: session.user.role === UserRole.ADMIN
-            ? { id: params.courseId }
-            : { id: params.courseId, instructorId: session.user.id },
+            ? { id: courseId }
+            : { id: courseId, instructorId: session.user.id },
         include: {
             instructor: {
                 select: {

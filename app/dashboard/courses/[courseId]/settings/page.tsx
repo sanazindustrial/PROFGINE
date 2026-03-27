@@ -11,8 +11,9 @@ import Link from "next/link"
 export default async function CourseSettingsPage({
     params,
 }: {
-    params: { courseId: string }
+    params: Promise<{ courseId: string }>
 }) {
+    const { courseId } = await params
     const session = await requireSession()
     if (!session) {
         redirect("/login")
@@ -21,8 +22,8 @@ export default async function CourseSettingsPage({
     // Verify user has access to this course
     const course = await prisma.course.findFirst({
         where: session.user.role === UserRole.ADMIN
-            ? { id: params.courseId }
-            : { id: params.courseId, instructorId: session.user.id },
+            ? { id: courseId }
+            : { id: courseId, instructorId: session.user.id },
         include: {
             instructor: {
                 select: {

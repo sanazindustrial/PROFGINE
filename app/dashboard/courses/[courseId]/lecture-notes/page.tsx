@@ -9,8 +9,9 @@ import { FileText } from "lucide-react"
 export default async function LectureNotesPage({
     params,
 }: {
-    params: { courseId: string }
+    params: Promise<{ courseId: string }>
 }) {
+    const { courseId } = await params
     const session = await requireSession()
     if (!session) {
         redirect("/login")
@@ -18,8 +19,8 @@ export default async function LectureNotesPage({
 
     const course = await prisma.course.findFirst({
         where: session.user.role === UserRole.ADMIN
-            ? { id: params.courseId }
-            : { id: params.courseId, instructorId: session.user.id },
+            ? { id: courseId }
+            : { id: courseId, instructorId: session.user.id },
     })
 
     if (!course) {
@@ -47,7 +48,7 @@ export default async function LectureNotesPage({
                 </div>
 
                 <CourseStudioDesign
-                    courseId={params.courseId}
+                    courseId={courseId}
                     headerTitle="Lecture Notes Builder"
                     headerDescription="Upload materials and generate structured lecture notes with clear sections and summaries"
                     enableSectionNumber

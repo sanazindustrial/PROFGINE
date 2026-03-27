@@ -13,20 +13,21 @@ import { UserRole } from "@prisma/client"
 export default async function BuildCourseSectionsPage({
     params,
 }: {
-    params: { courseId: string }
+    params: Promise<{ courseId: string }>
 }) {
+    const { courseId } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
         redirect("/auth/signin")
     }
 
-    if (!params?.courseId) {
+    if (!courseId) {
         redirect("/dashboard/courses")
     }
 
     const course = await prisma.course.findUnique({
-        where: { id: params.courseId },
+        where: { id: courseId },
         include: {
             modules: {
                 include: {

@@ -36,7 +36,13 @@ import {
     AlertTriangle,
     CheckCircle,
     Clock,
-    Key
+    Key,
+    ShieldCheck,
+    Globe,
+    Cpu,
+    Server,
+    XCircle,
+    Info
 } from 'lucide-react';
 
 export default async function ProfilePage() {
@@ -532,6 +538,165 @@ export default async function ProfilePage() {
                                     <p className="text-xs text-muted-foreground">Receive news about new features and promotions</p>
                                 </div>
                                 <Switch />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* AI & Machine Learning Training Data */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Cpu className="size-5" />
+                                AI &amp; Machine Learning Data Usage
+                            </CardTitle>
+                            <CardDescription>
+                                Control how your data is used for AI model training and machine learning features
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Alert>
+                                <Info className="size-4" />
+                                <AlertDescription>
+                                    Professor GENIE uses AI to generate discussion responses, grade assignments, and create presentations.
+                                    Your choices below control whether your data contributes to improving these features.
+                                </AlertDescription>
+                            </Alert>
+
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium">AI Model Training</Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Allow anonymized course content to improve AI grading accuracy and content generation quality
+                                    </p>
+                                </div>
+                                <Switch />
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium">Machine Learning Features</Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Enable personalized recommendations, smart content suggestions, and adaptive learning paths
+                                    </p>
+                                </div>
+                                <Switch defaultChecked />
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium">Usage Pattern Analysis</Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Allow analysis of your usage patterns to improve platform features and performance
+                                    </p>
+                                </div>
+                                <Switch defaultChecked />
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <Label className="text-sm font-medium">Student Performance Insights</Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        Allow aggregated, anonymized student performance data to train grading models
+                                    </p>
+                                </div>
+                                <Switch />
+                            </div>
+
+                            <div className="rounded-lg border bg-muted/30 p-3">
+                                <p className="text-xs text-muted-foreground">
+                                    <strong>How we use your data for AI:</strong> Data used for model training is always anonymized and aggregated.
+                                    Individual course content, student submissions, and personally identifiable information are never shared with
+                                    third-party AI providers for their own training purposes. You can opt out at any time, and previously contributed
+                                    data will be removed from future training datasets within 30 days.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Google Privacy Compliance */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <ShieldCheck className="size-5" />
+                                Google Privacy Compliance
+                            </CardTitle>
+                            <CardDescription>
+                                How we comply with Google&apos;s privacy policies and data protection requirements
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex items-start gap-3 rounded-lg border p-3">
+                                    <Globe className="mt-0.5 size-4 shrink-0 text-blue-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Google OAuth Data</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            We only request your name and email address via Google Sign-In. We do not access your
+                                            Google Drive, Gmail, Calendar, or any other Google services. Your Google account password
+                                            is never shared with us.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-lg border p-3">
+                                    <Server className="mt-0.5 size-4 shrink-0 text-green-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Data Storage &amp; Processing</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Your data is stored securely in encrypted databases. We use SSL/TLS encryption for all
+                                            data in transit. AI processing is performed through secure API connections and your content
+                                            is not stored by third-party AI providers beyond the processing request.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-lg border p-3">
+                                    <XCircle className="mt-0.5 size-4 shrink-0 text-red-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Data We Never Collect or Share</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            We never sell your data to advertisers or data brokers. We never access your device
+                                            contacts, location, camera, or microphone. We do not use tracking pixels, fingerprinting,
+                                            or cross-site tracking. Student educational records (FERPA) are protected at all times.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3 rounded-lg border p-3">
+                                    <Lock className="mt-0.5 size-4 shrink-0 text-purple-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Your Rights Under Google&apos;s Policies</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            In compliance with Google API Services User Data Policy: you can revoke our access at any time
+                                            through your Google Account settings. You can request a full data export or account deletion.
+                                            We undergo periodic security assessments and comply with Google&apos;s Limited Use requirements.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Regulatory Compliance</p>
+                                <div className="flex flex-wrap gap-2">
+                                    <Badge variant="outline">FERPA</Badge>
+                                    <Badge variant="outline">COPPA</Badge>
+                                    <Badge variant="outline">GDPR</Badge>
+                                    <Badge variant="outline">CCPA</Badge>
+                                    <Badge variant="outline">Google API Services User Data Policy</Badge>
+                                    <Badge variant="outline">Google OAuth 2.0 Policies</Badge>
+                                </div>
+                            </div>
+
+                            <div className="rounded-lg border bg-muted/30 p-3">
+                                <p className="text-xs text-muted-foreground">
+                                    <strong>Last updated:</strong> {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}. Professor GENIE&apos;s use and
+                                    transfer of information received from Google APIs adheres to the{' '}
+                                    <span className="font-medium underline">Google API Services User Data Policy</span>,
+                                    including the Limited Use requirements. For questions about our privacy practices,
+                                    contact our data protection team.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>

@@ -7,8 +7,9 @@ import { UserRole } from "@prisma/client"
 export default async function GeneralPresentationResultsPage({
     params,
 }: {
-    params: { presentationId: string }
+    params: Promise<{ presentationId: string }>
 }) {
+    const { presentationId } = await params
     const session = await requireSession()
     if (!session) {
         redirect("/login")
@@ -18,9 +19,9 @@ export default async function GeneralPresentationResultsPage({
     // General presentations have courseId as null
     const presentation = await prisma.presentation.findFirst({
         where: session.user.role === UserRole.ADMIN
-            ? { id: params.presentationId }
+            ? { id: presentationId }
             : {
-                id: params.presentationId,
+                id: presentationId,
                 userId: session.user.id  // User must own the presentation
             },
         include: {
@@ -49,7 +50,7 @@ export default async function GeneralPresentationResultsPage({
 
     // If this presentation has a courseId, redirect to the course-specific results page
     if (presentation.courseId && presentation.course) {
-        redirect(`/dashboard/courses/${presentation.courseId}/studio/results/${params.presentationId}`)
+        redirect(`/dashboard/courses/${presentation.courseId}/studio/results/${presentationId}`)
     }
 
     return (
