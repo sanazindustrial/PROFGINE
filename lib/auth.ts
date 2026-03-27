@@ -237,11 +237,6 @@ export const authOptions: NextAuthOptions = {
             if (account?.provider === 'google' && user.email) {
                 console.log("🔐 SignIn callback:", { user: user.email, account: account?.provider });
 
-                if (!isAllowedUniversityEmail(user.email)) {
-                    console.log("🚫 Sign-in blocked: non-university email", user.email);
-                    return false;
-                }
-
                 // Check if user exists, if not create them
                 let existingUser = await prisma.user.findUnique({
                     where: { email: user.email },
@@ -263,6 +258,16 @@ export const authOptions: NextAuthOptions = {
                     !!invitation &&
                     invitation.status === "PENDING" &&
                     (!invitation.expiresAt || invitation.expiresAt > new Date());
+
+                // Allow: school emails, explicitly allowed emails, existing users, or invited users
+                const emailAllowed = isAllowedUniversityEmail(user.email);
+                const hasExistingAccount = !!existingUser;
+                const hasInvitation = invitationValid;
+
+                if (!emailAllowed && !hasExistingAccount && !hasInvitation) {
+                    console.log("🚫 Sign-in blocked: no allowed email, account, or invitation", user.email);
+                    return false;
+                }
 
                 if (!existingUser) {
                     console.log("👤 Creating new user:", user.email);
