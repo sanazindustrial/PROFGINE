@@ -149,17 +149,17 @@ export default async function CourseSettingsPage({
                         <CardDescription>Manage your course</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <Link href={`/dashboard/courses/${params.courseId}/studio`} className="block">
+                        <Link href={`/dashboard/courses/${courseId}/studio`} className="block">
                             <Button variant="outline" className="w-full justify-start">
                                 Course Studio Design
                             </Button>
                         </Link>
-                        <Link href={`/dashboard/courses/${params.courseId}/build-sections`} className="block">
+                        <Link href={`/dashboard/courses/${courseId}/build-sections`} className="block">
                             <Button variant="outline" className="w-full justify-start">
                                 Build Course Sections
                             </Button>
                         </Link>
-                        <Link href={`/dashboard/courses/${params.courseId}/lecture-notes`} className="block">
+                        <Link href={`/dashboard/courses/${courseId}/lecture-notes`} className="block">
                             <Button variant="outline" className="w-full justify-start">
                                 Manage Lecture Notes
                             </Button>
