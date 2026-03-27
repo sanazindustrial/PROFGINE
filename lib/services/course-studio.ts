@@ -1,4 +1,6 @@
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
+import { aiQualityService } from "@/lib/services/ai-quality.service"
+import { fileExtractionService } from "@/lib/services/file-extraction.service"
 import PptxGenJS from "pptxgenjs"
 import { promises as fs } from "fs"
 import path from "path"
@@ -46,17 +48,56 @@ export class CourseStudioService {
         // Step 1: Extract and analyze content from sources
         const extractedContent = await this.extractContent(sources)
 
+        // Step 1.5: NotebookLM-style research synthesis for deeper content
+        let enrichedContent = extractedContent
+        try {
+            const research = await aiQualityService.researchSynthesize(
+                settings.title,
+                extractedContent.substring(0, 4000),
+                (settings.difficultyLevel as 'introductory' | 'intermediate' | 'advanced') || 'intermediate'
+            )
+            if (research.synthesis) {
+                enrichedContent += `\n\n## Research Synthesis\n${research.synthesis}`
+                if (research.keyInsights.length > 0) {
+                    enrichedContent += `\n\n### Key Insights\n${research.keyInsights.map(i => `- ${i}`).join('\n')}`
+                }
+            }
+        } catch (error) {
+            console.error('Research synthesis skipped:', error)
+        }
+
         // Step 2: Generate outline using AI
-        const outline = await this.generateOutline(extractedContent, settings)
+        const outline = await this.generateOutline(enrichedContent, settings)
 
         // Step 3: Generate slide content
         const slides = await this.generateSlides(outline, settings)
 
+        // Step 3.5: Gamma AI-style slide enhancement for quality
+        let enhancedSlides: SlideContent[] = slides
+        try {
+            const enhancement = await aiQualityService.enhanceSlides(
+                slides.map(s => ({ ...s, notes: s.notes || '' })),
+                settings.title,
+                settings.templateStyle || 'modern-minimalist'
+            )
+            if (enhancement.slides.length > 0 && enhancement.overallQuality >= 6) {
+                enhancedSlides = enhancement.slides.map(s => ({
+                    slideNumber: s.slideNumber,
+                    title: s.title,
+                    content: s.content,
+                    notes: s.notes,
+                    layout: s.layout,
+                }))
+            }
+        } catch (error) {
+            console.error('Slide enhancement skipped:', error)
+        }
+
         // Step 4: Create PowerPoint file
-        const pptxFile = await this.createPowerPoint(slides, settings)
+        const pptxFile = await this.createPowerPoint(enhancedSlides, settings)
 
         // Step 5: Save slides to database
-        await this.saveSlides(presentationId, slides)
+        await this.saveSlides(presentationId, enhancedSlides)
 
         return {
             slideCount: slides.length,
@@ -67,7 +108,7 @@ export class CourseStudioService {
     }
 
     /**
-     * Extract content from source files
+     * Extract content from source files using file extraction service
      */
     private async extractContent(sources: SourceFile[]): Promise<string> {
         let combinedContent = ""
@@ -75,8 +116,22 @@ export class CourseStudioService {
         for (const source of sources) {
             if (source.content) {
                 combinedContent += `\n\n## Source: ${source.fileName}\n${source.content}`
+            } else if (source.fileUrl) {
+                // Try to extract content from the actual file using extraction service
+                try {
+                    const filePath = path.join(process.cwd(), "public", source.fileUrl.replace(/^\//, ""))
+                    const extracted = await fileExtractionService.extractFromFile(filePath, source.fileName)
+                    combinedContent += `\n\n## Source: ${source.fileName}\n${extracted.text}`
+                    if (extracted.sections.length > 0) {
+                        for (const section of extracted.sections) {
+                            combinedContent += `\n### ${section.title}\n${section.content}`
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Failed to extract ${source.fileName}:`, error)
+                    combinedContent += `\n\n## Source: ${source.fileName}\n[Content from ${source.fileType}]`
+                }
             } else {
-                // In production, implement file reading and parsing
                 combinedContent += `\n\n## Source: ${source.fileName}\n[Content from ${source.fileType}]`
             }
         }
@@ -181,7 +236,7 @@ Format as JSON array with this structure:
     }
 
     /**
-     * Create PowerPoint file using pptxgenjs
+     * Create PowerPoint file using pptxgenjs with enhanced quality
      */
     private async createPowerPoint(
         slides: SlideContent[],
@@ -190,48 +245,124 @@ Format as JSON array with this structure:
         const pptx = new PptxGenJS()
 
         // Apply template style
-        this.applyTemplate(pptx, settings.templateStyle || "modern-minimalist")
+        const colors = this.applyTemplate(pptx, settings.templateStyle || "modern-minimalist")
 
-        // Add slides
+        // Add slides with enhanced formatting
         for (const slideData of slides) {
             const slide = pptx.addSlide()
 
-            if (slideData.layout === "title-only") {
-                // Title slide
-                slide.addText(slideData.title, {
-                    x: 0.5,
-                    y: 2.5,
-                    w: 9,
-                    h: 1.5,
-                    fontSize: 44,
-                    bold: true,
-                    align: "center",
-                    color: "363636",
-                })
-            } else {
-                // Content slide
-                slide.addText(slideData.title, {
-                    x: 0.5,
-                    y: 0.5,
-                    w: 9,
-                    h: 0.8,
-                    fontSize: 32,
-                    bold: true,
-                    color: "363636",
+            // Add subtle accent bar at top
+            slide.addShape(pptx.ShapeType.rect, {
+                x: 0,
+                y: 0,
+                w: '100%',
+                h: 0.06,
+                fill: { color: colors.accent },
+            })
+
+            if (slideData.layout === "title-only" || slideData.slideNumber === 1) {
+                // Enhanced title slide with accent background
+                slide.addShape(pptx.ShapeType.rect, {
+                    x: 0,
+                    y: 1.8,
+                    w: '100%',
+                    h: 2.5,
+                    fill: { color: colors.accent, transparency: 92 },
                 })
 
-                // Add bullet points
-                if (slideData.content && slideData.content.length > 0) {
-                    slide.addText(slideData.content.map(point => ({ text: point, options: { bullet: true } })), {
-                        x: 0.5,
-                        y: 1.5,
-                        w: 9,
-                        h: 4,
+                slide.addText(slideData.title, {
+                    x: 0.8,
+                    y: 2,
+                    w: 8.5,
+                    h: 1.5,
+                    fontSize: 40,
+                    bold: true,
+                    align: "center",
+                    color: colors.title,
+                    fontFace: colors.headFont,
+                })
+
+                // Subtitle with settings title if different
+                if (settings.title && settings.title !== slideData.title) {
+                    slide.addText(settings.title, {
+                        x: 0.8,
+                        y: 3.5,
+                        w: 8.5,
+                        h: 0.6,
                         fontSize: 18,
-                        color: "555555",
-                        valign: "top",
+                        color: colors.subtitle,
+                        align: "center",
+                        fontFace: colors.bodyFont,
                     })
                 }
+
+                // Footer line
+                slide.addShape(pptx.ShapeType.rect, {
+                    x: 3,
+                    y: 4.4,
+                    w: 4,
+                    h: 0.02,
+                    fill: { color: colors.accent },
+                })
+            } else {
+                // Enhanced content slide
+                // Title with accent underline
+                slide.addText(slideData.title, {
+                    x: 0.6,
+                    y: 0.25,
+                    w: 8.8,
+                    h: 0.8,
+                    fontSize: 28,
+                    bold: true,
+                    color: colors.title,
+                    fontFace: colors.headFont,
+                })
+
+                slide.addShape(pptx.ShapeType.rect, {
+                    x: 0.6,
+                    y: 1.05,
+                    w: 2,
+                    h: 0.03,
+                    fill: { color: colors.accent },
+                })
+
+                // Add bullet points with better formatting
+                if (slideData.content && slideData.content.length > 0) {
+                    slide.addText(
+                        slideData.content.map(point => ({
+                            text: point,
+                            options: {
+                                bullet: { type: 'bullet', style: '●' },
+                                paraSpaceBefore: 6,
+                                paraSpaceAfter: 4,
+                            }
+                        })),
+                        {
+                            x: 0.6,
+                            y: 1.3,
+                            w: 8.8,
+                            h: 3.8,
+                            fontSize: 17,
+                            color: colors.body,
+                            valign: "top",
+                            fontFace: colors.bodyFont,
+                            lineSpacingMultiple: 1.3,
+                        }
+                    )
+                }
+            }
+
+            // Slide number in footer
+            if (slideData.slideNumber > 1) {
+                slide.addText(String(slideData.slideNumber), {
+                    x: 9,
+                    y: 5.1,
+                    w: 0.5,
+                    h: 0.3,
+                    fontSize: 10,
+                    color: colors.subtitle,
+                    align: "right",
+                })
             }
 
             // Add speaker notes
@@ -246,8 +377,8 @@ Format as JSON array with this structure:
         await fs.mkdir(uploadsDir, { recursive: true })
 
         const filePath = path.join(uploadsDir, fileName)
-        const buffer = await pptx.write({ outputType: "nodebuffer" }) as Buffer
-        await fs.writeFile(filePath, buffer)
+        const buffer = await pptx.write({ outputType: "nodebuffer" })
+        await fs.writeFile(filePath, buffer as unknown as Uint8Array)
 
         return {
             url: `/uploads/presentations/${fileName}`,
@@ -257,33 +388,28 @@ Format as JSON array with this structure:
     }
 
     /**
-     * Apply template styling to presentation
+     * Apply template styling to presentation and return color scheme
      */
-    private applyTemplate(pptx: PptxGenJS, templateStyle: string) {
+    private applyTemplate(pptx: PptxGenJS, templateStyle: string): {
+        accent: string; title: string; subtitle: string; body: string;
+        headFont: string; bodyFont: string
+    } {
         switch (templateStyle) {
             case "modern-minimalist":
                 pptx.layout = "LAYOUT_WIDE"
-                pptx.theme = {
-                    headFontFace: "Arial",
-                    bodyFontFace: "Arial",
-                }
-                break
+                pptx.theme = { headFontFace: "Arial", bodyFontFace: "Arial" }
+                return { accent: "4F46E5", title: "1E1B4B", subtitle: "6B7280", body: "374151", headFont: "Arial", bodyFont: "Arial" }
             case "academic-classic":
                 pptx.layout = "LAYOUT_16x9"
-                pptx.theme = {
-                    headFontFace: "Times New Roman",
-                    bodyFontFace: "Times New Roman",
-                }
-                break
+                pptx.theme = { headFontFace: "Times New Roman", bodyFontFace: "Times New Roman" }
+                return { accent: "1E3A5F", title: "1E3A5F", subtitle: "4B5563", body: "374151", headFont: "Times New Roman", bodyFont: "Times New Roman" }
             case "corporate-professional":
                 pptx.layout = "LAYOUT_16x9"
-                pptx.theme = {
-                    headFontFace: "Calibri",
-                    bodyFontFace: "Calibri",
-                }
-                break
+                pptx.theme = { headFontFace: "Calibri", bodyFontFace: "Calibri" }
+                return { accent: "0D6EFD", title: "212529", subtitle: "6C757D", body: "343A40", headFont: "Calibri", bodyFont: "Calibri" }
             default:
                 pptx.layout = "LAYOUT_16x9"
+                return { accent: "4F46E5", title: "1F2937", subtitle: "6B7280", body: "374151", headFont: "Arial", bodyFont: "Arial" }
         }
     }
 

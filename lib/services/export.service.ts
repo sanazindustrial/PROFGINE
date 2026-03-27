@@ -1,16 +1,16 @@
 /**
  * Export Service
- * Handles PDF, Word (DOCX), and PowerPoint (PPTX) generation
+ * Handles PDF, Word (DOCX), PowerPoint (PPTX), Excel (XLSX), and CSV generation
  * 
  * Dependencies:
- * - pptxgenjs: PowerPoint generation (already installed)
- * - jspdf: PDF generation
- * - docx: Word document generation
+ * - pptxgenjs: PowerPoint generation
+ * - exceljs: Excel spreadsheet generation
  */
 
 import fs from 'fs'
 import path from 'path'
 import PptxGenJS from 'pptxgenjs'
+import ExcelJS from 'exceljs'
 
 // =============================================================================
 // TYPES
@@ -18,7 +18,7 @@ import PptxGenJS from 'pptxgenjs'
 
 export interface ExportResult {
     success: boolean
-    format: 'pdf' | 'docx' | 'pptx'
+    format: 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'csv'
     url?: string
     filePath?: string
     fileName?: string
@@ -1292,6 +1292,334 @@ class ExportService {
         `
     }
 
+    // =========================================================================
+    // EXCEL (XLSX) GENERATION
+    // =========================================================================
+
+    /**
+     * Generate Excel spreadsheet from syllabus data
+     */
+    async generateSyllabusXlsx(data: SyllabusExportData): Promise<ExportResult> {
+        try {
+            const fileName = this.generateFileName(data.courseTitle + '-syllabus', 'xlsx')
+            const filePath = path.join(this.uploadsDir, fileName)
+
+            const workbook = new ExcelJS.Workbook()
+            workbook.creator = 'Professor GENIE'
+            workbook.created = new Date()
+
+            // Overview Sheet
+            const overviewSheet = workbook.addWorksheet('Course Overview')
+            overviewSheet.columns = [
+                { header: 'Field', key: 'field', width: 25 },
+                { header: 'Value', key: 'value', width: 60 },
+            ]
+            overviewSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+            overviewSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+
+            overviewSheet.addRow({ field: 'Course Title', value: data.courseTitle })
+            if (data.courseCode) overviewSheet.addRow({ field: 'Course Code', value: data.courseCode })
+            if (data.semester) overviewSheet.addRow({ field: 'Semester', value: data.semester })
+            overviewSheet.addRow({ field: 'Instructor', value: data.instructor.name })
+            if (data.instructor.email) overviewSheet.addRow({ field: 'Email', value: data.instructor.email })
+            if (data.instructor.office) overviewSheet.addRow({ field: 'Office', value: data.instructor.office })
+            if (data.instructor.officeHours) overviewSheet.addRow({ field: 'Office Hours', value: data.instructor.officeHours })
+            if (data.description) overviewSheet.addRow({ field: 'Description', value: data.description })
+
+            // Objectives Sheet
+            if (data.objectives && data.objectives.length > 0) {
+                const objSheet = workbook.addWorksheet('Learning Objectives')
+                objSheet.columns = [
+                    { header: '#', key: 'num', width: 5 },
+                    { header: 'Objective', key: 'objective', width: 80 },
+                ]
+                objSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                objSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+                data.objectives.forEach((obj, i) => objSheet.addRow({ num: i + 1, objective: obj }))
+            }
+
+            // Modules Sheet
+            if (data.modules && data.modules.length > 0) {
+                const modSheet = workbook.addWorksheet('Course Modules')
+                modSheet.columns = [
+                    { header: 'Week', key: 'week', width: 8 },
+                    { header: 'Module Title', key: 'title', width: 35 },
+                    { header: 'Topics', key: 'topics', width: 50 },
+                    { header: 'Readings', key: 'readings', width: 30 },
+                    { header: 'Assignments', key: 'assignments', width: 30 },
+                ]
+                modSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                modSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+                data.modules.forEach(mod => {
+                    modSheet.addRow({
+                        week: mod.week || '',
+                        title: mod.title,
+                        topics: mod.topics?.join('; ') || '',
+                        readings: mod.readings?.join('; ') || '',
+                        assignments: mod.assignments?.join('; ') || '',
+                    })
+                })
+            }
+
+            // Grading Policy Sheet
+            if (data.gradingPolicy && data.gradingPolicy.length > 0) {
+                const gradeSheet = workbook.addWorksheet('Grading Policy')
+                gradeSheet.columns = [
+                    { header: 'Component', key: 'component', width: 35 },
+                    { header: 'Weight (%)', key: 'weight', width: 15 },
+                ]
+                gradeSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                gradeSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+                data.gradingPolicy.forEach(g => gradeSheet.addRow({ component: g.component, weight: g.weight }))
+            }
+
+            // Schedule Sheet
+            if (data.schedule && data.schedule.length > 0) {
+                const schedSheet = workbook.addWorksheet('Schedule')
+                schedSheet.columns = [
+                    { header: 'Week', key: 'week', width: 8 },
+                    { header: 'Date', key: 'date', width: 15 },
+                    { header: 'Topic', key: 'topic', width: 40 },
+                    { header: 'Readings', key: 'readings', width: 30 },
+                    { header: 'Due', key: 'due', width: 25 },
+                ]
+                schedSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                schedSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+                data.schedule.forEach(s => schedSheet.addRow({
+                    week: s.week,
+                    date: s.date || '',
+                    topic: s.topic,
+                    readings: s.readings || '',
+                    due: s.due || '',
+                }))
+            }
+
+            await workbook.xlsx.writeFile(filePath)
+            const stats = fs.statSync(filePath)
+
+            return {
+                success: true,
+                format: 'xlsx',
+                url: `/uploads/${fileName}`,
+                filePath,
+                fileName,
+                size: stats.size,
+            }
+        } catch (error) {
+            return {
+                success: false,
+                format: 'xlsx',
+                error: error instanceof Error ? error.message : 'Excel generation failed',
+            }
+        }
+    }
+
+    /**
+     * Generate Excel spreadsheet from lecture data
+     */
+    async generateLectureXlsx(data: LectureExportData): Promise<ExportResult> {
+        try {
+            const fileName = this.generateFileName(data.title + '-lecture', 'xlsx')
+            const filePath = path.join(this.uploadsDir, fileName)
+
+            const workbook = new ExcelJS.Workbook()
+            workbook.creator = 'Professor GENIE'
+            workbook.created = new Date()
+
+            // Overview Sheet
+            const overviewSheet = workbook.addWorksheet('Lecture Overview')
+            overviewSheet.columns = [
+                { header: 'Field', key: 'field', width: 20 },
+                { header: 'Value', key: 'value', width: 70 },
+            ]
+            overviewSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+            overviewSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+
+            overviewSheet.addRow({ field: 'Title', value: data.title })
+            if (data.courseTitle) overviewSheet.addRow({ field: 'Course', value: data.courseTitle })
+            if (data.date) overviewSheet.addRow({ field: 'Date', value: data.date })
+            if (data.summary) overviewSheet.addRow({ field: 'Summary', value: data.summary })
+
+            // Objectives Sheet
+            if (data.objectives && data.objectives.length > 0) {
+                const objSheet = workbook.addWorksheet('Learning Objectives')
+                objSheet.columns = [
+                    { header: '#', key: 'num', width: 5 },
+                    { header: 'Objective', key: 'objective', width: 80 },
+                ]
+                objSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                objSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+                data.objectives.forEach((obj, i) => objSheet.addRow({ num: i + 1, objective: obj }))
+            }
+
+            // Content Sections Sheet
+            const contentSheet = workbook.addWorksheet('Lecture Content')
+            contentSheet.columns = [
+                { header: 'Section', key: 'title', width: 30 },
+                { header: 'Content', key: 'content', width: 60 },
+                { header: 'Notes', key: 'notes', width: 30 },
+                { header: 'Activities', key: 'activities', width: 30 },
+            ]
+            contentSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+            contentSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+
+            for (const section of data.sections) {
+                contentSheet.addRow({
+                    title: section.title,
+                    content: section.content,
+                    notes: section.notes || '',
+                    activities: section.activities?.join('; ') || '',
+                })
+            }
+
+            // Key Terms Sheet
+            if (data.keyTerms && data.keyTerms.length > 0) {
+                const termsSheet = workbook.addWorksheet('Key Terms')
+                termsSheet.columns = [
+                    { header: 'Term', key: 'term', width: 25 },
+                    { header: 'Definition', key: 'definition', width: 65 },
+                ]
+                termsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+                termsSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } }
+                data.keyTerms.forEach(t => termsSheet.addRow({ term: t.term, definition: t.definition }))
+            }
+
+            await workbook.xlsx.writeFile(filePath)
+            const stats = fs.statSync(filePath)
+
+            return {
+                success: true,
+                format: 'xlsx',
+                url: `/uploads/${fileName}`,
+                filePath,
+                fileName,
+                size: stats.size,
+            }
+        } catch (error) {
+            return {
+                success: false,
+                format: 'xlsx',
+                error: error instanceof Error ? error.message : 'Excel generation failed',
+            }
+        }
+    }
+
+    // =========================================================================
+    // CSV GENERATION
+    // =========================================================================
+
+    /**
+     * Generate CSV from syllabus data (schedule/modules focus)
+     */
+    async generateSyllabusCsv(data: SyllabusExportData): Promise<ExportResult> {
+        try {
+            const fileName = this.generateFileName(data.courseTitle + '-syllabus', 'csv')
+            const filePath = path.join(this.uploadsDir, fileName)
+
+            const rows: string[] = []
+            rows.push(this.csvRow(['Course Title', data.courseTitle]))
+            rows.push(this.csvRow(['Course Code', data.courseCode || '']))
+            rows.push(this.csvRow(['Semester', data.semester || '']))
+            rows.push(this.csvRow(['Instructor', data.instructor.name]))
+            rows.push('')
+
+            if (data.modules && data.modules.length > 0) {
+                rows.push(this.csvRow(['Week', 'Module', 'Topics', 'Readings', 'Assignments']))
+                for (const mod of data.modules) {
+                    rows.push(this.csvRow([
+                        String(mod.week || ''),
+                        mod.title,
+                        mod.topics?.join('; ') || '',
+                        mod.readings?.join('; ') || '',
+                        mod.assignments?.join('; ') || '',
+                    ]))
+                }
+                rows.push('')
+            }
+
+            if (data.gradingPolicy && data.gradingPolicy.length > 0) {
+                rows.push(this.csvRow(['Component', 'Weight (%)']))
+                for (const g of data.gradingPolicy) {
+                    rows.push(this.csvRow([g.component, String(g.weight)]))
+                }
+            }
+
+            fs.writeFileSync(filePath, rows.join('\n'), 'utf-8')
+            const stats = fs.statSync(filePath)
+
+            return {
+                success: true,
+                format: 'csv',
+                url: `/uploads/${fileName}`,
+                filePath,
+                fileName,
+                size: stats.size,
+            }
+        } catch (error) {
+            return {
+                success: false,
+                format: 'csv',
+                error: error instanceof Error ? error.message : 'CSV generation failed',
+            }
+        }
+    }
+
+    /**
+     * Generate CSV from lecture data
+     */
+    async generateLectureCsv(data: LectureExportData): Promise<ExportResult> {
+        try {
+            const fileName = this.generateFileName(data.title + '-lecture', 'csv')
+            const filePath = path.join(this.uploadsDir, fileName)
+
+            const rows: string[] = []
+            rows.push(this.csvRow(['Lecture Title', data.title]))
+            rows.push(this.csvRow(['Course', data.courseTitle || '']))
+            rows.push(this.csvRow(['Date', data.date || '']))
+            rows.push('')
+
+            rows.push(this.csvRow(['Section', 'Content', 'Notes', 'Activities']))
+            for (const section of data.sections) {
+                rows.push(this.csvRow([
+                    section.title,
+                    section.content,
+                    section.notes || '',
+                    section.activities?.join('; ') || '',
+                ]))
+            }
+
+            if (data.keyTerms && data.keyTerms.length > 0) {
+                rows.push('')
+                rows.push(this.csvRow(['Term', 'Definition']))
+                for (const t of data.keyTerms) {
+                    rows.push(this.csvRow([t.term, t.definition]))
+                }
+            }
+
+            fs.writeFileSync(filePath, rows.join('\n'), 'utf-8')
+            const stats = fs.statSync(filePath)
+
+            return {
+                success: true,
+                format: 'csv',
+                url: `/uploads/${fileName}`,
+                filePath,
+                fileName,
+                size: stats.size,
+            }
+        } catch (error) {
+            return {
+                success: false,
+                format: 'csv',
+                error: error instanceof Error ? error.message : 'CSV generation failed',
+            }
+        }
+    }
+
+    private csvRow(fields: string[]): string {
+        return fields.map(f => `"${String(f).replace(/"/g, '""')}"`).join(',')
+    }
+
     /**
      * Export lecture notes in all formats
      */
@@ -1299,14 +1627,18 @@ class ExportService {
         pdf: ExportResult
         docx: ExportResult
         pptx: ExportResult
+        xlsx: ExportResult
+        csv: ExportResult
     }> {
-        const [pdf, docx, pptx] = await Promise.all([
+        const [pdf, docx, pptx, xlsx, csv] = await Promise.all([
             this.generateLecturePdf(data),
             this.generateLectureDocx(data),
-            this.generateLecturePptx(data)
+            this.generateLecturePptx(data),
+            this.generateLectureXlsx(data),
+            this.generateLectureCsv(data),
         ])
 
-        return { pdf, docx, pptx }
+        return { pdf, docx, pptx, xlsx, csv }
     }
 
     // =========================================================================
@@ -1320,14 +1652,18 @@ class ExportService {
         pdf: ExportResult
         docx: ExportResult
         pptx: ExportResult
+        xlsx: ExportResult
+        csv: ExportResult
     }> {
-        const [pdf, docx, pptx] = await Promise.all([
+        const [pdf, docx, pptx, xlsx, csv] = await Promise.all([
             this.generateSyllabusPdf(data),
             this.generateSyllabusDocx(data),
-            this.generateSyllabusPptx(data)
+            this.generateSyllabusPptx(data),
+            this.generateSyllabusXlsx(data),
+            this.generateSyllabusCsv(data),
         ])
 
-        return { pdf, docx, pptx }
+        return { pdf, docx, pptx, xlsx, csv }
     }
 
     /**

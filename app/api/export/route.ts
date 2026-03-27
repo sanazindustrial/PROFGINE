@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
                 case 'google':
                     result = await exportService.generateLecturePptx(lectureExportData)
                     break
+                case 'xlsx':
+                case 'excel':
+                    result = await exportService.generateLectureXlsx(lectureExportData)
+                    break
+                case 'csv':
+                    result = await exportService.generateLectureCsv(lectureExportData)
+                    break
                 case 'odp':
                     // ODP is similar to PPTX, export as PPTX for now
                     result = await exportService.generateLecturePptx(lectureExportData)
@@ -183,6 +190,13 @@ export async function POST(request: NextRequest) {
                 case 'powerpoint':
                     result = await exportService.generateSyllabusPptx(exportData)
                     break
+                case 'xlsx':
+                case 'excel':
+                    result = await exportService.generateSyllabusXlsx(exportData)
+                    break
+                case 'csv':
+                    result = await exportService.generateSyllabusCsv(exportData)
+                    break
                 case 'all':
                     const allResults = await exportService.exportSyllabusAll(exportData)
                     return NextResponse.json({
@@ -191,7 +205,7 @@ export async function POST(request: NextRequest) {
                     })
                 default:
                     return NextResponse.json(
-                        { error: `Unsupported format: ${format}. Use pdf, docx, pptx, or all` },
+                        { error: `Unsupported format: ${format}. Use pdf, docx, pptx, xlsx, csv, or all` },
                         { status: 400 }
                     )
             }
@@ -297,6 +311,13 @@ export async function POST(request: NextRequest) {
                 case 'powerpoint':
                     result = await exportService.generateLecturePptx(exportData)
                     break
+                case 'xlsx':
+                case 'excel':
+                    result = await exportService.generateLectureXlsx(exportData)
+                    break
+                case 'csv':
+                    result = await exportService.generateLectureCsv(exportData)
+                    break
                 case 'all':
                     const allResults = await exportService.exportLectureAll(exportData)
                     return NextResponse.json({
@@ -305,7 +326,7 @@ export async function POST(request: NextRequest) {
                     })
                 default:
                     return NextResponse.json(
-                        { error: `Unsupported format: ${format}. Use pdf, docx, pptx, or all` },
+                        { error: `Unsupported format: ${format}. Use pdf, docx, pptx, xlsx, csv, or all` },
                         { status: 400 }
                     )
             }
