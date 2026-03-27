@@ -11,9 +11,23 @@ export function getAllowedEmailDomains(): string[] {
     return domains.length > 0 ? domains : [".edu"];
 }
 
+export function getAllowedEmails(): string[] {
+    const raw = process.env.ALLOWED_EMAILS || "";
+    return raw
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean);
+}
+
 export function isAllowedUniversityEmail(email: string): boolean {
-    const domain = email.split("@")[1]?.toLowerCase();
+    const normalizedEmail = email.toLowerCase().trim();
+    const domain = normalizedEmail.split("@")[1];
     if (!domain) return false;
+
+    // Check individual email allowlist first
+    if (getAllowedEmails().includes(normalizedEmail)) {
+        return true;
+    }
 
     return getAllowedEmailDomains().some((allowed) => {
         if (allowed.startsWith(".")) {
