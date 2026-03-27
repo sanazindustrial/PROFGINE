@@ -324,11 +324,24 @@ function CourseDesignStudioContent() {
                     messages: [{ role: "user", content: agentQuestion }],
                 }),
             })
+
+            const contentType = res.headers.get("content-type") || ""
+
             if (!res.ok) {
-                const errData = await res.json().catch(() => null)
-                setAgentResponse(errData?.error || `Server error (${res.status}). Please try again.`)
+                if (contentType.includes("application/json")) {
+                    const errData = await res.json().catch(() => null)
+                    setAgentResponse(errData?.error || `Server error (${res.status}). Please try again.`)
+                } else {
+                    setAgentResponse(`Server error (${res.status}). Please try again.`)
+                }
                 return
             }
+
+            if (!contentType.includes("application/json")) {
+                setAgentResponse("Unexpected response from server. Please try again.")
+                return
+            }
+
             const data = await res.json()
             setAgentResponse(data.content || data.message || "I can help you with course design!")
         } catch (error) {

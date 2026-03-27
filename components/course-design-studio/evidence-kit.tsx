@@ -300,7 +300,7 @@ export function EvidenceKit({
                     <Dialog open={isAddingLink} onOpenChange={setIsAddingLink}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="w-full">
-                                <LinkIcon className="size-4 mr-2" />
+                                <LinkIcon className="mr-2 size-4" />
                                 Add External Link
                             </Button>
                         </DialogTrigger>
@@ -329,7 +329,7 @@ export function EvidenceKit({
                     </div>
                     <Select value={filterType} onValueChange={(v) => setFilterType(v as any)}>
                         <SelectTrigger className="w-[130px]">
-                            <Filter className="size-4 mr-2" />
+                            <Filter className="mr-2 size-4" />
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -389,7 +389,7 @@ export function EvidenceKit({
                                     <div className="flex items-center gap-1">
                                         <Badge
                                             variant="outline"
-                                            className={`${statusColors[item.processingStatus]} text-white gap-1`}
+                                            className={`${statusColors[item.processingStatus]} gap-1 text-white`}
                                         >
                                             {statusIcons[item.processingStatus]}
                                             <span className="text-xs">
@@ -408,20 +408,20 @@ export function EvidenceKit({
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem onClick={() => setSelectedItem(item)}>
-                                                    <Eye className="size-4 mr-2" />
+                                                    <Eye className="mr-2 size-4" />
                                                     View Details
                                                 </DropdownMenuItem>
                                                 {item.fileUrl && (
                                                     <DropdownMenuItem asChild>
                                                         <a href={item.fileUrl} target="_blank" rel="noopener noreferrer">
-                                                            <Download className="size-4 mr-2" />
+                                                            <Download className="mr-2 size-4" />
                                                             Download
                                                         </a>
                                                     </DropdownMenuItem>
                                                 )}
                                                 {item.processingStatus === 'FAILED' && (
                                                     <DropdownMenuItem onClick={() => handleReprocess(item.id)}>
-                                                        <RefreshCw className="size-4 mr-2" />
+                                                        <RefreshCw className="mr-2 size-4" />
                                                         Reprocess
                                                     </DropdownMenuItem>
                                                 )}
@@ -429,7 +429,7 @@ export function EvidenceKit({
                                                     className="text-destructive"
                                                     onClick={() => handleDelete(item.id)}
                                                 >
-                                                    <Trash2 className="size-4 mr-2" />
+                                                    <Trash2 className="mr-2 size-4" />
                                                     Delete
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
@@ -478,7 +478,7 @@ export function EvidenceKit({
                                 {selectedItem.contentSummary && (
                                     <div>
                                         <Label className="text-muted-foreground">AI Summary</Label>
-                                        <p className="mt-1 text-sm bg-muted p-3 rounded-md">
+                                        <p className="mt-1 rounded-md bg-muted p-3 text-sm">
                                             {selectedItem.contentSummary}
                                         </p>
                                     </div>
@@ -487,7 +487,7 @@ export function EvidenceKit({
                                 {selectedItem.topicsIdentified && selectedItem.topicsIdentified.length > 0 && (
                                     <div>
                                         <Label className="text-muted-foreground">Topics Identified</Label>
-                                        <div className="flex flex-wrap gap-2 mt-1">
+                                        <div className="mt-1 flex flex-wrap gap-2">
                                             {selectedItem.topicsIdentified.map((topic, i) => (
                                                 <Badge key={i} variant="secondary">{topic}</Badge>
                                             ))}

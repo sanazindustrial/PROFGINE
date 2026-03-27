@@ -3,6 +3,7 @@ import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { ChatMessage } from "@/types/ai.types"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 const DISCUSSION_SYSTEM_PROMPT =
     "You are Professor GENIE, an AI assistant for educators. Provide clear, concise, helpful responses with a professional academic tone."
@@ -10,18 +11,26 @@ const DISCUSSION_SYSTEM_PROMPT =
 const GRADING_SYSTEM_PROMPT =
     "You are an AI grading assistant. Provide structured, fair, and actionable feedback aligned with the rubric and assignment context."
 
-const readStreamToString = async (stream: ReadableStream<Uint8Array>) => {
+const readStreamToString = async (stream: ReadableStream<Uint8Array>, timeoutMs = 30000) => {
     const reader = stream.getReader()
     const decoder = new TextDecoder()
     let result = ""
 
-    while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
-        if (value) result += decoder.decode(value, { stream: true })
+    const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Stream read timed out")), timeoutMs)
+    )
+
+    try {
+        while (true) {
+            const { value, done } = await Promise.race([reader.read(), timeout])
+            if (done) break
+            if (value) result += decoder.decode(value, { stream: true })
+        }
+        result += decoder.decode()
+    } finally {
+        reader.releaseLock()
     }
 
-    result += decoder.decode()
     return result
 }
 
