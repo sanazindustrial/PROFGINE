@@ -170,10 +170,14 @@ export function CourseStudioDesign({
                 }),
             })
 
-            const data = await response.json()
+            const data = await response.json().catch(() => ({}))
 
             if (!response.ok) {
                 throw new Error(data.error || "Failed to generate presentation")
+            }
+
+            if (!data.presentationId) {
+                throw new Error("Server returned an invalid response — no presentation ID")
             }
 
             setResult(data)

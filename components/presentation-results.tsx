@@ -33,7 +33,12 @@ export function PresentationResults({ presentation, course }: PresentationResult
     const [isDownloading, setIsDownloading] = useState(false)
     const [isGeneratingNotes, setIsGeneratingNotes] = useState(false)
 
-    const metadata = presentation.metadata ? JSON.parse(presentation.metadata) : {}
+    let metadata: Record<string, any> = {}
+    try {
+        metadata = presentation.metadata ? JSON.parse(presentation.metadata) : {}
+    } catch {
+        // Ignore malformed metadata
+    }
 
     const statusColor: Record<string, string> = {
         COMPLETED: "bg-green-100 text-green-800 border-green-200",
@@ -472,23 +477,23 @@ export function PresentationResults({ presentation, course }: PresentationResult
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Button variant="outline" className="w-full justify-start" asChild>
-                                <Link href={`/dashboard/courses/${course.id}/studio`}>
+                                <Link href={course ? `/dashboard/courses/${course.id}/studio` : '/dashboard/presentation-studio'}>
                                     <Monitor className="mr-2 size-4" />
                                     Create Another
                                 </Link>
                             </Button>
-                            <Button variant="outline" className="w-full justify-start" asChild>
+                            {course && <Button variant="outline" className="w-full justify-start" asChild>
                                 <Link href={`/dashboard/courses/${course.id}`}>
                                     <ArrowLeft className="mr-2 size-4" />
                                     Back to Course
                                 </Link>
-                            </Button>
-                            <Button variant="outline" className="w-full justify-start" asChild>
+                            </Button>}
+                            {course && <Button variant="outline" className="w-full justify-start" asChild>
                                 <Link href={`/dashboard/courses/${course.id}/build-sections`}>
                                     <FileUp className="mr-2 size-4" />
                                     Upload to Course
                                 </Link>
-                            </Button>
+                            </Button>}
                         </CardContent>
                     </Card>
 
