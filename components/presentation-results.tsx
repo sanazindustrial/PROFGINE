@@ -31,6 +31,7 @@ export function PresentationResults({ presentation, course }: PresentationResult
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteError, setDeleteError] = useState("")
     const [isDownloading, setIsDownloading] = useState(false)
+    const [isGeneratingNotes, setIsGeneratingNotes] = useState(false)
 
     const metadata = presentation.metadata ? JSON.parse(presentation.metadata) : {}
 
@@ -125,6 +126,61 @@ export function PresentationResults({ presentation, course }: PresentationResult
             alert("An error occurred during download")
         } finally {
             setIsDownloading(false)
+        }
+    }
+
+    const handleLectureNotesDownload = async (format: "docx" | "google-docs") => {
+        setIsGeneratingNotes(true)
+        try {
+            const response = await fetch("/api/course-studio/lecture-notes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ presentationId: presentation.id })
+            })
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}))
+                alert(err.error || "Failed to generate lecture notes")
+                return
+            }
+
+            const data = await response.json()
+
+            if (format === "google-docs") {
+                // Download the .docx then show instructions
+                const fileResp = await fetch(data.downloadUrl)
+                const blob = await fileResp.blob()
+                const typedBlob = new Blob([blob], {
+                    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                })
+                const url = URL.createObjectURL(typedBlob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = data.fileName || "lecture-notes.docx"
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+                alert("Lecture notes downloaded! To use in Google Docs:\n1. Go to drive.google.com\n2. Click '+ New' → 'File upload'\n3. Upload the downloaded .docx file\n4. Open it — Google Drive converts it automatically.")
+            } else {
+                const fileResp = await fetch(data.downloadUrl)
+                const blob = await fileResp.blob()
+                const typedBlob = new Blob([blob], {
+                    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                })
+                const url = URL.createObjectURL(typedBlob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = data.fileName || "lecture-notes.docx"
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+            }
+        } catch (error) {
+            alert("An error occurred generating lecture notes")
+        } finally {
+            setIsGeneratingNotes(false)
         }
     }
 
@@ -324,13 +380,13 @@ export function PresentationResults({ presentation, course }: PresentationResult
                                             </Button>
                                         </>
                                     )}
-                                    <Button variant="outline" className="w-full justify-start" disabled>
+                                    <Button variant="outline" className="w-full justify-start" onClick={() => handleLectureNotesDownload("docx")} disabled={isGeneratingNotes}>
                                         <FileText className="mr-2 size-4" />
-                                        Word (.docx) lecture notes (coming soon)
+                                        {isGeneratingNotes ? "Generating Notes..." : "Word (.docx) Lecture Notes"}
                                     </Button>
-                                    <Button variant="outline" className="w-full justify-start" disabled>
+                                    <Button variant="outline" className="w-full justify-start" onClick={() => handleLectureNotesDownload("google-docs")} disabled={isGeneratingNotes}>
                                         <FileText className="mr-2 size-4" />
-                                        Google Docs lecture notes (coming soon)
+                                        {isGeneratingNotes ? "Generating Notes..." : "Google Docs Lecture Notes"}
                                     </Button>
                                 </div>
                             </div>
@@ -368,38 +424,13 @@ export function PresentationResults({ presentation, course }: PresentationResult
                             {/* Format Info */}
                             <div className="border-t pt-2">
                                 <p className="text-xs text-gray-600">
-                                    <strong>Lecture notes:</strong> Included in slide speaker notes (PPTX, PDF)<br />
+                                    <strong>Lecture notes (.docx):</strong> Comprehensive notes generated from your slides using AI<br />
                                     <strong>Windows:</strong> Use PowerPoint (Windows) format<br />
                                     <strong>Mac:</strong> Use Keynote or PowerPoint format<br />
                                     <strong>Google Slides:</strong> Download PPTX and upload to Google Drive<br />
+                                    <strong>Google Docs:</strong> Download .docx and upload to Google Drive<br />
                                     <strong>PDF:</strong> For printing or viewing only (not editable)
                                 </p>
-                            </div>
-
-                            {presentation.previewUrl && (
-                                <Button size="lg" variant="secondary" className="w-full" asChild>
-                                    <a href={presentation.previewUrl} target="_blank" rel="noopener noreferrer">
-                                        <Eye className="mr-2 size-4" />
-                                        Preview Online
-                                    </a>
-                                </Button>
-                            )}
-
-                            <div className="flex gap-2 border-t pt-3">
-                                <Button variant="outline" size="sm" className="flex-1">
-                                    <Share2 className="mr-2 size-4" />
-                                    Share
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1 text-red-600 hover:text-red-700"
-                                    onClick={handleDelete}
-                                    disabled={isDeleting}
-                                >
-                                    <Trash2 className="mr-2 size-4" />
-                                    {isDeleting ? "Deleting..." : "Delete"}
-                                </Button>
                             </div>
                         </CardContent>
                     </Card>

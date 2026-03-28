@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Upload, FileText, Monitor, Download, CheckCircle2 } from "lucide-react"
+import { Loader2, Upload, FileText, Monitor, Download, CheckCircle2, BookOpen } from "lucide-react"
 
 interface CourseStudioDesignProps {
     courseId?: string  // Optional - if not provided, creates general presentation
@@ -42,6 +42,7 @@ export function CourseStudioDesign({
     const [error, setError] = useState("")
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
     const [isUploading, setIsUploading] = useState(false)
+    const [outputType, setOutputType] = useState<"pptx" | "lecture-notes" | "both">("pptx")
 
     // Use appropriate header based on mode
     const displayTitle = isGeneralMode ? "General Presentation Studio" : headerTitle
@@ -87,6 +88,65 @@ export function CourseStudioDesign({
                 setIsUploading(false)
             }
 
+            // Generate lecture notes if requested
+            if (outputType === "lecture-notes" || outputType === "both") {
+                const lectureResponse = await fetch("/api/course-studio/lecture-notes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title: finalTitle,
+                        description,
+                        sources: uploadedFileUrls,
+                        settings: {
+                            difficultyLevel,
+                            targetDuration: parseInt(targetDuration),
+                            includeQuizzes,
+                            includeDiscussions,
+                        },
+                    }),
+                })
+
+                if (lectureResponse.ok) {
+                    const lectureData = await lectureResponse.json()
+                    if (outputType === "lecture-notes") {
+                        // Lecture notes only - download directly
+                        setResult({
+                            type: "lecture-notes",
+                            url: lectureData.url,
+                            fileName: lectureData.fileName,
+                        })
+                        setUploadedFiles([])
+                        // Auto-download
+                        try {
+                            const apiUrl = lectureData.url.replace(/^\/uploads\//, "/api/files/")
+                            const fileResp = await fetch(apiUrl)
+                            const blob = await fileResp.blob()
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement("a")
+                            a.href = url
+                            a.download = lectureData.fileName || "lecture-notes.docx"
+                            document.body.appendChild(a)
+                            a.click()
+                            document.body.removeChild(a)
+                            URL.revokeObjectURL(url)
+                        } catch {
+                            window.open(lectureData.url, "_blank")
+                        }
+                        setIsGenerating(false)
+                        setIsUploading(false)
+                        return
+                    }
+                } else {
+                    const errData = await lectureResponse.json().catch(() => ({}))
+                    if (outputType === "lecture-notes") {
+                        throw new Error(errData.error || "Failed to generate lecture notes")
+                    }
+                    // If "both" mode and lecture notes fail, still continue with PPT
+                    console.error("Lecture notes generation failed, continuing with PPT")
+                }
+            }
+
+            // Generate PowerPoint (for "pptx" or "both" modes)
             const response = await fetch("/api/course-studio/generate", {
                 method: "POST",
                 headers: {
@@ -270,6 +330,71 @@ export function CourseStudioDesign({
                         </div>
                     </div>
 
+                    {/* Output Type Selector */}
+                    <div className="space-y-3">
+                        <Label>Output Type</Label>
+                        <p className="text-xs text-gray-500">PowerPoint slides are visual anchors for live sessions. Lecture notes are comprehensive documents for deep studying.</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <label
+                                className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-colors ${outputType === "pptx" ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30" : "border-gray-200 hover:border-gray-300 dark:border-gray-700"}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="outputType"
+                                    value="pptx"
+                                    checked={outputType === "pptx"}
+                                    onChange={() => setOutputType("pptx")}
+                                    className="size-4 accent-purple-600"
+                                />
+                                <div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Monitor className="size-4 text-purple-600" />
+                                        <span className="text-sm font-medium">PowerPoint Slides</span>
+                                    </div>
+                                    <p className="mt-0.5 text-xs text-gray-500">Visual anchors, bullet points, speaker notes</p>
+                                </div>
+                            </label>
+                            <label
+                                className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-colors ${outputType === "lecture-notes" ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30" : "border-gray-200 hover:border-gray-300 dark:border-gray-700"}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="outputType"
+                                    value="lecture-notes"
+                                    checked={outputType === "lecture-notes"}
+                                    onChange={() => setOutputType("lecture-notes")}
+                                    className="size-4 accent-purple-600"
+                                />
+                                <div>
+                                    <div className="flex items-center gap-1.5">
+                                        <BookOpen className="size-4 text-blue-600" />
+                                        <span className="text-sm font-medium">Lecture Notes</span>
+                                    </div>
+                                    <p className="mt-0.5 text-xs text-gray-500">Detailed .docx with full paragraphs, case studies</p>
+                                </div>
+                            </label>
+                            <label
+                                className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-colors ${outputType === "both" ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30" : "border-gray-200 hover:border-gray-300 dark:border-gray-700"}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="outputType"
+                                    value="both"
+                                    checked={outputType === "both"}
+                                    onChange={() => setOutputType("both")}
+                                    className="size-4 accent-purple-600"
+                                />
+                                <div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Download className="size-4 text-green-600" />
+                                        <span className="text-sm font-medium">Both</span>
+                                    </div>
+                                    <p className="mt-0.5 text-xs text-gray-500">Generate slides and lecture notes together</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     {/* File Upload Section */}
                     <div className="space-y-4">
                         <Label>Upload Course Materials</Label>
@@ -363,12 +488,16 @@ export function CourseStudioDesign({
                         ) : isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 size-4 animate-spin" />
-                                Generating Presentation...
+                                {outputType === "lecture-notes" ? "Generating Lecture Notes..." : outputType === "both" ? "Generating Slides & Notes..." : "Generating Presentation..."}
                             </>
                         ) : (
                             <>
-                                <Monitor className="mr-2 size-4" />
-                                Generate PowerPoint Presentation
+                                {outputType === "lecture-notes" ? (
+                                    <BookOpen className="mr-2 size-4" />
+                                ) : (
+                                    <Monitor className="mr-2 size-4" />
+                                )}
+                                {outputType === "lecture-notes" ? "Generate Lecture Notes" : outputType === "both" ? "Generate Slides & Lecture Notes" : "Generate PowerPoint Presentation"}
                             </>
                         )}
                     </Button>

@@ -635,6 +635,15 @@ function CourseDesignStudioContent() {
                                                             alt={alt || ""}
                                                             className="max-h-80 rounded-lg border border-gray-200 shadow-sm dark:border-gray-700"
                                                             loading="lazy"
+                                                            onError={(e) => {
+                                                                const target = e.currentTarget
+                                                                // Replace broken image with a styled placeholder
+                                                                target.style.display = "none"
+                                                                const placeholder = document.createElement("div")
+                                                                placeholder.className = "flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-600 dark:bg-gray-800"
+                                                                placeholder.innerHTML = `<div><svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">${alt || "Image unavailable"}</p></div>`
+                                                                target.parentElement?.insertBefore(placeholder, target)
+                                                            }}
                                                         />
                                                         {alt && <figcaption className="mt-1.5 text-center text-xs text-gray-500 dark:text-gray-400">{alt}</figcaption>}
                                                     </figure>

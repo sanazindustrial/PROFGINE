@@ -2,9 +2,24 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+/**
+ * Convert a /uploads/ path to an API-backed /api/files/ URL for reliable serving.
+ * Files in public/uploads/ may not be served by Next.js after build.
+ */
+function toApiFileUrl(uploadsUrl: string): string {
+    if (!uploadsUrl) return ""
+    // /uploads/presentations/file.pptx → /api/files/presentations/file.pptx
+    return uploadsUrl.replace(/^\/uploads\//, "/api/files/")
+}
+
 export async function POST(req: NextRequest) {
     try {
-        const session = await requireSession()
+        let session
+        try {
+            session = await requireSession()
+        } catch {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
 
         const { presentationId, format } = await req.json()
 
@@ -16,10 +31,10 @@ export async function POST(req: NextRequest) {
         }
 
         // Validate format
-        const validFormats = ["pptx", "pdf", "google-slides", "keynote"]
+        const validFormats = ["pptx", "pdf", "google-slides", "keynote", "docx", "google-docs"]
         if (!validFormats.includes(format)) {
             return NextResponse.json(
-                { error: "Invalid format. Must be one of: pptx, pdf, google-slides, keynote" },
+                { error: "Invalid format" },
                 { status: 400 }
             )
         }
@@ -42,28 +57,33 @@ export async function POST(req: NextRequest) {
             )
         }
 
+        const metadata = presentation.metadata ? JSON.parse(presentation.metadata) : {}
+
         // Generate download URL based on format
         let downloadUrl = ""
         let fileName = `${presentation.title.replace(/[^a-z0-9]/gi, '_')}`
 
         switch (format) {
             case "pptx":
-                downloadUrl = presentation.fileUrl || ""
+                downloadUrl = toApiFileUrl(presentation.fileUrl || "")
                 fileName += ".pptx"
                 break
             case "pdf":
-                downloadUrl = presentation.pdfUrl || ""
+                downloadUrl = toApiFileUrl(presentation.pdfUrl || "")
                 fileName += ".pdf"
                 break
             case "google-slides":
-                // For Google Slides, provide instructions or conversion URL
-                downloadUrl = presentation.fileUrl || ""
+                downloadUrl = toApiFileUrl(presentation.fileUrl || "")
                 fileName += "_google_slides.pptx"
                 break
             case "keynote":
-                // For Keynote (Mac), use the same PPTX file
-                downloadUrl = presentation.fileUrl || ""
+                downloadUrl = toApiFileUrl(presentation.fileUrl || "")
                 fileName += ".key"
+                break
+            case "docx":
+            case "google-docs":
+                downloadUrl = toApiFileUrl(metadata.lectureNotesUrl || "")
+                fileName += format === "google-docs" ? "_google_docs.docx" : ".docx"
                 break
         }
 

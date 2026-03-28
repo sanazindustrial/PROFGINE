@@ -9,6 +9,8 @@ import Link from "next/link"
 function AuthErrorContent() {
     const searchParams = useSearchParams()
     const error = searchParams.get("error")
+    const reason = searchParams.get("reason")
+    const email = searchParams.get("email")
 
     const errorMessages: Record<string, { title: string; description: string }> = {
         Configuration: {
@@ -65,7 +67,30 @@ function AuthErrorContent() {
         },
     }
 
-    const errorInfo = error ? errorMessages[error] || errorMessages.Default : errorMessages.Default
+    // Use specific AccessDenied messages based on reason
+    let errorInfo = error ? errorMessages[error] || errorMessages.Default : errorMessages.Default
+    if (error === "AccessDenied" && reason) {
+        switch (reason) {
+            case "email_not_allowed":
+                errorInfo = {
+                    title: "Email Not Authorized",
+                    description: "Your email address is not authorized to access this platform. ProfGenie is available to university professors and invited users.",
+                }
+                break
+            case "student_invite_only":
+                errorInfo = {
+                    title: "Invitation Required",
+                    description: "Student accounts require an invitation from a professor. Please ask your professor to invite you to the platform.",
+                }
+                break
+            case "student_account":
+                errorInfo = {
+                    title: "Student Access Restricted",
+                    description: "Student sign-in is currently restricted. Please contact your professor or the platform administrator for access.",
+                }
+                break
+        }
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -109,6 +134,23 @@ function AuthErrorContent() {
                         )}
 
                         {/* Troubleshooting Tips */}
+                        {error === "AccessDenied" && (
+                            <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+                                <p className="mb-2 text-sm font-medium text-amber-800">How to Get Access:</p>
+                                <ul className="list-inside list-disc space-y-1 text-sm text-amber-700">
+                                    <li>Use a university email address (.edu) to sign in</li>
+                                    <li>Ask your institution&apos;s admin to add your email domain</li>
+                                    <li>Request an invitation from your professor or administrator</li>
+                                    <li>Contact support at support@profgenie.ai for assistance</li>
+                                </ul>
+                                {email && (
+                                    <p className="mt-2 text-xs text-amber-600">
+                                        Email used: {email}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         {error === "OAuthCallback" && (
                             <div className="rounded-md border border-blue-200 bg-blue-50 p-4">
                                 <p className="mb-2 text-sm font-medium text-blue-800">Troubleshooting Tips:</p>

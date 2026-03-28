@@ -266,7 +266,7 @@ export const authOptions: NextAuthOptions = {
 
                 if (!emailAllowed && !hasExistingAccount && !hasInvitation) {
                     console.log("🚫 Sign-in blocked: no allowed email, account, or invitation", user.email);
-                    return false;
+                    return `/auth/error?error=AccessDenied&reason=email_not_allowed&email=${encodeURIComponent(user.email)}`;
                 }
 
                 if (!existingUser) {
@@ -280,7 +280,7 @@ export const authOptions: NextAuthOptions = {
 
                     if (role === UserRole.STUDENT) {
                         console.log("🚫 Sign-in blocked: student accounts are invite-only", user.email);
-                        return false;
+                        return `/auth/error?error=AccessDenied&reason=student_invite_only&email=${encodeURIComponent(user.email)}`;
                     }
 
                     // Special case: Make first user admin
@@ -330,7 +330,7 @@ export const authOptions: NextAuthOptions = {
                 } else {
                     if (existingUser.role === UserRole.STUDENT) {
                         console.log("🚫 Sign-in blocked: student accounts are invite-only", user.email);
-                        return false;
+                        return `/auth/error?error=AccessDenied&reason=student_account&email=${encodeURIComponent(user.email)}`;
                     }
 
                     const { ensureUserSubscription } = await import("@/lib/access/getBillingContext");
