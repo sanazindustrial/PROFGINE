@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useCallback, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -38,6 +38,12 @@ import {
     Check,
     Loader2,
     Wand2,
+    ImageIcon,
+    ZoomIn,
+    ZoomOut,
+    X,
+    Download,
+    Palette,
 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type {
@@ -47,6 +53,41 @@ import type {
     EvidenceKitItem,
     ReadyCheckReport,
 } from "@/types/course-design-studio.types"
+
+function ChatImage({ src, alt, onZoom }: { src?: string; alt?: string; onZoom: (img: { src: string; alt: string; type: "url" | "svg" }) => void }) {
+    const [imgError, setImgError] = useState(false)
+    if (imgError || !src) {
+        return (
+            <figure className="my-4">
+                <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-600 dark:bg-gray-800">
+                    <div>
+                        <ImageIcon className="mx-auto size-10 text-gray-400" />
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{alt || "Image unavailable"}</p>
+                    </div>
+                </div>
+                {alt && <figcaption className="mt-1.5 text-center text-xs text-gray-500 dark:text-gray-400">{alt}</figcaption>}
+            </figure>
+        )
+    }
+    return (
+        <figure className="my-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+                src={src}
+                alt={alt || ""}
+                className="max-h-80 cursor-pointer rounded-lg border border-gray-200 shadow-sm transition-transform hover:scale-[1.02] hover:shadow-md dark:border-gray-700"
+                loading="lazy"
+                onClick={() => onZoom({ src, alt: alt || "", type: "url" })}
+                onError={() => setImgError(true)}
+            />
+            {alt && (
+                <figcaption className="mt-1.5 flex items-center justify-center gap-1 text-center text-xs text-gray-500 dark:text-gray-400">
+                    <ZoomIn className="size-3" /> Click to zoom &middot; {alt}
+                </figcaption>
+            )}
+        </figure>
+    )
+}
 
 function CourseDesignStudioContent() {
     const searchParams = useSearchParams()
@@ -66,6 +107,9 @@ function CourseDesignStudioContent() {
     const [agentProvider, setAgentProvider] = useState("")
     const [agentDuration, setAgentDuration] = useState(0)
     const [copied, setCopied] = useState(false)
+    const [chatImages, setChatImages] = useState<Array<{ svg: string; altText: string; refinedPrompt: string; palette: string[] }>>([])
+    const [lightboxImage, setLightboxImage] = useState<{ src: string; alt: string; type: "url" | "svg" } | null>(null)
+    const [lightboxZoom, setLightboxZoom] = useState(1)
     const [activeTab, setActiveTab] = useState("course-info")
     const [designLoading, setDesignLoading] = useState(false)
     const [designError, setDesignError] = useState<string | null>(null)
@@ -90,7 +134,7 @@ function CourseDesignStudioContent() {
         }
     }
 
-    const loadCourseDesign = async () => {
+    const loadCourseDesign = useCallback(async () => {
         if (!effectiveCourseId) return
         setDesignLoading(true)
         setDesignError(null)
@@ -141,7 +185,8 @@ function CourseDesignStudioContent() {
         } finally {
             setDesignLoading(false)
         }
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [effectiveCourseId])
 
     const handleAnalyze = async () => {
         if (!effectiveCourseId) throw new Error("Course not selected")
@@ -245,7 +290,7 @@ function CourseDesignStudioContent() {
         if (effectiveCourseId) {
             loadCourseDesign()
         }
-    }, [effectiveCourseId])
+    }, [effectiveCourseId, loadCourseDesign])
 
     const aiFeatures = [
         {
@@ -327,15 +372,45 @@ function CourseDesignStudioContent() {
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const isImageRequest = (text: string) => {
+        const lower = text.toLowerCase()
+        return /\b(create|generate|make|draw|design|show me)\b.{0,20}\b(image|picture|visual|diagram|flowchart|chart|infographic|illustration|svg)\b/i.test(lower)
+            || /\b(image|picture|visual|diagram|flowchart|chart|infographic|illustration)\b.{0,20}\b(of|for|about|showing)\b/i.test(lower)
+    }
+
+    const detectImageStyle = (text: string): string => {
+        const lower = text.toLowerCase()
+        if (lower.includes("diagram") || lower.includes("flowchart") || lower.includes("flow chart")) return "diagram"
+        if (lower.includes("infographic")) return "infographic"
+        if (lower.includes("realistic") || lower.includes("photo")) return "photo-realistic"
+        if (lower.includes("illustration") || lower.includes("cartoon")) return "illustration"
+        return "academic"
+    }
+
     const askAgent = async () => {
         if (!agentQuestion.trim()) return
         setIsAgentLoading(true)
         setAgentResponse("")
         setAgentProvider("")
         setAgentDuration(0)
+        setChatImages([])
+
+        const wantsImage = isImageRequest(agentQuestion)
 
         try {
-            const res = await fetch("/api/chat", {
+            // If image request, generate image AND get text response in parallel
+            const imagePromise = wantsImage
+                ? fetch("/api/ai/generate-image", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        description: agentQuestion,
+                        style: detectImageStyle(agentQuestion),
+                    }),
+                }).then(r => r.ok ? r.json() : null).catch(() => null)
+                : Promise.resolve(null)
+
+            const chatPromise = fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -343,14 +418,22 @@ function CourseDesignStudioContent() {
                 }),
             })
 
-            const contentType = res.headers.get("content-type") || ""
+            const [imageResult, chatRes] = await Promise.all([imagePromise, chatPromise])
 
-            if (!res.ok) {
+            // Handle image result
+            if (imageResult?.image) {
+                setChatImages([imageResult.image])
+            }
+
+            // Handle chat response
+            const contentType = chatRes.headers.get("content-type") || ""
+
+            if (!chatRes.ok) {
                 if (contentType.includes("application/json")) {
-                    const errData = await res.json().catch(() => null)
-                    setAgentResponse(errData?.error || `Server error (${res.status}). Please try again.`)
+                    const errData = await chatRes.json().catch(() => null)
+                    setAgentResponse(errData?.error || `Server error (${chatRes.status}). Please try again.`)
                 } else {
-                    setAgentResponse(`Server error (${res.status}). Please try again.`)
+                    setAgentResponse(`Server error (${chatRes.status}). Please try again.`)
                 }
                 return
             }
@@ -360,7 +443,7 @@ function CourseDesignStudioContent() {
                 return
             }
 
-            const data = await res.json()
+            const data = await chatRes.json()
             setAgentResponse(data.content || data.message || "I can help you with course design!")
             setAgentProvider(data.provider || "")
             setAgentDuration(data.durationMs || 0)
@@ -471,6 +554,22 @@ function CourseDesignStudioContent() {
                                         {prompt}
                                     </button>
                                 ))}
+                                {/* Image generation prompts */}
+                                {[
+                                    "Create a diagram of Bloom's Taxonomy levels",
+                                    "Generate a flowchart for flipped classroom model",
+                                    "Design an infographic about active learning strategies",
+                                ].map((prompt) => (
+                                    <button
+                                        key={prompt}
+                                        type="button"
+                                        onClick={() => { setAgentQuestion(prompt); }}
+                                        className="flex items-center gap-1 rounded-full border border-pink-200 bg-pink-50 px-3 py-1.5 text-xs text-pink-700 transition-colors hover:border-pink-400 hover:bg-pink-100 dark:border-pink-800 dark:bg-pink-950/30 dark:text-pink-300 dark:hover:bg-pink-950/50"
+                                    >
+                                        <ImageIcon className="size-3" />
+                                        {prompt}
+                                    </button>
+                                ))}
                             </div>
                         )}
 
@@ -550,6 +649,63 @@ function CourseDesignStudioContent() {
                                     </div>
                                 </div>
 
+                                {/* AI Generated Images */}
+                                {chatImages.length > 0 && (
+                                    <div className="border-b border-purple-100 px-5 py-4 dark:border-purple-900">
+                                        <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-purple-800 dark:text-purple-300">
+                                            <Palette className="size-4" />
+                                            Generated Images
+                                        </h4>
+                                        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+                                            {chatImages.map((img, idx) => (
+                                                <div key={idx} className="group relative overflow-hidden rounded-xl border border-purple-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-purple-800 dark:bg-gray-900">
+                                                    <div
+                                                        className="flex cursor-pointer items-center justify-center bg-gray-50 p-4 dark:bg-gray-800"
+                                                        onClick={() => setLightboxImage({ src: img.svg, alt: img.altText || "Generated image", type: "svg" })}
+                                                        dangerouslySetInnerHTML={{ __html: img.svg }}
+                                                    />
+                                                    <div className="space-y-2 p-3">
+                                                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{img.altText}</p>
+                                                        {img.refinedPrompt && (
+                                                            <p className="text-xs italic text-gray-500 dark:text-gray-400">&ldquo;{img.refinedPrompt}&rdquo;</p>
+                                                        )}
+                                                        {img.palette && img.palette.length > 0 && (
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-xs text-gray-400">Palette:</span>
+                                                                {img.palette.map((color: string, ci: number) => (
+                                                                    <div key={ci} className="size-4 rounded-full border border-gray-200 dark:border-gray-700" style={{ backgroundColor: color }} title={color} />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                className="flex items-center gap-1 rounded-md bg-purple-100 px-2 py-1 text-xs text-purple-700 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800"
+                                                                onClick={() => setLightboxImage({ src: img.svg, alt: img.altText || "Generated image", type: "svg" })}
+                                                            >
+                                                                <ZoomIn className="size-3" /> View
+                                                            </button>
+                                                            <button
+                                                                className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                                                onClick={() => {
+                                                                    const blob = new Blob([img.svg], { type: "image/svg+xml" })
+                                                                    const url = URL.createObjectURL(blob)
+                                                                    const a = document.createElement("a")
+                                                                    a.href = url
+                                                                    a.download = `genie-image-${idx + 1}.svg`
+                                                                    a.click()
+                                                                    URL.revokeObjectURL(url)
+                                                                }}
+                                                            >
+                                                                <Download className="size-3" /> Download SVG
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Markdown Response Body */}
                                 <ScrollArea className="max-h-[600px]">
                                     <div className="px-5 py-4 text-[13px] leading-relaxed text-gray-800 dark:text-gray-200">
@@ -627,27 +783,7 @@ function CourseDesignStudioContent() {
                                                 td: ({ children }) => (
                                                     <td className="px-3 py-2 text-[12px]">{children}</td>
                                                 ),
-                                                img: ({ src, alt }) => (
-                                                    <figure className="my-4">
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img
-                                                            src={src || ""}
-                                                            alt={alt || ""}
-                                                            className="max-h-80 rounded-lg border border-gray-200 shadow-sm dark:border-gray-700"
-                                                            loading="lazy"
-                                                            onError={(e) => {
-                                                                const target = e.currentTarget
-                                                                // Replace broken image with a styled placeholder
-                                                                target.style.display = "none"
-                                                                const placeholder = document.createElement("div")
-                                                                placeholder.className = "flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-gray-600 dark:bg-gray-800"
-                                                                placeholder.innerHTML = `<div><svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">${alt || "Image unavailable"}</p></div>`
-                                                                target.parentElement?.insertBefore(placeholder, target)
-                                                            }}
-                                                        />
-                                                        {alt && <figcaption className="mt-1.5 text-center text-xs text-gray-500 dark:text-gray-400">{alt}</figcaption>}
-                                                    </figure>
-                                                ),
+                                                img: (props) => <ChatImage src={props.src} alt={props.alt} onZoom={(img) => setLightboxImage(img)} />,
                                                 a: ({ href, children }) => (
                                                     <a href={href} target="_blank" rel="noopener noreferrer" className="text-purple-600 underline decoration-purple-300 underline-offset-2 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300">
                                                         {children}
@@ -973,6 +1109,76 @@ function CourseDesignStudioContent() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            {/* Lightbox Modal */}
+            {lightboxImage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => { setLightboxImage(null); setLightboxZoom(1) }}>
+                    <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+                        {/* Controls */}
+                        <div className="absolute -top-12 right-0 flex items-center gap-2">
+                            <button
+                                className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                                onClick={() => setLightboxZoom((z) => Math.max(0.25, z - 0.25))}
+                                title="Zoom out"
+                            >
+                                <ZoomOut className="size-5" />
+                            </button>
+                            <span className="min-w-12 text-center text-sm text-white">{Math.round(lightboxZoom * 100)}%</span>
+                            <button
+                                className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                                onClick={() => setLightboxZoom((z) => Math.min(4, z + 0.25))}
+                                title="Zoom in"
+                            >
+                                <ZoomIn className="size-5" />
+                            </button>
+                            <button
+                                className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                                onClick={() => {
+                                    if (lightboxImage.type === "svg") {
+                                        const blob = new Blob([lightboxImage.src], { type: "image/svg+xml" })
+                                        const url = URL.createObjectURL(blob)
+                                        const a = document.createElement("a")
+                                        a.href = url
+                                        a.download = "genie-image.svg"
+                                        a.click()
+                                        URL.revokeObjectURL(url)
+                                    } else {
+                                        const a = document.createElement("a")
+                                        a.href = lightboxImage.src
+                                        a.download = "genie-image.png"
+                                        a.target = "_blank"
+                                        a.click()
+                                    }
+                                }}
+                                title="Download"
+                            >
+                                <Download className="size-5" />
+                            </button>
+                            <button
+                                className="rounded-lg bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                                onClick={() => { setLightboxImage(null); setLightboxZoom(1) }}
+                                title="Close"
+                            >
+                                <X className="size-5" />
+                            </button>
+                        </div>
+                        {/* Image */}
+                        <div className="overflow-auto rounded-lg bg-white p-2 shadow-2xl dark:bg-gray-900" style={{ maxHeight: "85vh", maxWidth: "85vw" }}>
+                            <div style={{ transform: `scale(${lightboxZoom})`, transformOrigin: "top left", transition: "transform 0.2s ease" }}>
+                                {lightboxImage.type === "svg" ? (
+                                    <div dangerouslySetInnerHTML={{ __html: lightboxImage.src }} />
+                                ) : (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                    <img src={lightboxImage.src} alt={lightboxImage.alt} className="max-w-none" />
+                                )}
+                            </div>
+                        </div>
+                        {lightboxImage.alt && (
+                            <p className="mt-2 text-center text-sm text-white/70">{lightboxImage.alt}</p>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
