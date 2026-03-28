@@ -185,7 +185,7 @@ function CourseDesignStudioContent() {
         } finally {
             setDesignLoading(false)
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveCourseId])
 
     const handleAnalyze = async () => {
