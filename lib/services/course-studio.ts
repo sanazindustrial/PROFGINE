@@ -39,6 +39,19 @@ interface SlideContent {
 }
 
 export class CourseStudioService {
+    /** Race a promise against a timeout; returns undefined on timeout */
+    private withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T | undefined> {
+        return Promise.race([
+            promise,
+            new Promise<undefined>((resolve) => {
+                setTimeout(() => {
+                    console.warn(`${label} timed out after ${ms}ms — skipping`)
+                    resolve(undefined)
+                }, ms)
+            }),
+        ])
+    }
+
     /**
      * Generate a complete presentation from sources
      */
@@ -48,15 +61,19 @@ export class CourseStudioService {
         // Step 1: Extract and analyze content from sources
         const extractedContent = await this.extractContent(sources)
 
-        // Step 1.5: NotebookLM-style research synthesis for deeper content
+        // Step 1.5: NotebookLM-style research synthesis (timeout 15s — optional enrichment)
         let enrichedContent = extractedContent
         try {
-            const research = await aiQualityService.researchSynthesize(
-                settings.title,
-                extractedContent.substring(0, 4000),
-                (settings.difficultyLevel as 'introductory' | 'intermediate' | 'advanced') || 'intermediate'
+            const research = await this.withTimeout(
+                aiQualityService.researchSynthesize(
+                    settings.title,
+                    extractedContent.substring(0, 4000),
+                    (settings.difficultyLevel as 'introductory' | 'intermediate' | 'advanced') || 'intermediate'
+                ),
+                15000,
+                'Research synthesis'
             )
-            if (research.synthesis) {
+            if (research?.synthesis) {
                 enrichedContent += `\n\n## Research Synthesis\n${research.synthesis}`
                 if (research.keyInsights.length > 0) {
                     enrichedContent += `\n\n### Key Insights\n${research.keyInsights.map(i => `- ${i}`).join('\n')}`
@@ -72,15 +89,19 @@ export class CourseStudioService {
         // Step 3: Generate slide content
         const slides = await this.generateSlides(outline, settings)
 
-        // Step 3.5: Gamma AI-style slide enhancement for quality
+        // Step 3.5: Gamma AI-style slide enhancement (timeout 20s — optional quality boost)
         let enhancedSlides: SlideContent[] = slides
         try {
-            const enhancement = await aiQualityService.enhanceSlides(
-                slides.map(s => ({ ...s, notes: s.notes || '' })),
-                settings.title,
-                settings.templateStyle || 'modern-minimalist'
+            const enhancement = await this.withTimeout(
+                aiQualityService.enhanceSlides(
+                    slides.map(s => ({ ...s, notes: s.notes || '' })),
+                    settings.title,
+                    settings.templateStyle || 'modern-minimalist'
+                ),
+                20000,
+                'Slide enhancement'
             )
-            if (enhancement.slides.length > 0 && enhancement.overallQuality >= 6) {
+            if (enhancement && enhancement.slides.length > 0 && enhancement.overallQuality >= 6) {
                 enhancedSlides = enhancement.slides.map(s => ({
                     slideNumber: s.slideNumber,
                     title: s.title,
@@ -93,21 +114,27 @@ export class CourseStudioService {
             console.error('Slide enhancement skipped:', error)
         }
 
-        // Step 3.7: Nano Banana - Generate AI images for slides
+        // Step 3.7: AI images for slides (timeout 20s — optional visuals)
         let slideImages: Map<number, string> = new Map()
         try {
-            const imageResults = await aiQualityService.generateSlideImages(
-                enhancedSlides.map(s => ({
-                    title: s.title,
-                    content: s.content,
-                    imageDescriptions: [],
-                })),
-                settings.title,
-                (settings.templateStyle?.includes('academic') ? 'academic' : 'infographic') as 'academic' | 'infographic'
+            const imageResults = await this.withTimeout(
+                aiQualityService.generateSlideImages(
+                    enhancedSlides.map(s => ({
+                        title: s.title,
+                        content: s.content,
+                        imageDescriptions: [],
+                    })),
+                    settings.title,
+                    (settings.templateStyle?.includes('academic') ? 'academic' : 'infographic') as 'academic' | 'infographic'
+                ),
+                20000,
+                'Slide image generation'
             )
-            for (const result of imageResults) {
-                if (result.images.length > 0 && result.images[0].svg) {
-                    slideImages.set(result.slideIndex, result.images[0].svg)
+            if (imageResults) {
+                for (const result of imageResults) {
+                    if (result.images.length > 0 && result.images[0].svg) {
+                        slideImages.set(result.slideIndex, result.images[0].svg)
+                    }
                 }
             }
         } catch (error) {
@@ -218,21 +245,34 @@ Format as JSON array with this structure:
 ]`
 
         try {
-            // Use streamChat which is available in MultiAIAdapter
-            const result = await multiAI.streamChat([
+            // Use streamChat with a 30s timeout to prevent hanging
+            const streamPromise = multiAI.streamChat([
                 { role: "system", content: "You are an expert educational content designer specializing in creating engaging lecture presentations." },
                 { role: "user", content: prompt },
             ])
+
+            const result = await this.withTimeout(streamPromise, 30000, 'Outline AI stream')
+            if (!result) {
+                console.warn('Outline generation timed out — using fallback')
+                return this.getFallbackOutline(settings.title, targetSlides)
+            }
 
             // Read the stream to get the text
             const reader = result.stream.getReader()
             const decoder = new TextDecoder()
             let fullText = ""
 
+            const readStart = Date.now()
             while (true) {
                 const { done, value } = await reader.read()
                 if (done) break
                 fullText += decoder.decode(value, { stream: true })
+                // Safety: abort reading if it's been too long (30s for reading)
+                if (Date.now() - readStart > 30000) {
+                    console.warn('Stream reading taking too long — using partial content')
+                    try { reader.cancel() } catch {}
+                    break
+                }
             }
 
             return fullText

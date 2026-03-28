@@ -43,6 +43,7 @@ export function CourseStudioDesign({
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
     const [isUploading, setIsUploading] = useState(false)
     const [outputType, setOutputType] = useState<"pptx" | "lecture-notes" | "both">("pptx")
+    const [progressMsg, setProgressMsg] = useState("")
 
     // Use appropriate header based on mode
     const displayTitle = isGeneralMode ? "General Presentation Studio" : headerTitle
@@ -59,6 +60,7 @@ export function CourseStudioDesign({
         setIsGenerating(true)
         setError("")
         setResult(null)
+        setProgressMsg("Preparing...")
 
         const finalTitle = includeSectionInTitle && sectionNumber
             ? `Week ${sectionNumber}: ${title.trim()}`
@@ -69,6 +71,7 @@ export function CourseStudioDesign({
             const uploadedFileUrls: string[] = []
             if (uploadedFiles.length > 0) {
                 setIsUploading(true)
+                setProgressMsg(`Uploading ${uploadedFiles.length} file(s)...`)
                 for (const file of uploadedFiles) {
                     const formData = new FormData()
                     formData.append("file", file)
@@ -90,6 +93,7 @@ export function CourseStudioDesign({
 
             // Generate lecture notes if requested
             if (outputType === "lecture-notes" || outputType === "both") {
+                setProgressMsg("Generating lecture notes with AI...")
                 const lectureResponse = await fetch("/api/course-studio/lecture-notes", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -147,6 +151,7 @@ export function CourseStudioDesign({
             }
 
             // Generate PowerPoint (for "pptx" or "both" modes)
+            setProgressMsg("Generating presentation slides with AI — this may take up to 2 minutes...")
             const response = await fetch("/api/course-studio/generate", {
                 method: "POST",
                 headers: {
@@ -492,7 +497,7 @@ export function CourseStudioDesign({
                         ) : isGenerating ? (
                             <>
                                 <Loader2 className="mr-2 size-4 animate-spin" />
-                                {outputType === "lecture-notes" ? "Generating Lecture Notes..." : outputType === "both" ? "Generating Slides & Notes..." : "Generating Presentation..."}
+                                {progressMsg || "Generating..."}
                             </>
                         ) : (
                             <>
