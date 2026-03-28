@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ["pptxgenjs"],
   async redirects() {
     return [{
       source: "/:path*",

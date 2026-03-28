@@ -7,8 +7,13 @@ export const runtime = "nodejs"
 
 export async function GET(req: NextRequest) {
     try {
-        const session = await requireSession()
-        if (!session) {
+        let session;
+        try {
+            session = await requireSession()
+        } catch {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 

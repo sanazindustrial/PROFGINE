@@ -115,10 +115,21 @@ export class CourseStudioService {
         }
 
         // Step 4: Create PowerPoint file
-        const pptxFile = await this.createPowerPoint(enhancedSlides, settings, slideImages)
+        let pptxFile: { url: string; pdfUrl: string; previewUrl: string }
+        try {
+            pptxFile = await this.createPowerPoint(enhancedSlides, settings, slideImages)
+        } catch (error) {
+            console.error('PowerPoint creation failed:', error)
+            throw new Error(`PowerPoint creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        }
 
         // Step 5: Save slides to database
-        await this.saveSlides(presentationId, enhancedSlides)
+        try {
+            await this.saveSlides(presentationId, enhancedSlides)
+        } catch (error) {
+            console.error('Saving slides to database failed:', error)
+            // Don't throw - the PPTX file was still created successfully
+        }
 
         return {
             slideCount: slides.length,

@@ -4,11 +4,17 @@ import { prisma } from "@/lib/prisma"
 import { CourseStudioService } from "@/lib/services/course-studio"
 
 export const runtime = "nodejs"
+export const maxDuration = 120 // Allow up to 2 minutes for AI generation
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireSession()
-    if (!session) {
+    let session;
+    try {
+      session = await requireSession()
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -68,30 +74,58 @@ export async function POST(req: NextRequest) {
     })
 
     // Store source files if provided
-    if (sources && Array.isArray(sources)) {
+    if (sources && Array.isArray(sources) && sources.length > 0) {
       for (const source of sources) {
-        await prisma.presentationSourceFile.create({
-          data: {
-            presentationId: presentation.id,
-            fileName: source.fileName,
-            fileType: source.fileType,
-            fileUrl: source.fileUrl,
-            fileSize: source.fileSize,
-            pages: source.pages,
-          },
-        })
+        // Handle both URL strings (from frontend file upload) and source objects
+        const isUrlString = typeof source === 'string'
+        const fileUrl = isUrlString ? source : source.fileUrl
+        if (!fileUrl) continue
+
+        const fileName = isUrlString
+          ? fileUrl.split('/').pop() || 'unknown'
+          : source.fileName || 'unknown'
+        const fileType = isUrlString
+          ? (fileUrl.split('.').pop() || 'unknown').toUpperCase()
+          : source.fileType || 'unknown'
+
+        try {
+          await prisma.presentationSourceFile.create({
+            data: {
+              presentationId: presentation.id,
+              fileName,
+              fileType,
+              fileUrl,
+              fileSize: isUrlString ? undefined : source.fileSize,
+              pages: isUrlString ? undefined : source.pages,
+            },
+          })
+        } catch (err) {
+          console.error('Failed to store source file record:', err)
+        }
       }
     }
 
     // Initialize Course Studio Service
     const studioService = new CourseStudioService()
 
+    // Normalize sources: convert URL strings to SourceFile objects
+    const normalizedSources = (sources || []).map((s: any) => {
+      if (typeof s === 'string') {
+        return {
+          fileName: s.split('/').pop() || 'file',
+          fileType: (s.split('.').pop() || '').toUpperCase(),
+          fileUrl: s,
+        }
+      }
+      return s
+    })
+
     // Generate presentation asynchronously
     // In production, this should be a background job
     try {
       const result = await studioService.generatePresentation({
         presentationId: presentation.id,
-        sources: sources || [],
+        sources: normalizedSources,
         settings: {
           ...settings,
           title,
@@ -139,7 +173,7 @@ export async function POST(req: NextRequest) {
       )
     }
   } catch (error) {
-    console.error("Course Studio generation error:", error)
+    console.error("Course Studio generation error:", error instanceof Error ? error.stack : error)
     return NextResponse.json(
       {
         error: "Internal server error",
