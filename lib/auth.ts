@@ -427,6 +427,14 @@ export const authOptions: NextAuthOptions = {
                             }
                         }
                     });
+
+                    // Also update the UserSubscription billing record to match
+                    await prisma.userSubscription.upsert({
+                        where: { userId: existingUser.id },
+                        create: { userId: existingUser.id, tier: "PREMIUM", status: "ACTIVE" },
+                        update: { tier: "PREMIUM", status: "ACTIVE" },
+                    });
+
                     console.log(`✅ Owner ${user.email} promoted to ADMIN with premium access`);
                 }
 

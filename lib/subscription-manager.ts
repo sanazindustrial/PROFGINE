@@ -98,7 +98,7 @@ export class SubscriptionManager {
    */
   hasFeature(feature: FeatureType): boolean {
     // Admins have access to all features
-    if (this.user.role === 'PROFESSOR') {
+    if (this.user.role === 'ADMIN') {
       return true;
     }
 
@@ -231,7 +231,7 @@ export class SubscriptionManager {
    */
   canCreateCourse(currentCourseCount: number): boolean {
     if (this.user.role === 'ADMIN') return true;
-    if (this.user.role === 'PROFESSOR') return false;
+    if (this.user.role === 'STUDENT') return false;
     if (!this.isSubscriptionActive()) return false;
 
     const features = this.getFeatures();
@@ -240,7 +240,7 @@ export class SubscriptionManager {
 
   canCreateAssignment(currentAssignmentCount: number): boolean {
     if (this.user.role === 'ADMIN') return true;
-    if (this.user.role === 'PROFESSOR') return false;
+    if (this.user.role === 'STUDENT') return false;
     if (!this.isSubscriptionActive()) return false;
 
     const features = this.getFeatures();
@@ -249,7 +249,7 @@ export class SubscriptionManager {
 
   canCreateDiscussion(currentDiscussionCount: number): boolean {
     if (this.user.role === 'ADMIN') return true;
-    if (this.user.role === 'PROFESSOR') return false;
+    if (this.user.role === 'STUDENT') return false;
     if (!this.isSubscriptionActive()) return false;
 
     const features = this.getFeatures();

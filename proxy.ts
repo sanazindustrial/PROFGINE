@@ -63,34 +63,19 @@ function getRoleDashboardPath(token: any) {
 }
 
 function handleSubscriptionRedirect(req: NextRequest, token: any) {
-  const subscriptionType = token?.subscriptionType || "FREE_TRIAL";
-
-  // Avoid loops: if already on destination, do nothing
+  const subscriptionType = token?.subscriptionType;
   const pathname = req.nextUrl.pathname;
 
-  // Trial logic
-  if (subscriptionType === "FREE_TRIAL") {
-    const trialExpired =
-      token?.trialExpiresAt && new Date() > new Date(token.trialExpiresAt);
-
-    if (trialExpired) {
-      if (pathname === "/subscription/upgrade") return NextResponse.next();
-      return NextResponse.redirect(new URL("/subscription/upgrade", req.url));
-    }
-
-    if (pathname === "/trial-dashboard") return NextResponse.next();
-    return NextResponse.redirect(new URL("/trial-dashboard", req.url));
-  }
-
-  // Paid users
+  // Paid users (both legacy SubscriptionType and new SubscriptionTier)
   if (["BASIC", "PREMIUM", "ENTERPRISE"].includes(subscriptionType)) {
     if (pathname === "/dashboard") return NextResponse.next();
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Default
-  if (pathname === "/trial-dashboard") return NextResponse.next();
-  return NextResponse.redirect(new URL("/trial-dashboard", req.url));
+  // FREE or FREE_TRIAL users — let them through to /dashboard too
+  // The actual pages handle billing/access checks via getBillingContext
+  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return NextResponse.next();
+  return NextResponse.redirect(new URL("/dashboard", req.url));
 }
 
 function handleDashboardRedirect(req: NextRequest, token: any) {

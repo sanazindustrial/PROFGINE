@@ -5,6 +5,7 @@ import { prisma } from '@/prisma/client';
 import CourseManagement from '@/components/course-management';
 import { UserRole } from '@prisma/client';
 import { SubscriptionManager, FeatureType } from '@/lib/subscription-manager';
+import { getBillingContext } from '@/lib/access/getBillingContext';
 
 export default async function CoursesPage() {
   const session = await getServerSession(authOptions);
@@ -45,12 +46,19 @@ export default async function CoursesPage() {
     redirect('/auth/signin');
   }
 
-  // Create subscription manager (using defaults since we don't have subscription fields in current schema)
+  // Create subscription manager using actual billing context
+  const billingContext = await getBillingContext();
+  const actualSubscriptionType = billingContext.tier === 'FREE_TRIAL' ? 'FREE' as const
+    : billingContext.tier === 'BASIC' ? 'BASIC' as const
+      : billingContext.tier === 'PREMIUM' ? 'PREMIUM' as const
+        : billingContext.tier === 'ENTERPRISE' ? 'PREMIUM' as const
+          : 'FREE' as const;
+
   const subscriptionManager = new SubscriptionManager({
     userId: userWithDetails.id,
     role: userWithDetails.role,
-    subscriptionType: 'PREMIUM', // Simulated - you can add to schema later
-    subscriptionExpiresAt: null,
+    subscriptionType: actualSubscriptionType,
+    subscriptionExpiresAt: billingContext.currentPeriodEnd,
     trialExpiresAt: null
   });
 
@@ -177,7 +185,7 @@ export default async function CoursesPage() {
       canUseApiAccess: subscriptionManager.hasFeature(FeatureType.API_ACCESS),
       coursesUsed: courses.length,
       courseLimit: features.maxCourses,
-      subscriptionType: 'PREMIUM', // Simulated
+      subscriptionType: actualSubscriptionType,
       upgradeMessages: {
         courseCreation: subscriptionManager.hasFeature(FeatureType.COURSE_CREATION) ? null : subscriptionManager.getUpgradeMessage('courses'),
         assignments: subscriptionManager.hasFeature(FeatureType.ASSIGNMENT_CREATION) ? null : subscriptionManager.getUpgradeMessage('assignments'),

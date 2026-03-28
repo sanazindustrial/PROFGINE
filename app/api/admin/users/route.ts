@@ -80,6 +80,23 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        // Create billing records (UserSubscription + UserUsageCounter)
+        const billingTier = subType === SubscriptionType.PREMIUM ? "PREMIUM" :
+            subType === SubscriptionType.BASIC ? "BASIC" : "FREE_TRIAL";
+        const billingStatus = billingTier === "FREE_TRIAL" ? "TRIALING" : "ACTIVE";
+
+        await prisma.userSubscription.upsert({
+            where: { userId: newUser.id },
+            create: { userId: newUser.id, tier: billingTier as any, status: billingStatus as any },
+            update: {},
+        });
+
+        await prisma.userUsageCounter.upsert({
+            where: { userId: newUser.id },
+            create: { userId: newUser.id },
+            update: {},
+        });
+
         console.log(`✅ User created manually by ${adminUser.id}: ${newUser.email} (${newUser.role}${newUser.isOwner ? ", OWNER" : ""})`);
 
         return NextResponse.json({

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/prisma/client';
 import { UserRole } from '@prisma/client';
 import { createSubscriptionManager } from '@/lib/enhanced-subscription-manager';
+import { getBillingContext } from '@/lib/access/getBillingContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,22 +46,37 @@ export default async function ModuleRegistrationPage() {
     });
   }
 
-  // Get current usage statistics (simulated)
-  const currentUsage = {
-    students: 12,
-    courses: 3,
-    assignments: 15,
-    storageUsedMB: 256,
-    aiGradingRequestsThisMonth: 5,
-    reportsGeneratedThisMonth: 2
+  // Get current usage statistics from billing context
+  const billingContext = await getBillingContext();
+  const currentUsage = billingContext.usage ? {
+    students: ('studentsCount' in billingContext.usage) ? billingContext.usage.studentsCount || 0 : 0,
+    courses: billingContext.usage.coursesCount || 0,
+    assignments: billingContext.usage.assignmentsCount || 0,
+    storageUsedMB: 0,
+    aiGradingRequestsThisMonth: billingContext.usage.aiGradesCount || 0,
+    reportsGeneratedThisMonth: 0
+  } : {
+    students: 0,
+    courses: 0,
+    assignments: 0,
+    storageUsedMB: 0,
+    aiGradingRequestsThisMonth: 0,
+    reportsGeneratedThisMonth: 0
   };
 
-  // Create subscription manager
+  // Map billing tier to subscription type
+  const actualSubscriptionType = billingContext.tier === 'FREE_TRIAL' ? 'FREE' as const
+    : billingContext.tier === 'BASIC' ? 'BASIC' as const
+      : billingContext.tier === 'PREMIUM' ? 'PREMIUM' as const
+        : billingContext.tier === 'ENTERPRISE' ? 'PREMIUM' as const
+          : 'FREE' as const;
+
+  // Create subscription manager with actual data
   const subscriptionManager = createSubscriptionManager({
     userId: user.id,
     role: user.role,
-    subscriptionType: 'PREMIUM', // Simulated
-    subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    subscriptionType: actualSubscriptionType,
+    subscriptionExpiresAt: billingContext.currentPeriodEnd,
     trialExpiresAt: null,
     currentUsage
   });
@@ -146,15 +162,15 @@ export default async function ModuleRegistrationPage() {
               <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
                   className={`h-2 rounded-full bg-blue-600 transition-all duration-300 ${(usageSummary.students.percentage ?? 0) >= 100 ? 'w-full' :
-                      (usageSummary.students.percentage ?? 0) >= 90 ? 'w-[90%]' :
-                        (usageSummary.students.percentage ?? 0) >= 80 ? 'w-4/5' :
-                          (usageSummary.students.percentage ?? 0) >= 75 ? 'w-3/4' :
-                            (usageSummary.students.percentage ?? 0) >= 66 ? 'w-2/3' :
-                              (usageSummary.students.percentage ?? 0) >= 50 ? 'w-1/2' :
-                                (usageSummary.students.percentage ?? 0) >= 33 ? 'w-1/3' :
-                                  (usageSummary.students.percentage ?? 0) >= 25 ? 'w-1/4' :
-                                    (usageSummary.students.percentage ?? 0) >= 20 ? 'w-1/5' :
-                                      (usageSummary.students.percentage ?? 0) >= 10 ? 'w-[10%]' : 'w-0'
+                    (usageSummary.students.percentage ?? 0) >= 90 ? 'w-[90%]' :
+                      (usageSummary.students.percentage ?? 0) >= 80 ? 'w-4/5' :
+                        (usageSummary.students.percentage ?? 0) >= 75 ? 'w-3/4' :
+                          (usageSummary.students.percentage ?? 0) >= 66 ? 'w-2/3' :
+                            (usageSummary.students.percentage ?? 0) >= 50 ? 'w-1/2' :
+                              (usageSummary.students.percentage ?? 0) >= 33 ? 'w-1/3' :
+                                (usageSummary.students.percentage ?? 0) >= 25 ? 'w-1/4' :
+                                  (usageSummary.students.percentage ?? 0) >= 20 ? 'w-1/5' :
+                                    (usageSummary.students.percentage ?? 0) >= 10 ? 'w-[10%]' : 'w-0'
                     }`}
                 ></div>
               </div>
