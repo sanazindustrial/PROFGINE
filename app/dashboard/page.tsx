@@ -220,6 +220,12 @@ export default async function DashboardPage() {
                                         Discussions
                                     </Link>
                                 </Button>
+                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
+                                    <Link href="/dashboard/credits">
+                                        <CreditCard className="mr-2 size-4" />
+                                        Credits & Usage
+                                    </Link>
+                                </Button>
                             </CardContent>
                         </Card>
                     </div>

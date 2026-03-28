@@ -96,7 +96,7 @@ export default function CourseManagement({ user, courses }: CourseManagementProp
                                 : `View your enrolled courses`}
                     </p>
                 </div>
-                {user.role === UserRole.PROFESSOR && user.subscriptionContext?.canCreateCourse ? (
+                {(user.role === UserRole.ADMIN || user.subscriptionContext?.canCreateCourse) ? (
                     <Button asChild>
                         <Link href="/dashboard/courses/new">
                             <Plus className="size-4" />
@@ -238,36 +238,36 @@ export default function CourseManagement({ user, courses }: CourseManagementProp
                         <BookOpen className="mx-auto mb-4 size-16 text-muted-foreground" />
                         <h3 className="mb-2 text-lg font-medium">No courses yet</h3>
                         <p className="mb-4 text-muted-foreground">
-                            {user.role === UserRole.PROFESSOR
-                                ? 'Create your first course to get started'
-                                : 'No courses available at the moment'}
+                            {user.role === UserRole.ADMIN
+                                ? 'Create a course or manage existing courses'
+                                : user.role === UserRole.PROFESSOR
+                                    ? 'Create your first course to get started'
+                                    : 'No courses available at the moment'}
                         </p>
 
-                        {user.role === UserRole.PROFESSOR && (
-                            <div className="space-y-4">
-                                {user.subscriptionContext?.canCreateCourse ? (
-                                    <Link href="/dashboard/courses/new">
-                                        <Button>
-                                            <Plus className="mr-2 size-4" />
-                                            Create Your First Course
-                                        </Button>
-                                    </Link>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <Button disabled>
-                                            <Plus className="mr-2 size-4" />
-                                            Create Course
-                                        </Button>
-                                        <p className="text-sm text-muted-foreground">
-                                            {subscriptionContext?.upgradeMessages?.courseCreation || 'Upgrade to create more courses'}
-                                        </p>
-                                        <Link href="/subscription/upgrade">
-                                            <Button variant="outline" size="sm">
-                                                Upgrade Now
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                )}
+                        {(user.role === UserRole.ADMIN || (user.role === UserRole.PROFESSOR && user.subscriptionContext?.canCreateCourse)) && (
+                            <Link href="/dashboard/courses/new">
+                                <Button>
+                                    <Plus className="mr-2 size-4" />
+                                    Create Your First Course
+                                </Button>
+                            </Link>
+                        )}
+
+                        {user.role === UserRole.PROFESSOR && !user.subscriptionContext?.canCreateCourse && (
+                            <div className="space-y-2">
+                                <Button disabled>
+                                    <Plus className="mr-2 size-4" />
+                                    Create Course
+                                </Button>
+                                <p className="text-sm text-muted-foreground">
+                                    {subscriptionContext?.upgradeMessages?.courseCreation || 'Upgrade to create more courses'}
+                                </p>
+                                <Link href="/subscription/upgrade">
+                                    <Button variant="outline" size="sm">
+                                        Upgrade Now
+                                    </Button>
+                                </Link>
                             </div>
                         )}
                     </div>

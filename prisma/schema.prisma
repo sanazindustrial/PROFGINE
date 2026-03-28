@@ -507,7 +507,22 @@ model UserUsageCounter {
   assignmentsCount     Int      @default(0)
   aiGradesCount        Int      @default(0)
   plagiarismScansCount Int      @default(0)
+  creditsUsed          Int      @default(0)
+  creditsRemaining     Int      @default(50)
+  creditResetAt        DateTime?
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Admin-configurable per-feature credit costs
+model FeatureCost {
+  id          String      @id @default(cuid())
+  featureType FeatureType @unique
+  creditCost  Int         @default(1)
+  displayName String
+  description String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model Invitation {
@@ -1142,6 +1157,10 @@ enum FeatureType {
   PLAGIARISM_DETECTION
   PROFESSOR_STYLE_LEARNING
   ORGANIZATION_MANAGEMENT
+  CREDIT_SYSTEM
+  CUSTOM_PROMPTS
+  PRESENTATION_GENERATION
+  COURSE_DESIGN
 }
 
 enum UserRole {
@@ -1230,6 +1249,7 @@ enum CreditType {
   ROLLOVER
   BONUS
   REFUND
+  MONTHLY_ALLOCATION
 }
 
 enum PresentationSource {

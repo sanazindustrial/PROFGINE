@@ -171,25 +171,26 @@ export default async function CoursesPage() {
     }
   }));
 
-  // Prepare subscription context for professors
-  const subscriptionContext = userWithDetails.role === UserRole.PROFESSOR ? (() => {
+  // Prepare subscription context for all non-student roles
+  const subscriptionContext = userWithDetails.role !== UserRole.STUDENT ? (() => {
+    const isAdmin = userWithDetails.role === UserRole.ADMIN;
     const features = subscriptionManager.getFeatures();
     return {
-      canCreateCourse: subscriptionManager.hasFeature(FeatureType.COURSE_CREATION),
-      canCreateAssignment: subscriptionManager.hasFeature(FeatureType.ASSIGNMENT_CREATION),
-      canCreateDiscussion: subscriptionManager.hasFeature(FeatureType.DISCUSSION_CREATION),
-      canUseCustomRubrics: subscriptionManager.hasFeature(FeatureType.CUSTOM_RUBRICS),
-      canUseAiGrading: subscriptionManager.hasFeature(FeatureType.AI_GRADING),
-      canAccessAnalytics: subscriptionManager.hasFeature(FeatureType.ADVANCED_ANALYTICS),
-      canUseBulkOperations: subscriptionManager.hasFeature(FeatureType.BULK_OPERATIONS),
-      canUseApiAccess: subscriptionManager.hasFeature(FeatureType.API_ACCESS),
+      canCreateCourse: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.COURSE_CREATION),
+      canCreateAssignment: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.ASSIGNMENT_CREATION),
+      canCreateDiscussion: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.DISCUSSION_CREATION),
+      canUseCustomRubrics: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.CUSTOM_RUBRICS),
+      canUseAiGrading: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.AI_GRADING),
+      canAccessAnalytics: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.ADVANCED_ANALYTICS),
+      canUseBulkOperations: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.BULK_OPERATIONS),
+      canUseApiAccess: isAdmin ? true : subscriptionManager.hasFeature(FeatureType.API_ACCESS),
       coursesUsed: courses.length,
-      courseLimit: features.maxCourses,
-      subscriptionType: actualSubscriptionType,
+      courseLimit: isAdmin ? -1 : features.maxCourses,
+      subscriptionType: isAdmin ? 'PREMIUM' : actualSubscriptionType,
       upgradeMessages: {
-        courseCreation: subscriptionManager.hasFeature(FeatureType.COURSE_CREATION) ? null : subscriptionManager.getUpgradeMessage('courses'),
-        assignments: subscriptionManager.hasFeature(FeatureType.ASSIGNMENT_CREATION) ? null : subscriptionManager.getUpgradeMessage('assignments'),
-        discussions: subscriptionManager.hasFeature(FeatureType.DISCUSSION_CREATION) ? null : subscriptionManager.getUpgradeMessage('discussions'),
+        courseCreation: null,
+        assignments: null,
+        discussions: null,
       }
     };
   })() : null;
