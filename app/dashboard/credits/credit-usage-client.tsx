@@ -300,7 +300,7 @@ export default function CreditUsageClient({
                         )}
                     </Badge>
                     {isAdmin && (
-                        <Link href="/api/admin/feature-costs" target="_blank">
+                        <Link href="/admin/feature-costs">
                             <Badge variant="outline" className="cursor-pointer text-sm hover:bg-muted">
                                 Admin Costs
                             </Badge>
@@ -312,8 +312,8 @@ export default function CreditUsageClient({
             {/* Credit Alert Banner */}
             {!isUnlimited && usagePercent >= 75 && (
                 <div className={`flex items-center gap-3 rounded-lg border p-4 ${usagePercent >= 90
-                        ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
-                        : 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30'
+                    ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
+                    : 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30'
                     }`}>
                     <AlertTriangle className={`size-5 shrink-0 ${usagePercent >= 90 ? 'text-red-600' : 'text-orange-600'}`} />
                     <div className="flex-1">
@@ -400,8 +400,8 @@ export default function CreditUsageClient({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeTab === tab.id
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             <Icon className="size-4" />
@@ -665,8 +665,8 @@ export default function CreditUsageClient({
                                     <div
                                         key={pkg.amount}
                                         className={`relative flex flex-col items-center rounded-xl border-2 p-6 transition-all hover:shadow-md ${pkg.popular
-                                                ? 'border-primary bg-primary/5'
-                                                : 'border-border hover:border-primary/50'
+                                            ? 'border-primary bg-primary/5'
+                                            : 'border-border hover:border-primary/50'
                                             }`}
                                     >
                                         {pkg.popular && (
@@ -683,10 +683,10 @@ export default function CreditUsageClient({
                                             onClick={() => handleBuyCredits(pkg.amount)}
                                             disabled={buyingPackage !== null || isUnlimited}
                                             className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${isUnlimited
-                                                    ? 'cursor-not-allowed bg-muted text-muted-foreground'
-                                                    : pkg.popular
-                                                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                                                ? 'cursor-not-allowed bg-muted text-muted-foreground'
+                                                : pkg.popular
+                                                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                                                 }`}
                                         >
                                             {buyingPackage === pkg.amount ? 'Processing...' : isUnlimited ? 'Not Needed' : 'Purchase'}
@@ -741,10 +741,10 @@ export default function CreditUsageClient({
                                     <div
                                         key={i}
                                         className={`flex items-start gap-3 rounded-lg border p-4 ${notif.severity === 'critical'
-                                                ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
-                                                : notif.severity === 'warning'
-                                                    ? 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30'
-                                                    : 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30'
+                                            ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
+                                            : notif.severity === 'warning'
+                                                ? 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30'
+                                                : 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30'
                                             }`}
                                     >
                                         <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${notif.severity === 'critical' ? 'text-red-600' : notif.severity === 'warning' ? 'text-orange-600' : 'text-blue-600'
