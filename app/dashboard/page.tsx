@@ -4,21 +4,6 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import PersonalizedWelcome from '@/components/personalized-welcome';
 import { getBillingContext } from '@/lib/access/getBillingContext';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-    BookOpen,
-    FileText,
-    MessageCircle,
-    Users,
-    GraduationCap,
-    Crown,
-    Settings,
-    CreditCard,
-    Monitor
-} from 'lucide-react';
 
 export default async function DashboardPage() {
     const session = await getServerSession(authOptions);
@@ -27,10 +12,8 @@ export default async function DashboardPage() {
         redirect('/auth/signin');
     }
 
-    // Get current billing context using the multi-tenant system
     const billingContext = await getBillingContext();
 
-    // Get user with detailed relations
     const userWithData = await prisma.user.findUnique({
         where: { id: session.user.id },
         include: {
@@ -50,9 +33,7 @@ export default async function DashboardPage() {
                     course: {
                         include: {
                             instructor: {
-                                select: {
-                                    name: true
-                                }
+                                select: { name: true }
                             },
                             _count: {
                                 select: {
@@ -68,17 +49,11 @@ export default async function DashboardPage() {
                 include: {
                     assignment: {
                         include: {
-                            course: {
-                                select: {
-                                    title: true
-                                }
-                            }
+                            course: { select: { title: true } }
                         }
                     }
                 },
-                orderBy: {
-                    submittedAt: 'desc'
-                },
+                orderBy: { submittedAt: 'desc' },
                 take: 5
             }
         }
@@ -90,155 +65,29 @@ export default async function DashboardPage() {
 
     const stats = {
         totalCourses: userWithData.courses.length,
-        totalStudents: userWithData.courses.reduce((total, course) => total + course._count.enrollments, 0),
-        totalAssignments: userWithData.courses.reduce((total, course) => total + course._count.assignments, 0),
-        totalDiscussions: userWithData.courses.reduce((total, course) => total + course._count.discussions, 0),
+        totalStudents: userWithData.courses.reduce((t, c) => t + c._count.enrollments, 0),
+        totalAssignments: userWithData.courses.reduce((t, c) => t + c._count.assignments, 0),
+        totalDiscussions: userWithData.courses.reduce((t, c) => t + c._count.discussions, 0),
         totalSubmissions: userWithData.submissions.length,
-        totalGradedItems: userWithData.submissions.length, // Using submissions as proxy
-        totalRubrics: 0, // Default value
-        recentActivity: [], // Empty array for recent activity
+        totalGradedItems: userWithData.submissions.length,
+        totalRubrics: 0,
+        recentActivity: [],
     };
 
-    // Get current usage for this billing context
     const currentUsage = billingContext.usage ? {
         students: ('studentsCount' in billingContext.usage) ? billingContext.usage.studentsCount || 0 : 0,
         courses: billingContext.usage.coursesCount,
         assignments: billingContext.usage.assignmentsCount,
         aiGrades: billingContext.usage.aiGradesCount,
-        plagiarismScans: billingContext.usage.plagiarismScansCount,
-    } : {
-        students: 0,
-        courses: 0,
-        assignments: 0,
-        aiGrades: 0,
-        plagiarismScans: 0,
-    };
+    } : { students: 0, courses: 0, assignments: 0, aiGrades: 0 };
 
     return (
-        <div className="container mx-auto py-6 sm:py-8 lg:py-10">
-            <div className="grid gap-6 lg:grid-cols-4 lg:gap-8">
-                {/* Subscription Sidebar */}
-                <div className="lg:col-span-1">
-                    <div className="sticky top-6 space-y-5">
-                        {/* Current Plan Card */}
-                        <Card className="border-2 transition-shadow duration-200 hover:shadow-md">
-                            <CardHeader className="pb-4">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-lg font-semibold">Current Plan</CardTitle>
-                                    <Crown className="size-5 text-yellow-600" />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <Badge
-                                        variant={billingContext.tier === 'FREE_TRIAL' ? 'secondary' : 'default'}
-                                        className="text-sm font-medium"
-                                    >
-                                        {billingContext.tier}
-                                    </Badge>
-                                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                                        {billingContext.ownerType === 'ORG' ? 'Organization Plan' : 'Personal Plan'}
-                                    </p>
-                                </div>
-
-                                <div className="space-y-3 text-sm">
-                                    <div className="flex justify-between py-1">
-                                        <span className="text-muted-foreground">Courses</span>
-                                        <span className="font-medium">
-                                            {currentUsage.courses}
-                                            {billingContext.tier === 'FREE_TRIAL' && ' / 2'}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between py-1">
-                                        <span className="text-muted-foreground">AI Grades</span>
-                                        <span className="font-medium">
-                                            {currentUsage.aiGrades}
-                                            {billingContext.tier === 'FREE_TRIAL' && ' / 10'}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between py-1">
-                                        <span className="text-muted-foreground">Students</span>
-                                        <span className="font-medium">
-                                            {currentUsage.students}
-                                            {billingContext.tier === 'FREE_TRIAL' && ' / 10'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2.5 pt-3">
-                                    <Button asChild size="sm" className="w-full">
-                                        <Link href="/dashboard/billing">
-                                            <CreditCard className="mr-2 size-4" />
-                                            Manage Billing
-                                        </Link>
-                                    </Button>
-
-                                    {billingContext.tier === 'FREE_TRIAL' && (
-                                        <Button asChild variant="outline" size="sm" className="w-full">
-                                            <Link href="/dashboard/billing">
-                                                Upgrade Plan
-                                            </Link>
-                                        </Button>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Quick Actions */}
-                        <Card className="transition-shadow duration-200 hover:shadow-md">
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2.5">
-                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                                    <Link href="/dashboard/courses/new">
-                                        <BookOpen className="mr-2 size-4" />
-                                        New Course
-                                    </Link>
-                                </Button>
-                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                                    <Link href="/dashboard/courses">
-                                        <Monitor className="mr-2 size-4" />
-                                        Course Studio
-                                    </Link>
-                                </Button>
-                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                                    <Link href="/dashboard/assignments">
-                                        <FileText className="mr-2 size-4" />
-                                        Assignments
-                                    </Link>
-                                </Button>
-                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                                    <Link href="/grade">
-                                        <GraduationCap className="mr-2 size-4" />
-                                        AI Grading
-                                    </Link>
-                                </Button>
-                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                                    <Link href="/discussion">
-                                        <MessageCircle className="mr-2 size-4" />
-                                        Discussions
-                                    </Link>
-                                </Button>
-                                <Button asChild variant="outline" size="sm" className="w-full justify-start">
-                                    <Link href="/dashboard/credits">
-                                        <CreditCard className="mr-2 size-4" />
-                                        Credits & Usage
-                                    </Link>
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-
-                {/* Main Dashboard Content */}
-                <div className="lg:col-span-3">
-                    <PersonalizedWelcome
-                        user={userWithData as any}
-                        stats={stats}
-                    />
-                </div>
-            </div>
-        </div>
+        <PersonalizedWelcome
+            user={userWithData as any}
+            stats={stats}
+            billingTier={billingContext.tier}
+            billingOwnerType={billingContext.ownerType}
+            currentUsage={currentUsage}
+        />
     );
 }

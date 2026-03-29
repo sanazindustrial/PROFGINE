@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
@@ -39,6 +39,22 @@ interface TopNavProps {
 export function TopNav({ user }: TopNavProps) {
     const pathname = usePathname()
     const [isSearchOpen, setIsSearchOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
+
+    useEffect(() => {
+        const fetchUnread = async () => {
+            try {
+                const res = await fetch('/api/notifications/unread-count')
+                if (res.ok) {
+                    const data = await res.json()
+                    setUnreadCount(data.count || 0)
+                }
+            } catch {}
+        }
+        fetchUnread()
+        const interval = setInterval(fetchUnread, 30000) // poll every 30s
+        return () => clearInterval(interval)
+    }, [])
 
     const getInitials = (name: string | null | undefined) => {
         if (!name) return "U"
@@ -122,10 +138,16 @@ export function TopNav({ user }: TopNavProps) {
                     </Button>
 
                     {/* Notifications */}
-                    <Button variant="ghost" size="icon" className="relative">
-                        <Bell className="size-5" />
-                        <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500" />
-                    </Button>
+                    <Link href="/dashboard/notifications">
+                        <Button variant="ghost" size="icon" className="relative">
+                            <Bell className="size-5" />
+                            {unreadCount > 0 && (
+                                <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
+                        </Button>
+                    </Link>
 
                     {/* User Menu */}
                     <DropdownMenu>

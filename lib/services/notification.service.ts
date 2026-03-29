@@ -724,16 +724,28 @@ class NotificationService {
      */
     async getUserNotifications(userId: string, limit = 20): Promise<any[]> {
         try {
-            const response = await fetch(
-                `${this.jsonServerUrl}/notifications?userId=${userId}&_sort=createdAt&_order=desc&_limit=${limit}`
-            )
-            if (response.ok) {
-                return await response.json()
-            }
-        } catch {
-            // JSON Server not available
+            return await prisma.notification.findMany({
+                where: { userId },
+                orderBy: { createdAt: 'desc' },
+                take: limit,
+            })
+        } catch (error) {
+            console.error('[Notification] DB fetch failed:', error)
+            return []
         }
-        return []
+    }
+
+    /**
+     * Get unread count for a user
+     */
+    async getUnreadCount(userId: string): Promise<number> {
+        try {
+            return await prisma.notification.count({
+                where: { userId, isRead: false },
+            })
+        } catch {
+            return 0
+        }
     }
 
     /**
@@ -741,14 +753,30 @@ class NotificationService {
      */
     async markAsRead(notificationId: string): Promise<boolean> {
         try {
-            const response = await fetch(`${this.jsonServerUrl}/notifications/${notificationId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ read: true, readAt: new Date().toISOString() })
+            await prisma.notification.update({
+                where: { id: notificationId },
+                data: { isRead: true },
             })
-            return response.ok
-        } catch {
+            return true
+        } catch (error) {
+            console.error('[Notification] Mark as read failed:', error)
             return false
+        }
+    }
+
+    /**
+     * Mark all notifications as read for a user
+     */
+    async markAllAsRead(userId: string): Promise<number> {
+        try {
+            const result = await prisma.notification.updateMany({
+                where: { userId, isRead: false },
+                data: { isRead: true },
+            })
+            return result.count
+        } catch (error) {
+            console.error('[Notification] Mark all as read failed:', error)
+            return 0
         }
     }
 

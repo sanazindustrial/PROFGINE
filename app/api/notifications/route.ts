@@ -101,7 +101,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { notificationId } = body
+    const { notificationId, markAllRead } = body
+
+    // Mark all as read
+    if (markAllRead) {
+        const count = await notificationService.markAllAsRead(session.user.id)
+        return NextResponse.json({ success: true, markedCount: count })
+    }
 
     if (!notificationId) {
         return NextResponse.json(
