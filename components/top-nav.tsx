@@ -23,7 +23,8 @@ import {
     Shield,
     Menu,
     Bell,
-    Search
+    Search,
+    Coins
 } from "lucide-react"
 
 interface TopNavProps {
@@ -110,6 +111,15 @@ export function TopNav({ user }: TopNavProps) {
                                 Studio
                             </Button>
                         </Link>
+                        <Link href="/dashboard/credits">
+                            <Button
+                                variant={pathname === "/dashboard/credits" ? "secondary" : "ghost"}
+                                size="sm"
+                            >
+                                <Coins className="mr-1 size-4" />
+                                Credits
+                            </Button>
+                        </Link>
                         {isAdmin && (
                             <Link href={adminDestination}>
                                 <Button
@@ -184,6 +194,12 @@ export function TopNav({ user }: TopNavProps) {
                                 <Link href="/dashboard/billing" className="cursor-pointer">
                                     <CreditCard className="mr-2 size-4" />
                                     <span>Billing</span>
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link href="/dashboard/credits" className="cursor-pointer">
+                                    <Coins className="mr-2 size-4" />
+                                    <span>Credits & Features</span>
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>

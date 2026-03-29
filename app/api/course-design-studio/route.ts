@@ -21,6 +21,16 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
+        // Resolve DB user by email for consistent ID
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email! },
+            select: { id: true },
+        })
+        if (!dbUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+        const userId = dbUser.id
+
         const { searchParams } = new URL(req.url)
         const courseId = searchParams.get("courseId")
         const action = searchParams.get("action")
@@ -33,7 +43,7 @@ export async function GET(req: NextRequest) {
         const course = await prisma.course.findFirst({
             where: {
                 id: courseId,
-                instructorId: session.user.id,
+                instructorId: userId,
             },
         })
 
@@ -136,6 +146,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
+        // Resolve DB user by email for consistent ID
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email! },
+            select: { id: true },
+        })
+        if (!dbUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+        const userId = dbUser.id
+
         const body = await req.json()
         const { action, courseId, ...data } = body
 
@@ -147,7 +167,7 @@ export async function POST(req: NextRequest) {
         const course = await prisma.course.findFirst({
             where: {
                 id: courseId,
-                instructorId: session.user.id,
+                instructorId: userId,
             },
         })
 
@@ -161,7 +181,7 @@ export async function POST(req: NextRequest) {
                 const initialized = await courseDesignStudioService.initializeCourseDesign(
                     courseId,
                     data.details || {},
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: initialized })
 
@@ -169,7 +189,7 @@ export async function POST(req: NextRequest) {
             case "bulk-import":
                 const importResult = await courseDesignStudioService.bulkImportCourses(
                     data.importData,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: importResult })
 
@@ -184,7 +204,7 @@ export async function POST(req: NextRequest) {
                 const evidence = await courseDesignStudioService.addEvidenceItem(
                     design.id,
                     data.item,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: evidence })
 
@@ -198,7 +218,7 @@ export async function POST(req: NextRequest) {
                 }
                 const analysis = await courseDesignStudioService.analyzeContent(
                     analyzeDesign.id,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: analysis })
 
@@ -212,7 +232,7 @@ export async function POST(req: NextRequest) {
                 }
                 const objectives = await courseDesignStudioService.generateObjectives(
                     objDesign.id,
-                    session.user.id,
+                    userId,
                     data.options
                 )
                 return NextResponse.json({ success: true, data: objectives })
@@ -228,7 +248,7 @@ export async function POST(req: NextRequest) {
                 }
                 const curriculum = await courseDesignStudioService.suggestCurriculum(
                     curDesign.id,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: curriculum })
 
@@ -236,7 +256,7 @@ export async function POST(req: NextRequest) {
             case "generate-lecture":
                 const lectureNotes = await courseDesignStudioService.generateLectureNotes(
                     data.sectionId,
-                    session.user.id,
+                    userId,
                     data.options
                 )
                 return NextResponse.json({ success: true, data: { content: lectureNotes } })
@@ -245,7 +265,7 @@ export async function POST(req: NextRequest) {
             case "design-assessment":
                 const rubric = await courseDesignStudioService.designAssessment(
                     data.contentId,
-                    session.user.id,
+                    userId,
                     data.assessmentType || "assignment"
                 )
                 return NextResponse.json({ success: true, data: rubric })
@@ -260,7 +280,7 @@ export async function POST(req: NextRequest) {
                 }
                 const syllabus = await courseDesignStudioService.generateSyllabus(
                     sylDesign.id,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: syllabus })
 
@@ -274,7 +294,7 @@ export async function POST(req: NextRequest) {
                 }
                 const readyCheck = await courseDesignStudioService.runReadyCheck(
                     checkDesign.id,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: readyCheck })
 
@@ -288,7 +308,7 @@ export async function POST(req: NextRequest) {
                 }
                 const publishResult = await courseDesignStudioService.publishCourse(
                     pubDesign.id,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: publishResult })
 
@@ -301,7 +321,7 @@ export async function POST(req: NextRequest) {
                         context: data.context || { currentPhase: "unknown" },
                         conversationId: data.conversationId,
                     },
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: genieResponse })
 
@@ -328,6 +348,16 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
+        // Resolve DB user by email for consistent ID
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email! },
+            select: { id: true },
+        })
+        if (!dbUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+        const userId = dbUser.id
+
         const body = await req.json()
         const { action, courseId, ...data } = body
 
@@ -339,7 +369,7 @@ export async function PUT(req: NextRequest) {
         const course = await prisma.course.findFirst({
             where: {
                 id: courseId,
-                instructorId: session.user.id,
+                instructorId: userId,
             },
         })
 
@@ -366,7 +396,7 @@ export async function PUT(req: NextRequest) {
                 const updated = await courseDesignStudioService.initializeCourseDesign(
                     courseId,
                     data.details,
-                    session.user.id
+                    userId
                 )
                 return NextResponse.json({ success: true, data: updated })
 
@@ -379,7 +409,7 @@ export async function PUT(req: NextRequest) {
                         bloomsLevel: data.bloomsLevel,
                         assessmentMethod: data.assessmentMethod,
                         isApproved: data.isApproved,
-                        approvedBy: data.isApproved ? session.user.id : null,
+                        approvedBy: data.isApproved ? userId : null,
                         approvedAt: data.isApproved ? new Date() : null,
                     },
                 })
@@ -450,7 +480,7 @@ export async function PUT(req: NextRequest) {
                     data: {
                         status: "APPROVED",
                         isApproved: true,
-                        approvedBy: session.user.id,
+                        approvedBy: userId,
                         approvedAt: new Date(),
                     },
                 })
@@ -479,6 +509,16 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
+        // Resolve DB user by email for consistent ID
+        const dbUser = await prisma.user.findUnique({
+            where: { email: session.user.email! },
+            select: { id: true },
+        })
+        if (!dbUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
+        }
+        const userId = dbUser.id
+
         const { searchParams } = new URL(req.url)
         const courseId = searchParams.get("courseId")
         const action = searchParams.get("action")
@@ -492,7 +532,7 @@ export async function DELETE(req: NextRequest) {
         const course = await prisma.course.findFirst({
             where: {
                 id: courseId,
-                instructorId: session.user.id,
+                instructorId: userId,
             },
         })
 
