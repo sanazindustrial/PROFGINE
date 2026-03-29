@@ -1,7 +1,14 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect } from "react"
 
+/**
+ * Client-side source code protection:
+ * - Disables right-click context menu
+ * - Blocks dev-tools keyboard shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U)
+ * - Disables text selection & copy/paste on the page
+ * - Prevents drag events on content
+ */
 export function SourceProtection() {
     useEffect(() => {
         // Disable right-click context menu
@@ -10,55 +17,59 @@ export function SourceProtection() {
             return false
         }
 
-        // Block developer tools keyboard shortcuts
+        // Block dev-tools and view-source shortcuts
         const handleKeyDown = (e: KeyboardEvent) => {
             // F12
-            if (e.key === 'F12') {
+            if (e.key === "F12") {
                 e.preventDefault()
                 return false
             }
-            // Ctrl+Shift+I (Inspect Element)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault()
-                return false
-            }
-            // Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault()
-                return false
-            }
-            // Ctrl+Shift+C (Element picker)
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+            // Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+Shift+C (Elements)
+            if (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key.toUpperCase())) {
                 e.preventDefault()
                 return false
             }
             // Ctrl+U (View Source)
-            if (e.ctrlKey && e.key === 'u') {
+            if (e.ctrlKey && e.key.toUpperCase() === "U") {
                 e.preventDefault()
                 return false
             }
-            // Ctrl+S (Save)
-            if (e.ctrlKey && e.key === 's') {
+            // Ctrl+S (Save page)
+            if (e.ctrlKey && e.key.toUpperCase() === "S") {
+                e.preventDefault()
+                return false
+            }
+            // Ctrl+A (Select all) on non-input elements
+            if (
+                e.ctrlKey &&
+                e.key.toUpperCase() === "A" &&
+                !(e.target instanceof HTMLInputElement) &&
+                !(e.target instanceof HTMLTextAreaElement)
+            ) {
+                e.preventDefault()
+                return false
+            }
+            // Ctrl+C / Ctrl+X copy/cut on non-input elements
+            if (
+                e.ctrlKey &&
+                ["C", "X"].includes(e.key.toUpperCase()) &&
+                !(e.target instanceof HTMLInputElement) &&
+                !(e.target instanceof HTMLTextAreaElement)
+            ) {
                 e.preventDefault()
                 return false
             }
         }
 
-        // Disable copy
+        // Disable copy event
         const handleCopy = (e: ClipboardEvent) => {
-            e.preventDefault()
-            return false
-        }
-
-        // Disable paste
-        const handlePaste = (e: ClipboardEvent) => {
-            // Allow paste in input/textarea elements
-            const target = e.target as HTMLElement
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-                return true
+            if (
+                !(e.target instanceof HTMLInputElement) &&
+                !(e.target instanceof HTMLTextAreaElement)
+            ) {
+                e.preventDefault()
+                return false
             }
-            e.preventDefault()
-            return false
         }
 
         // Disable drag
@@ -67,68 +78,63 @@ export function SourceProtection() {
             return false
         }
 
-        // Disable text selection on non-input elements
+        // Disable text selection via selectstart
         const handleSelectStart = (e: Event) => {
-            const target = e.target as HTMLElement
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-                return true
+            if (
+                !(e.target instanceof HTMLInputElement) &&
+                !(e.target instanceof HTMLTextAreaElement)
+            ) {
+                e.preventDefault()
+                return false
             }
-            e.preventDefault()
-            return false
         }
 
-        // Console warning
-        const warningStyle = 'color: red; font-size: 24px; font-weight: bold;'
-        const infoStyle = 'color: #333; font-size: 14px;'
-        console.log('%c⚠️ STOP!', warningStyle)
-        console.log(
-            '%cThis is a protected application. Unauthorized access, copying, or reverse engineering of this software is strictly prohibited under applicable intellectual property laws including the Digital Millennium Copyright Act (DMCA), Computer Fraud and Abuse Act (CFAA), and FERPA regulations for educational data protection.',
-            infoStyle
-        )
-        console.log(
-            '%c© Professor GENIE Platform - All Rights Reserved. Unauthorized use is subject to legal action.',
-            infoStyle
-        )
+        // Disable print-screen detection (limited)
+        const handleBeforePrint = () => {
+            document.body.style.visibility = "hidden"
+        }
+        const handleAfterPrint = () => {
+            document.body.style.visibility = "visible"
+        }
 
-        document.addEventListener('contextmenu', handleContextMenu)
-        document.addEventListener('keydown', handleKeyDown)
-        document.addEventListener('copy', handleCopy)
-        document.addEventListener('paste', handlePaste)
-        document.addEventListener('dragstart', handleDragStart)
-        document.addEventListener('selectstart', handleSelectStart)
+        document.addEventListener("contextmenu", handleContextMenu)
+        document.addEventListener("keydown", handleKeyDown)
+        document.addEventListener("copy", handleCopy)
+        document.addEventListener("dragstart", handleDragStart)
+        document.addEventListener("selectstart", handleSelectStart)
+        window.addEventListener("beforeprint", handleBeforePrint)
+        window.addEventListener("afterprint", handleAfterPrint)
 
-        // Add CSS-based protection
-        document.body.style.setProperty('-webkit-user-select', 'none')
-        document.body.style.setProperty('-moz-user-select', 'none')
-        document.body.style.setProperty('-ms-user-select', 'none')
-        document.body.style.setProperty('user-select', 'none')
-
-        // Allow text selection in form inputs
-        const style = document.createElement('style')
+        // Add CSS to disable selection globally (except inputs)
+        const style = document.createElement("style")
         style.textContent = `
-            input, textarea, [contenteditable="true"] {
-                -webkit-user-select: text !important;
-                -moz-user-select: text !important;
-                -ms-user-select: text !important;
-                user-select: text !important;
-            }
-        `
+      body {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+      }
+      input, textarea, [contenteditable="true"] {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+      }
+      @media print {
+        body { display: none !important; }
+      }
+    `
         document.head.appendChild(style)
 
         return () => {
-            document.removeEventListener('contextmenu', handleContextMenu)
-            document.removeEventListener('keydown', handleKeyDown)
-            document.removeEventListener('copy', handleCopy)
-            document.removeEventListener('paste', handlePaste)
-            document.removeEventListener('dragstart', handleDragStart)
-            document.removeEventListener('selectstart', handleSelectStart)
-            document.body.style.removeProperty('-webkit-user-select')
-            document.body.style.removeProperty('-moz-user-select')
-            document.body.style.removeProperty('-ms-user-select')
-            document.body.style.removeProperty('user-select')
-            if (style.parentNode) {
-                style.parentNode.removeChild(style)
-            }
+            document.removeEventListener("contextmenu", handleContextMenu)
+            document.removeEventListener("keydown", handleKeyDown)
+            document.removeEventListener("copy", handleCopy)
+            document.removeEventListener("dragstart", handleDragStart)
+            document.removeEventListener("selectstart", handleSelectStart)
+            window.removeEventListener("beforeprint", handleBeforePrint)
+            window.removeEventListener("afterprint", handleAfterPrint)
+            document.head.removeChild(style)
         }
     }, [])
 
