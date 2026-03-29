@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,7 @@ import {
     Crown,
     AlertTriangle,
     CheckCircle,
+    CheckCircle2,
     Info,
     ShoppingCart,
     BookOpen,
@@ -195,6 +196,18 @@ export default function CreditUsageClient({
     const [showAllTransactions, setShowAllTransactions] = useState(false)
     const [guidelinesExpanded, setGuidelinesExpanded] = useState<string | null>(null)
 
+    // Handle return from Stripe checkout
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('purchase') === 'success') {
+            setBuySuccess(true)
+            setActiveTab('overview')
+            // Clean URL
+            window.history.replaceState({}, '', '/dashboard/credits')
+            setTimeout(() => setBuySuccess(false), 5000)
+        }
+    }, [])
+
     const isUnlimited = user.role === 'ADMIN' && user.isOwner
     const isAdmin = user.role === 'ADMIN'
     const totalUsedThisMonth = monthlyUsage.reduce((sum, u) => sum + u.totalUsed, 0)
@@ -225,20 +238,28 @@ export default function CreditUsageClient({
     const handleBuyCredits = async (amount: number) => {
         setBuyingPackage(amount)
         try {
-            const res = await fetch('/api/credits', {
+            // Map amount to package ID
+            const packageId = String(amount)
+
+            const res = await fetch('/api/stripe/credit-purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount, paymentMethod: 'platform' }),
+                body: JSON.stringify({ packageId }),
             })
-            if (res.ok) {
-                setBuySuccess(true)
-                setTimeout(() => {
-                    setBuySuccess(false)
-                    window.location.reload()
-                }, 2000)
+            const data = await res.json()
+
+            if (res.ok && data.url) {
+                // Redirect to Stripe checkout
+                window.location.href = data.url
+            } else if (data.error === 'Payment system is not configured') {
+                // Stripe not configured — show message
+                alert('Payment system is being set up. Please try again later.')
+            } else {
+                alert(data.error || 'Failed to start checkout')
             }
         } catch (err) {
             console.error('Purchase failed:', err)
+            alert('An error occurred. Please try again.')
         } finally {
             setBuyingPackage(null)
         }
@@ -253,6 +274,15 @@ export default function CreditUsageClient({
 
     return (
         <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+            {/* Purchase Success Banner */}
+            {buySuccess && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+                    <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span className="font-medium">Purchase successful! Your credits have been added to your account.</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -281,11 +311,10 @@ export default function CreditUsageClient({
 
             {/* Credit Alert Banner */}
             {!isUnlimited && usagePercent >= 75 && (
-                <div className={`flex items-center gap-3 rounded-lg border p-4 ${
-                    usagePercent >= 90
+                <div className={`flex items-center gap-3 rounded-lg border p-4 ${usagePercent >= 90
                         ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
                         : 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30'
-                }`}>
+                    }`}>
                     <AlertTriangle className={`size-5 shrink-0 ${usagePercent >= 90 ? 'text-red-600' : 'text-orange-600'}`} />
                     <div className="flex-1">
                         <p className={`text-sm font-medium ${usagePercent >= 90 ? 'text-red-800 dark:text-red-300' : 'text-orange-800 dark:text-orange-300'}`}>
@@ -297,9 +326,8 @@ export default function CreditUsageClient({
                     </div>
                     <button
                         onClick={() => setActiveTab('buy')}
-                        className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-white ${
-                            usagePercent >= 90 ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
-                        }`}
+                        className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-medium text-white ${usagePercent >= 90 ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
+                            }`}
                     >
                         Buy Credits
                     </button>
@@ -371,11 +399,10 @@ export default function CreditUsageClient({
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                                activeTab === tab.id
+                            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${activeTab === tab.id
                                     ? 'bg-background text-foreground shadow-sm'
                                     : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                                }`}
                         >
                             <Icon className="size-4" />
                             <span className="hidden sm:inline">{tab.label}</span>
@@ -637,11 +664,10 @@ export default function CreditUsageClient({
                                 {CREDIT_PACKAGES.map(pkg => (
                                     <div
                                         key={pkg.amount}
-                                        className={`relative flex flex-col items-center rounded-xl border-2 p-6 transition-all hover:shadow-md ${
-                                            pkg.popular
+                                        className={`relative flex flex-col items-center rounded-xl border-2 p-6 transition-all hover:shadow-md ${pkg.popular
                                                 ? 'border-primary bg-primary/5'
                                                 : 'border-border hover:border-primary/50'
-                                        }`}
+                                            }`}
                                     >
                                         {pkg.popular && (
                                             <Badge className="absolute -top-2.5 bg-primary text-xs">Most Popular</Badge>
@@ -656,13 +682,12 @@ export default function CreditUsageClient({
                                         <button
                                             onClick={() => handleBuyCredits(pkg.amount)}
                                             disabled={buyingPackage !== null || isUnlimited}
-                                            className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                                                isUnlimited
+                                            className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${isUnlimited
                                                     ? 'cursor-not-allowed bg-muted text-muted-foreground'
                                                     : pkg.popular
                                                         ? 'bg-primary text-primary-foreground hover:bg-primary/90'
                                                         : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                                            }`}
+                                                }`}
                                         >
                                             {buyingPackage === pkg.amount ? 'Processing...' : isUnlimited ? 'Not Needed' : 'Purchase'}
                                         </button>
@@ -715,24 +740,20 @@ export default function CreditUsageClient({
                                 activeNotifications.map((notif, i) => (
                                     <div
                                         key={i}
-                                        className={`flex items-start gap-3 rounded-lg border p-4 ${
-                                            notif.severity === 'critical'
+                                        className={`flex items-start gap-3 rounded-lg border p-4 ${notif.severity === 'critical'
                                                 ? 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
                                                 : notif.severity === 'warning'
                                                     ? 'border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30'
                                                     : 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/30'
-                                        }`}
+                                            }`}
                                     >
-                                        <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${
-                                            notif.severity === 'critical' ? 'text-red-600' : notif.severity === 'warning' ? 'text-orange-600' : 'text-blue-600'
-                                        }`} />
+                                        <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${notif.severity === 'critical' ? 'text-red-600' : notif.severity === 'warning' ? 'text-orange-600' : 'text-blue-600'
+                                            }`} />
                                         <div>
-                                            <p className={`text-sm font-medium ${
-                                                notif.severity === 'critical' ? 'text-red-800 dark:text-red-300' : notif.severity === 'warning' ? 'text-orange-800 dark:text-orange-300' : 'text-blue-800 dark:text-blue-300'
-                                            }`}>{notif.title}</p>
-                                            <p className={`text-xs ${
-                                                notif.severity === 'critical' ? 'text-red-600 dark:text-red-400' : notif.severity === 'warning' ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'
-                                            }`}>{notif.message}</p>
+                                            <p className={`text-sm font-medium ${notif.severity === 'critical' ? 'text-red-800 dark:text-red-300' : notif.severity === 'warning' ? 'text-orange-800 dark:text-orange-300' : 'text-blue-800 dark:text-blue-300'
+                                                }`}>{notif.title}</p>
+                                            <p className={`text-xs ${notif.severity === 'critical' ? 'text-red-600 dark:text-red-400' : notif.severity === 'warning' ? 'text-orange-600 dark:text-orange-400' : 'text-blue-600 dark:text-blue-400'
+                                                }`}>{notif.message}</p>
                                         </div>
                                     </div>
                                 ))

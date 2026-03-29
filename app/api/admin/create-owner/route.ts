@@ -1,38 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { requireSession } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+const OWNER_EMAILS = (process.env.OWNER_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, secret } = await request.json();
-    
-    // Simple security check
-    if (secret !== process.env.NEXTAUTH_SECRET) {
+    const session = await requireSession();
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
+    // Only owner admins can create other admins
+    const requestingUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { role: true, email: true }
+    });
+
+    if (!requestingUser || requestingUser.role !== 'ADMIN' || !OWNER_EMAILS.includes(requestingUser.email.toLowerCase())) {
+      return NextResponse.json({ error: 'Forbidden - owner access required' }, { status: 403 });
+    }
+
+    const { email } = await request.json();
+
     if (!email) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
     }
-    
+
     // Check if user exists
     let user = await prisma.user.findUnique({
       where: { email }
     });
-    
+
     if (user) {
-      // Update existing user to admin
       user = await prisma.user.update({
         where: { email },
-        data: { 
+        data: {
           role: 'ADMIN',
           updatedAt: new Date()
         }
       });
-      console.log(`Updated existing user to ADMIN: ${email}`);
     } else {
-      // Create new admin user
       user = await prisma.user.create({
         data: {
           email,
@@ -40,13 +48,12 @@ export async function POST(request: NextRequest) {
           role: 'ADMIN',
         }
       });
-      console.log(`Created new ADMIN user: ${email}`);
     }
-    
+
     // Create/update invitation
     const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Valid for 1 year
-    
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
     await prisma.invitation.upsert({
       where: { email },
       update: {
@@ -61,26 +68,17 @@ export async function POST(request: NextRequest) {
         expiresAt,
       }
     });
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       message: `Admin user created/updated: ${email}`,
-      userId: user.id 
+      userId: user.id
     });
-    
+
   } catch (error) {
     console.error('Error creating admin:', error);
-    return NextResponse.json({ 
-      error: 'Failed to create admin user',
-      details: error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({
+      error: 'Failed to create admin user'
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ 
-    message: 'POST to this endpoint with { email, secret } to create admin user' 
-  });
 }

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 // Using Node.js runtime for better compatibility
 export const runtime = "nodejs"
@@ -804,7 +806,11 @@ async function fetchWebpage(url: string, cookies?: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
     try {
-        // Public API - no auth required for discussion tools
+        const session = await getServerSession(authOptions)
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        }
+
         const body = await request.json()
         const { url, rawContent, cookies, authenticated } = body
 

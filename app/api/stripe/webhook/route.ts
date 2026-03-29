@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
 
     try {
         switch (event.type) {
+            case 'checkout.session.completed': {
+                const session = event.data.object as Stripe.Checkout.Session
+                // Handle one-time credit purchases
+                if (session.metadata?.type === 'credit_purchase') {
+                    await handleCreditPurchase(session)
+                }
+                break
+            }
+
             case 'customer.subscription.created':
             case 'customer.subscription.updated': {
                 const subscription = event.data.object as Stripe.Subscription
@@ -69,6 +78,37 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         )
     }
+}
+
+async function handleCreditPurchase(session: Stripe.Checkout.Session) {
+    const userId = session.metadata?.userId
+    const credits = parseInt(session.metadata?.credits || '0', 10)
+
+    if (!userId || credits <= 0) {
+        console.error('Invalid credit purchase metadata:', session.metadata)
+        return
+    }
+
+    // Add credits to user balance and create transaction record
+    await prisma.$transaction([
+        prisma.user.update({
+            where: { id: userId },
+            data: {
+                creditBalance: { increment: credits },
+                stripeCustomerId: session.customer as string || undefined,
+            },
+        }),
+        prisma.creditTransaction.create({
+            data: {
+                userId,
+                amount: credits,
+                type: 'PURCHASE',
+                description: `Stripe credit purchase - ${credits} credits (session: ${session.id})`,
+            },
+        }),
+    ])
+
+    console.log(`Credit purchase: ${credits} credits added for user ${userId}`)
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {

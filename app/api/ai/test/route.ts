@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
+import { authOptions } from '@/app/api/auth/auth-options'
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { prisma } from "@/prisma/client"
 
 export async function POST(request: NextRequest) {
     try {
         // Check if user is admin
-        const session = await getServerSession()
+        const session = await getServerSession(authOptions)
         if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }

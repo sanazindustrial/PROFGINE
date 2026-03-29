@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// Purchase additional credits
+// Purchase additional credits - redirects to Stripe checkout
 export async function POST(request: NextRequest) {
     try {
         const session = await requireSession()
@@ -86,7 +86,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { amount, paymentMethod } = await request.json()
+        const { amount, packageId } = await request.json()
+
+        // If packageId is provided, redirect to Stripe credit purchase
+        if (packageId) {
+            return NextResponse.json({
+                redirect: '/api/stripe/credit-purchase',
+                message: 'Use /api/stripe/credit-purchase endpoint for Stripe-based purchases'
+            })
+        }
 
         if (!amount || amount <= 0) {
             return NextResponse.json({ error: 'Invalid credit amount' }, { status: 400 })
@@ -100,24 +108,17 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Calculate cost (example: 1 credit = $0.10)
-        const costPerCredit = 0.10
-        const totalCost = amount * costPerCredit
-
-        // In a real implementation, you would integrate with payment processor here
-        // For now, we'll simulate the transaction
-
-        // Create credit transaction
+        // For non-Stripe purchases (admin grants, promo codes, etc.)
+        // Real money purchases should use /api/stripe/credit-purchase
         const transaction = await prisma.creditTransaction.create({
             data: {
                 userId: user.id,
                 amount: amount,
                 type: 'PURCHASE',
-                description: `Credit purchase - ${amount} credits for $${totalCost.toFixed(2)}`
+                description: `Credit grant - ${amount} credits`
             }
         })
 
-        // Update user credit balance
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -128,11 +129,10 @@ export async function POST(request: NextRequest) {
         })
 
         return NextResponse.json({
-            message: 'Credits purchased successfully',
+            message: 'Credits added successfully',
             transaction: {
                 id: transaction.id,
                 amount: amount,
-                cost: totalCost,
                 newBalance: user.creditBalance + amount
             }
         })

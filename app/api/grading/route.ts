@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getToken } from "next-auth/jwt"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { ChatMessage } from "@/types/ai.types"
 
@@ -32,6 +33,11 @@ const withSystemPrompt = (messages: ChatMessage[]): ChatMessage[] => {
 
 export async function POST(request: NextRequest) {
     try {
+        const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+        if (!token?.email) {
+            return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        }
+
         const body = await request.json()
         const rawMessages = (body?.messages || []) as ChatMessage[]
 

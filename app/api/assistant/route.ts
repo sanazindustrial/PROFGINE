@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import OpenAI from "openai"
 import { APIPromise } from "openai/core"
 
@@ -37,6 +39,11 @@ export async function POST(req: Request) {
       { message: "AI Assistant is not configured. Please contact the administrator." },
       { status: 503 }
     )
+  }
+
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
 
   // Parse the request body

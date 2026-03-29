@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { openAIAdaptor } from "@/adaptors/open-ai.adaptor"
 import { fileInputSchema } from "@/schemas/file-input.schema"
 import { fromError } from "zod-validation-error"
 
 export async function POST(req: any) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+    }
+
     const formData = await req.formData()
     const createdFiles = []
 

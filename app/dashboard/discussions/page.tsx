@@ -111,7 +111,7 @@ export default async function DiscussionsPage() {
                     <div className="flex gap-2">
                         <Button asChild variant="outline">
                             <Link href="/dashboard/discussions/review">
-                                <Zap className="mr-2 h-4 w-4" />
+                                <Zap className="mr-2 size-4" />
                                 Bulk AI Review
                             </Link>
                         </Button>
@@ -124,7 +124,7 @@ export default async function DiscussionsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Threads</CardTitle>
-                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <MessageSquare className="size-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.totalThreads}</div>
@@ -133,7 +133,7 @@ export default async function DiscussionsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <Users className="size-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.totalPosts}</div>
@@ -142,7 +142,7 @@ export default async function DiscussionsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <Clock className="size-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.pendingReview}</div>
@@ -151,7 +151,7 @@ export default async function DiscussionsPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Reviewed</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                        <CheckCircle className="size-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.reviewed}</div>
@@ -164,9 +164,9 @@ export default async function DiscussionsPage() {
                 {threads.length === 0 ? (
                     <Card>
                         <CardContent className="flex flex-col items-center justify-center py-12">
-                            <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+                            <MessageSquare className="mb-4 size-12 text-muted-foreground" />
                             <h3 className="text-lg font-semibold">No Discussion Threads</h3>
-                            <p className="text-muted-foreground text-center mt-2">
+                            <p className="mt-2 text-center text-muted-foreground">
                                 {isProfessor
                                     ? 'Create your first discussion thread to get started.'
                                     : 'No discussions available yet. Check back later.'}
@@ -231,7 +231,7 @@ export default async function DiscussionsPage() {
                                             {isProfessor && pendingPosts > 0 && (
                                                 <Button asChild size="sm">
                                                     <Link href={`/dashboard/discussions/review?thread=${thread.id}`}>
-                                                        <Zap className="mr-2 h-4 w-4" />
+                                                        <Zap className="mr-2 size-4" />
                                                         Review Posts
                                                     </Link>
                                                 </Button>

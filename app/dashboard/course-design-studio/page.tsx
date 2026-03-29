@@ -1164,8 +1164,8 @@ function CourseDesignStudioContent() {
                             </button>
                         </div>
                         {/* Image */}
-                        <div className="overflow-auto rounded-lg bg-white p-2 shadow-2xl dark:bg-gray-900" style={{ maxHeight: "85vh", maxWidth: "85vw" }}>
-                            <div style={{ transform: `scale(${lightboxZoom})`, transformOrigin: "top left", transition: "transform 0.2s ease" }}>
+                        <div className="max-h-[85vh] max-w-[85vw] overflow-auto rounded-lg bg-white p-2 shadow-2xl dark:bg-gray-900">
+                            <div className="origin-top-left transition-transform duration-200 ease-in-out" style={{ transform: `scale(${lightboxZoom})` }}>
                                 {lightboxImage.type === "svg" ? (
                                     <div dangerouslySetInnerHTML={{ __html: lightboxImage.src }} />
                                 ) : (

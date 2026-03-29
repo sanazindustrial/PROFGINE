@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/auth-options'
 
 export async function GET(request: NextRequest) {
-    // Check if Stripe is configured
+    const userSession = await getServerSession(authOptions)
+    if (!userSession?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     if (!stripe) {
         return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
     }

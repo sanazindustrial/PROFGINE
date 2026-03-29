@@ -12,31 +12,21 @@ function isPublicPath(pathname: string) {
     pathname === "/privacy" ||
     pathname === "/terms" ||
     pathname === "/contact" ||
-    pathname === "/discussion" ||
-    pathname === "/grade" ||
     pathname === "/docs" ||
     pathname === "/help" ||
-    pathname.startsWith("/google") && pathname.endsWith(".html") ||
+    (pathname.startsWith("/google") && pathname.endsWith(".html")) ||
     pathname === "/subscription/upgrade" ||
-    pathname === "/trial-dashboard" ||
-    pathname === "/bookmarklet.js" ||
-    pathname === "/bookmarklet-auth.js" ||
     pathname.startsWith("/auth/") ||
-    pathname.startsWith("/debug/") ||
-    pathname.startsWith("/test/") ||
-    pathname.startsWith("/api/debug/") ||
-    pathname.startsWith("/api/redirect") ||
     pathname.startsWith("/api/auth/") ||
-    pathname.startsWith("/api/chat") ||
     pathname.startsWith("/api/contact") ||
-    pathname.startsWith("/api/discussion/") ||
-    pathname.startsWith("/api/ai/")
+    pathname.startsWith("/api/stripe/webhook")
   );
 }
 
 function isAdminRoute(pathname: string) {
   return (
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin/") ||
     pathname.startsWith("/admin-dashboard") ||
     pathname.startsWith("/user-management") ||
     pathname.startsWith("/subscription-management") ||
@@ -142,6 +132,9 @@ export async function proxy(req: NextRequest) {
   // Admin routes: require ADMIN
   if (isAdminRoute(pathname)) {
     if (!token || token.role !== "ADMIN") {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.next();
@@ -149,6 +142,10 @@ export async function proxy(req: NextRequest) {
 
   // Everything else: require auth
   if (!token) {
+    // API routes get 401 JSON, pages get redirected
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/auth/signin", req.url));
   }
 
