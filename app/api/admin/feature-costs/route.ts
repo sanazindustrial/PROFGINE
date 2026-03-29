@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSession } from '@/lib/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+
+async function requireAdmin() {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+        return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+    }
+    const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true, role: true, isOwner: true },
+    })
+    if (!user || user.role !== 'ADMIN') {
+        return { error: NextResponse.json({ error: 'Admin access required' }, { status: 403 }) }
+    }
+    return { user }
+}
 
 const DEFAULT_FEATURE_COSTS = [
     { featureType: 'COURSE_CREATION', creditCost: 5, displayName: 'Course Creation', description: 'Create a new course' },
@@ -20,21 +36,10 @@ const DEFAULT_FEATURE_COSTS = [
 
 // GET - Retrieve all feature costs
 export async function GET() {
+    const auth = await requireAdmin()
+    if ('error' in auth) return auth.error
+
     try {
-        const session = await requireSession()
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: { role: true, isOwner: true }
-        })
-
-        if (!user || user.role !== 'ADMIN') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-        }
-
         let featureCosts = await prisma.featureCost.findMany({
             orderBy: { displayName: 'asc' }
         })
@@ -61,23 +66,16 @@ export async function GET() {
     }
 }
 
-// PUT - Update a feature cost (admin only)
+// PUT - Update a feature cost (owner-admin only)
 export async function PUT(request: NextRequest) {
+    const auth = await requireAdmin()
+    if ('error' in auth) return auth.error
+
+    if (!auth.user.isOwner) {
+        return NextResponse.json({ error: 'Owner access required' }, { status: 403 })
+    }
+
     try {
-        const session = await requireSession()
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: { role: true, isOwner: true }
-        })
-
-        if (!user || user.role !== 'ADMIN' || !user.isOwner) {
-            return NextResponse.json({ error: 'Owner access required' }, { status: 403 })
-        }
-
         const { featureType, creditCost, isActive } = await request.json()
 
         if (!featureType) {
