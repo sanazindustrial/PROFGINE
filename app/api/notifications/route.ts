@@ -13,22 +13,22 @@ import { notificationService, type NotificationType } from "@/lib/services/notif
 
 export async function GET(request: NextRequest) {
     try {
-    const session = await requireSession()
+        const session = await requireSession()
 
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
-    const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '20')
+        const { searchParams } = new URL(request.url)
+        const limit = parseInt(searchParams.get('limit') || '20')
 
-    const notifications = await notificationService.getUserNotifications(session.user.id, limit)
+        const notifications = await notificationService.getUserNotifications(session.user.id, limit)
 
-    return NextResponse.json({
-        success: true,
-        notifications,
-        count: notifications.length
-    })
+        return NextResponse.json({
+            success: true,
+            notifications,
+            count: notifications.length
+        })
     } catch (error: any) {
         if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         console.error('[Notifications API] Error:', error)
@@ -45,39 +45,39 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-    const session = await requireSession()
+        const session = await requireSession()
 
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
-    // Only professors and admins can send notifications
-    if (session.user.role !== 'PROFESSOR' && session.user.role !== 'ADMIN') {
-        return NextResponse.json({ error: 'Access denied' }, { status: 403 })
-    }
+        // Only professors and admins can send notifications
+        if (session.user.role !== 'PROFESSOR' && session.user.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+        }
 
-    const body = await request.json()
-    const { type, recipientEmail, recipientName, subject, message, data, courseId, userId } = body
+        const body = await request.json()
+        const { type, recipientEmail, recipientName, subject, message, data, courseId, userId } = body
 
-    if (!type || !recipientEmail || !subject || !message) {
-        return NextResponse.json(
-            { error: 'Missing required fields: type, recipientEmail, subject, message' },
-            { status: 400 }
-        )
-    }
+        if (!type || !recipientEmail || !subject || !message) {
+            return NextResponse.json(
+                { error: 'Missing required fields: type, recipientEmail, subject, message' },
+                { status: 400 }
+            )
+        }
 
-    const result = await notificationService.sendNotification({
-        type: type as NotificationType,
-        recipientEmail,
-        recipientName,
-        subject,
-        message,
-        data,
-        courseId,
-        userId,
-    })
+        const result = await notificationService.sendNotification({
+            type: type as NotificationType,
+            recipientEmail,
+            recipientName,
+            subject,
+            message,
+            data,
+            courseId,
+            userId,
+        })
 
-    return NextResponse.json(result)
+        return NextResponse.json(result)
     } catch (error: any) {
         if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         console.error('[Notifications API] Error:', error)
@@ -94,31 +94,31 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
     try {
-    const session = await requireSession()
+        const session = await requireSession()
 
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
-    const body = await request.json()
-    const { notificationId, markAllRead } = body
+        const body = await request.json()
+        const { notificationId, markAllRead } = body
 
-    // Mark all as read
-    if (markAllRead) {
-        const count = await notificationService.markAllAsRead(session.user.id)
-        return NextResponse.json({ success: true, markedCount: count })
-    }
+        // Mark all as read
+        if (markAllRead) {
+            const count = await notificationService.markAllAsRead(session.user.id)
+            return NextResponse.json({ success: true, markedCount: count })
+        }
 
-    if (!notificationId) {
-        return NextResponse.json(
-            { error: 'Missing required field: notificationId' },
-            { status: 400 }
-        )
-    }
+        if (!notificationId) {
+            return NextResponse.json(
+                { error: 'Missing required field: notificationId' },
+                { status: 400 }
+            )
+        }
 
-    const success = await notificationService.markAsRead(notificationId)
+        const success = await notificationService.markAsRead(notificationId)
 
-    return NextResponse.json({ success })
+        return NextResponse.json({ success })
     } catch (error: any) {
         if (error?.message === 'Not authenticated') return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
         console.error('[Notifications API] Error:', error)

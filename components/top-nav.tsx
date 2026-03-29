@@ -49,7 +49,7 @@ export function TopNav({ user }: TopNavProps) {
                     const data = await res.json()
                     setUnreadCount(data.count || 0)
                 }
-            } catch {}
+            } catch { }
         }
         fetchUnread()
         const interval = setInterval(fetchUnread, 30000) // poll every 30s

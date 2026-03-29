@@ -456,29 +456,55 @@ function CourseDesignStudioContent() {
     }
 
     return (
-        <div className="mx-auto max-w-7xl flex-1 space-y-6 p-8 pt-6">
-            <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-                <div className="flex-1 space-y-1">
-                    <h2 className="flex items-center gap-2 text-3xl font-bold tracking-tight">
-                        <Zap className="size-8 text-purple-600" />
-                        AI Course Design Studio
-                    </h2>
-                    <p className="text-muted-foreground">
-                        Intelligent tools to design engaging and effective courses
-                    </p>
+        <div className="mx-auto max-w-7xl flex-1 space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+            {/* Header */}
+            <div className="space-y-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
+                        <h2 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight sm:text-3xl">
+                            <Zap className="size-7 text-purple-600" />
+                            AI Course Design Studio
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                            Intelligent tools to design engaging and effective courses
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-muted-foreground">Difficulty Level</label>
+                            <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
+                                <SelectTrigger className="w-full sm:w-[180px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="light">Light - Introductory</SelectItem>
+                                    <SelectItem value="medium">Medium - Standard</SelectItem>
+                                    <SelectItem value="hard">Hard - Advanced</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button
+                            variant="outline"
+                            className="mt-auto border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/20"
+                            onClick={() => setShowAskAgent(!showAskAgent)}
+                        >
+                            <MessageCircle className="mr-2 size-4" />
+                            Ask Professor GENIE
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Course status bar */}
+                <div className="flex flex-wrap items-center gap-2">
                     {effectiveCourseId && (
-                        <Badge variant="secondary" className="mt-2">
-                            Editing Course: {currentCourseTitle || "Selected Course"}
+                        <Badge variant="secondary">
+                            Editing: {currentCourseTitle || "Selected Course"}
                             {currentCourseCode ? ` (${currentCourseCode})` : ""}
                         </Badge>
                     )}
                     {!effectiveCourseId && !isCourseIdLoading && (
-                        <Badge variant="outline" className="mt-2">
-                            Select a course to enable presentations
-                        </Badge>
-                    )}
-                    {!effectiveCourseId && !isCourseIdLoading && (
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <>
+                            <Badge variant="outline">Select a course to enable presentations</Badge>
                             <Button asChild variant="outline" size="sm">
                                 <Link href="/dashboard/courses">
                                     Choose Existing Course
@@ -489,36 +515,11 @@ function CourseDesignStudioContent() {
                                     Create New Course
                                 </Link>
                             </Button>
-                        </div>
+                        </>
                     )}
                     {!effectiveCourseId && isCourseIdLoading && (
-                        <Badge variant="outline" className="mt-2">
-                            Loading courses...
-                        </Badge>
+                        <Badge variant="outline">Loading courses...</Badge>
                     )}
-                </div>
-                <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
-                    <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">Difficulty Level</label>
-                        <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="light">Light - Introductory</SelectItem>
-                                <SelectItem value="medium">Medium - Standard</SelectItem>
-                                <SelectItem value="hard">Hard - Advanced</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <Button
-                        variant="outline"
-                        className="mt-auto border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/20"
-                        onClick={() => setShowAskAgent(!showAskAgent)}
-                    >
-                        <MessageCircle className="mr-2 size-4" />
-                        Ask Professor GENIE
-                    </Button>
                 </div>
             </div>
 
@@ -826,35 +827,35 @@ function CourseDesignStudioContent() {
                 </Alert>
             )}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="flex flex-wrap gap-2">
-                    <TabsTrigger value="course-info" className="flex items-center gap-2">
-                        <ClipboardList className="size-4" />
-                        Course Information
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                <TabsList className="flex h-auto flex-wrap gap-1.5 bg-muted/50 p-1.5">
+                    <TabsTrigger value="course-info" className="flex items-center gap-1.5 text-sm">
+                        <ClipboardList className="size-3.5" />
+                        <span className="hidden sm:inline">Course</span> Info
                     </TabsTrigger>
-                    <TabsTrigger value="evidence" className="flex items-center gap-2">
-                        <BookOpen className="size-4" />
+                    <TabsTrigger value="evidence" className="flex items-center gap-1.5 text-sm">
+                        <BookOpen className="size-3.5" />
                         Evidence Kit
                     </TabsTrigger>
-                    <TabsTrigger value="analysis" className="flex items-center gap-2">
-                        <Layers className="size-4" />
-                        Content Analysis
+                    <TabsTrigger value="analysis" className="flex items-center gap-1.5 text-sm">
+                        <Layers className="size-3.5" />
+                        Analysis
                     </TabsTrigger>
-                    <TabsTrigger value="sections" className="flex items-center gap-2">
-                        <Layout className="size-4" />
-                        Course Sections
+                    <TabsTrigger value="sections" className="flex items-center gap-1.5 text-sm">
+                        <Layout className="size-3.5" />
+                        Sections
                     </TabsTrigger>
-                    <TabsTrigger value="ready-check" className="flex items-center gap-2">
-                        <Shield className="size-4" />
-                        Ready-Check & Publish
+                    <TabsTrigger value="ready-check" className="flex items-center gap-1.5 text-sm">
+                        <Shield className="size-3.5" />
+                        Ready-Check
                     </TabsTrigger>
-                    <TabsTrigger value="tools" className="flex items-center gap-2">
-                        <Zap className="size-4" />
+                    <TabsTrigger value="tools" className="flex items-center gap-1.5 text-sm">
+                        <Zap className="size-3.5" />
                         AI Tools
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="course-info" className="space-y-6">
+                <TabsContent value="course-info" className="space-y-6 pt-2">
                     {effectiveCourseId ? (
                         <CourseInformation
                             courseId={effectiveCourseId}
@@ -874,7 +875,7 @@ function CourseDesignStudioContent() {
                     )}
                 </TabsContent>
 
-                <TabsContent value="evidence" className="space-y-6">
+                <TabsContent value="evidence" className="space-y-6 pt-2">
                     {effectiveCourseId && hasDesign ? (
                         <EvidenceKit
                             courseId={effectiveCourseId}
@@ -892,7 +893,7 @@ function CourseDesignStudioContent() {
                     )}
                 </TabsContent>
 
-                <TabsContent value="analysis" className="space-y-6">
+                <TabsContent value="analysis" className="space-y-6 pt-2">
                     {effectiveCourseId && hasDesign ? (
                         <ContentAnalysis
                             courseId={effectiveCourseId}
@@ -908,7 +909,7 @@ function CourseDesignStudioContent() {
                     )}
                 </TabsContent>
 
-                <TabsContent value="sections" className="space-y-6">
+                <TabsContent value="sections" className="space-y-6 pt-2">
                     {/* Quick Actions for Presentation Studio and Lecture Notes */}
                     {effectiveCourseId && hasDesign && (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -965,7 +966,7 @@ function CourseDesignStudioContent() {
                     )}
                 </TabsContent>
 
-                <TabsContent value="ready-check" className="space-y-6">
+                <TabsContent value="ready-check" className="space-y-6 pt-2">
                     {publishStatus && (
                         <Alert>
                             <AlertDescription>{publishStatus}</AlertDescription>
@@ -987,7 +988,7 @@ function CourseDesignStudioContent() {
                     )}
                 </TabsContent>
 
-                <TabsContent value="tools" className="space-y-6">
+                <TabsContent value="tools" className="space-y-6 pt-2">
                     {completedTools.length > 0 && (
                         <Card className="border-green-200 bg-gradient-to-r from-green-50 to-blue-50 dark:border-green-900 dark:from-green-950/20 dark:to-blue-950/20">
                             <CardHeader>

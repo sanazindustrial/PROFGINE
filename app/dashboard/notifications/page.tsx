@@ -163,21 +163,19 @@ export default function NotificationsPage() {
             <div className="mb-4 flex gap-1 rounded-lg bg-muted/50 p-1">
                 <button
                     onClick={() => setFilter("all")}
-                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                        filter === "all"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${filter === "all"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
                 >
                     All ({notifications.length})
                 </button>
                 <button
                     onClick={() => setFilter("unread")}
-                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                        filter === "unread"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                    }`}
+                    className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${filter === "unread"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
                 >
                     Unread ({unreadCount})
                 </button>
@@ -212,11 +210,10 @@ export default function NotificationsPage() {
                             <button
                                 key={notification.id}
                                 onClick={() => !notification.isRead && markAsRead(notification.id)}
-                                className={`group relative flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-sm ${
-                                    notification.isRead
-                                        ? "border-transparent bg-background opacity-70"
-                                        : "border-border/50 bg-card shadow-sm"
-                                }`}
+                                className={`group relative flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-sm ${notification.isRead
+                                    ? "border-transparent bg-background opacity-70"
+                                    : "border-border/50 bg-card shadow-sm"
+                                    }`}
                             >
                                 {/* Unread dot */}
                                 {!notification.isRead && (

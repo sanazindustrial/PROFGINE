@@ -20,15 +20,10 @@ import {
     Zap,
     Star,
     HelpCircle,
-    PlayCircle,
     CheckCircle,
     AlertCircle,
-    Lightbulb,
     Rocket,
     Camera,
-    CreditCard,
-    Bell,
-    Lock
 } from "lucide-react"
 
 export default function HelpPage() {
@@ -421,49 +416,74 @@ export default function HelpPage() {
                     </CardContent>
                 </Card>
 
-                {/* Contact & Support */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Bell className="size-5" />
-                            Need More Help?
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                            <div className="rounded-lg border p-4 text-center">
-                                <BookOpen className="mx-auto mb-2 size-8 text-blue-600" />
-                                <h3 className="mb-2 font-semibold">Documentation</h3>
-                                <p className="mb-4 text-sm text-muted-foreground">
-                                    Comprehensive guides and tutorials
-                                </p>
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href="/docs">View Docs</Link>
-                                </Button>
-                            </div>
-                            <div className="rounded-lg border p-4 text-center">
-                                <Users className="mx-auto mb-2 size-8 text-green-600" />
-                                <h3 className="mb-2 font-semibold">Community</h3>
-                                <p className="mb-4 text-sm text-muted-foreground">
-                                    Connect with other educators
-                                </p>
-                                <Button variant="outline" size="sm" disabled>
-                                    Coming Soon
-                                </Button>
-                            </div>
-                            <div className="rounded-lg border p-4 text-center">
-                                <MessageSquare className="mx-auto mb-2 size-8 text-purple-600" />
-                                <h3 className="mb-2 font-semibold">Support</h3>
-                                <p className="mb-4 text-sm text-muted-foreground">
-                                    Direct support from our team
-                                </p>
-                                <Button variant="outline" size="sm" disabled>
+                {/* Community & Support */}
+                <div className="grid gap-6 sm:grid-cols-2">
+                    <Card className="border-green-200 dark:border-green-900">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="size-5 text-green-600" />
+                                Community
+                            </CardTitle>
+                            <CardDescription>
+                                Connect with other educators using Professor GENIE
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                                <li className="flex items-start gap-2">
+                                    <CheckCircle className="mt-0.5 size-4 shrink-0 text-green-500" />
+                                    Share teaching strategies and best practices
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <CheckCircle className="mt-0.5 size-4 shrink-0 text-green-500" />
+                                    Get tips on AI-powered course design
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <CheckCircle className="mt-0.5 size-4 shrink-0 text-green-500" />
+                                    Collaborate with educators worldwide
+                                </li>
+                            </ul>
+                            <Button className="w-full" asChild>
+                                <a href="mailto:community@profgenie.ai?subject=Join%20Professor%20GENIE%20Community">
+                                    Join Community
+                                </a>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-purple-200 dark:border-purple-900">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <MessageSquare className="size-5 text-purple-600" />
+                                Support
+                            </CardTitle>
+                            <CardDescription>
+                                Direct support from our team
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <ul className="space-y-2 text-sm text-muted-foreground">
+                                <li className="flex items-start gap-2">
+                                    <CheckCircle className="mt-0.5 size-4 shrink-0 text-purple-500" />
+                                    Technical issues and bug reports
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <CheckCircle className="mt-0.5 size-4 shrink-0 text-purple-500" />
+                                    Account and subscription help
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <CheckCircle className="mt-0.5 size-4 shrink-0 text-purple-500" />
+                                    Feature requests and feedback
+                                </li>
+                            </ul>
+                            <Button className="w-full" variant="outline" asChild>
+                                <a href="mailto:support@profgenie.ai?subject=Support%20Request">
                                     Contact Support
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                                </a>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </FeatureLayout>
     )

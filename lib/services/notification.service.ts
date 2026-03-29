@@ -1037,6 +1037,82 @@ class NotificationService {
             }
         })
     }
+
+    /**
+     * Send credit threshold notification
+     * Called when a user's credit usage crosses a threshold (50%, 75%, 90%, 100%)
+     */
+    async sendCreditAlert(
+        userId: string,
+        userEmail: string,
+        userName: string,
+        usagePercent: number,
+        creditsRemaining: number,
+        monthlyAllocation: number
+    ): Promise<NotificationResult | null> {
+        let title: string
+        let message: string
+        let priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT' = 'NORMAL'
+
+        if (usagePercent >= 100) {
+            title = 'Credits Exhausted'
+            message = `Your monthly credits are fully used (${monthlyAllocation}/${monthlyAllocation}). Purchase more credits to continue using AI features.`
+            priority = 'URGENT'
+        } else if (usagePercent >= 90) {
+            title = 'Credits Almost Depleted'
+            message = `You have used 90% of your monthly credits. Only ${creditsRemaining} credits remaining. Consider purchasing more.`
+            priority = 'HIGH'
+        } else if (usagePercent >= 75) {
+            title = 'Credits Running Low'
+            message = `You have used 75% of your monthly credits. ${creditsRemaining} credits remaining.`
+            priority = 'NORMAL'
+        } else if (usagePercent >= 50) {
+            title = 'Half Credits Used'
+            message = `You have used 50% of your monthly credit allocation. ${creditsRemaining} credits remaining.`
+            priority = 'LOW'
+        } else {
+            return null
+        }
+
+        try {
+            // Check if we already sent this threshold notification this month
+            const startOfMonth = new Date()
+            startOfMonth.setDate(1)
+            startOfMonth.setHours(0, 0, 0, 0)
+
+            const existing = await prisma.notification.findFirst({
+                where: {
+                    userId,
+                    title,
+                    createdAt: { gte: startOfMonth },
+                }
+            })
+
+            if (existing) return null // Already notified for this threshold
+
+            // Save in-app notification
+            const notification = await prisma.notification.create({
+                data: {
+                    userId,
+                    type: 'SYSTEM_ANNOUNCEMENT',
+                    title,
+                    message,
+                    priority,
+                    isRead: false,
+                    isEmailSent: false,
+                }
+            })
+
+            return {
+                success: true,
+                notificationId: notification.id,
+                inApp: { saved: true, id: notification.id },
+            }
+        } catch (error) {
+            console.error('Failed to send credit alert:', error)
+            return { success: false, error: String(error) }
+        }
+    }
 }
 
 // Export singleton
