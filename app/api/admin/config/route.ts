@@ -3,25 +3,53 @@ import { prisma } from "@/lib/prisma"
 import { requireSession } from "@/lib/auth"
 import crypto from "crypto"
 
-const ENCRYPTION_KEY = process.env.CONFIG_ENCRYPTION_KEY || "default-encryption-key-change-in-production"
+function getEncryptionKey(): Uint8Array {
+    const key = process.env.CONFIG_ENCRYPTION_KEY
+    if (!key || key.length < 32) {
+        throw new Error("CONFIG_ENCRYPTION_KEY must be set and at least 32 characters")
+    }
+    return new Uint8Array(crypto.scryptSync(key, "profgenie-config-salt", 32))
+}
 
 function encrypt(text: string): string {
-    const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY)
-    let encrypted = cipher.update(text, 'utf8', 'hex')
-    encrypted += cipher.final('hex')
-    return encrypted
+    const key = getEncryptionKey()
+    const iv = new Uint8Array(crypto.randomBytes(16))
+    const cipher = crypto.createCipheriv("aes-256-gcm", key, iv)
+    let encrypted = cipher.update(text, "utf8", "hex")
+    encrypted += cipher.final("hex")
+    const authTag = cipher.getAuthTag().toString("hex")
+    return Buffer.from(iv).toString("hex") + ":" + authTag + ":" + encrypted
 }
 
 function decrypt(encryptedText: string): string {
     try {
-        const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY)
-        let decrypted = decipher.update(encryptedText, 'hex', 'utf8')
-        decrypted += decipher.final('utf8')
+        const parts = encryptedText.split(":")
+        if (parts.length !== 3) {
+            return encryptedText // Legacy unencrypted value — backwards compat
+        }
+        const key = getEncryptionKey()
+        const iv = new Uint8Array(Buffer.from(parts[0], "hex"))
+        const authTag = new Uint8Array(Buffer.from(parts[1], "hex"))
+        const encrypted = parts[2]
+        const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv)
+        decipher.setAuthTag(authTag)
+        let decrypted = decipher.update(encrypted, "hex", "utf8")
+        decrypted += decipher.final("utf8")
         return decrypted
     } catch (error) {
-        return encryptedText // Return as-is if decryption fails (backwards compatibility)
+        return "[decryption failed]"
     }
 }
+
+// Allowlist of config keys that may be stored
+const ALLOWED_CONFIG_KEYS = new Set([
+    "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "GROQ_API_KEY",
+    "PERPLEXITY_API_KEY", "COHERE_API_KEY", "HUGGINGFACE_API_KEY",
+    "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD",
+    "STRIPE_SECRET_KEY", "STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET",
+    "AI_PREFERRED_PROVIDER", "AI_FALLBACK_ENABLED", "MAX_TOKENS_PER_REQUEST",
+    "PLATFORM_NAME", "SUPPORT_EMAIL",
+])
 
 export async function GET(request: NextRequest) {
     try {
@@ -64,6 +92,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Key and category are required" }, { status: 400 })
         }
 
+        // Validate key against allowlist — prevent arbitrary env var writes
+        if (!ALLOWED_CONFIG_KEYS.has(key)) {
+            return NextResponse.json({ error: "Configuration key not allowed" }, { status: 400 })
+        }
+
         const encryptedValue = value ? encrypt(value) : null
 
         const config = await prisma.adminConfig.upsert({
@@ -86,10 +119,7 @@ export async function POST(request: NextRequest) {
             }
         })
 
-        // Update environment variable for immediate use
-        if (value) {
-            process.env[key] = value
-        }
+        // Config values are read from DB at runtime — no process.env mutation
 
         return NextResponse.json({ config: { ...config, value: null } }) // Don't return the actual value
     } catch (error) {
@@ -112,12 +142,13 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: "Key is required" }, { status: 400 })
         }
 
+        if (!ALLOWED_CONFIG_KEYS.has(key)) {
+            return NextResponse.json({ error: "Configuration key not allowed" }, { status: 400 })
+        }
+
         await prisma.adminConfig.delete({
             where: { key }
         })
-
-        // Remove from environment
-        delete process.env[key]
 
         return NextResponse.json({ success: true })
     } catch (error) {

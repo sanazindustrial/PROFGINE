@@ -84,6 +84,23 @@ function handleDashboardRedirect(req: NextRequest, token: any) {
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // CSRF protection: validate Origin header for state-changing API requests
+  const method = req.method.toUpperCase();
+  if (pathname.startsWith("/api/") && !["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const origin = req.headers.get("origin");
+    const host = req.headers.get("host");
+    if (origin && host) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return NextResponse.json({ error: "Forbidden: origin mismatch" }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Forbidden: invalid origin" }, { status: 403 });
+      }
+    }
+  }
+
   const sessionCookie =
     req.cookies.get("next-auth.session-token") ||
     req.cookies.get("__Secure-next-auth.session-token");
@@ -94,16 +111,14 @@ export async function proxy(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  console.log("🔍 Proxy Debug:", {
-    pathname,
-    isAuthenticated: !!token,
-    hasSessionCookie: !!sessionCookie,
-    tokenEmail: token?.email,
-    userRole: token?.role,
-    invalidSession: (token as any)?.invalidSession,
-    subscriptionType: token?.subscriptionType,
-    trialExpiresAt: token?.trialExpiresAt,
-  });
+  // Auth debug logging (production: keep minimal)
+  if (process.env.NODE_ENV === "development") {
+    console.log("🔍 Proxy Debug:", {
+      pathname,
+      isAuthenticated: !!token,
+      userRole: token?.role,
+    });
+  }
 
   if ((token as any)?.invalidSession) {
     const response = NextResponse.redirect(new URL("/auth/signin", req.url));

@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSession } from "@/lib/auth";
-import formidable from "formidable";
+import { checkRateLimit, getClientIP, rateLimiters } from "@/lib/rate-limit";
 import { promises as fs } from "fs";
 import path from "path";
+
+const ALLOWED_EXTENSIONS = new Set([
+    ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx",
+    ".txt", ".md", ".csv", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp",
+]);
+
+const ALLOWED_MIME_PREFIXES = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument",
+    "application/vnd.ms-",
+    "application/msword",
+    "text/",
+    "image/",
+];
 
 // POST /api/uploads
 export async function POST(req: NextRequest) {
     try {
         const session = await requireSession();
+
+        // Rate limit uploads
+        const clientIP = getClientIP(req);
+        const rateCheck = checkRateLimit(rateLimiters.upload, clientIP);
+        if (!rateCheck.allowed) {
+            return NextResponse.json({ error: "Too many uploads. Please wait." }, { status: 429 });
+        }
 
         // Create uploads directory if it doesn't exist
         const uploadsDir = path.join(process.cwd(), "public/uploads");
@@ -25,6 +46,24 @@ export async function POST(req: NextRequest) {
         const maxSize = 10 * 1024 * 1024;
         if (file.size > maxSize) {
             return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 });
+        }
+
+        // Validate file extension
+        const ext = path.extname(file.name).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.has(ext)) {
+            return NextResponse.json(
+                { error: `File type '${ext}' is not allowed` },
+                { status: 400 }
+            );
+        }
+
+        // Validate MIME type
+        const mimeAllowed = ALLOWED_MIME_PREFIXES.some((prefix) => file.type.startsWith(prefix));
+        if (!mimeAllowed && file.type) {
+            return NextResponse.json(
+                { error: `MIME type '${file.type}' is not allowed` },
+                { status: 400 }
+            );
         }
 
         // Generate unique filename

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { ChatMessage } from "@/types/ai.types"
 import { sanitizeMessages } from "@/lib/prompt-guard"
+import { checkRateLimit, getClientIP, rateLimiters } from "@/lib/rate-limit"
+import { preGenerationEthicsCheck, postGenerationEthicsCheck, createEthicsMetadata, AI_DISCLOSURE } from "@/lib/ai-ethics"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -83,6 +85,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Authentication required" }, { status: 401 })
         }
 
+        // Rate limit: 30 requests per minute per user
+        const rateCheck = checkRateLimit(rateLimiters.aiChat, session.user.email)
+        if (!rateCheck.allowed) {
+            return NextResponse.json({ error: "Rate limit exceeded. Please slow down." }, { status: 429 })
+        }
+
         const body = await request.json()
         const rawMessages = (body?.messages || []) as ChatMessage[]
 
@@ -96,17 +104,35 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: sanitized.reason || "Message blocked" }, { status: 400 })
         }
 
+        // AI Ethics: pre-generation check
+        const lastUserMessage = rawMessages.filter(m => m.role === "user").pop()?.content || ""
+        const preCheck = preGenerationEthicsCheck(lastUserMessage)
+        if (!preCheck.passed) {
+            return NextResponse.json({ error: preCheck.blockedReason || "Request not permitted" }, { status: 400 })
+        }
+
         const messages = withSystemPrompt(sanitized.messages)
         const start = Date.now()
 
         const { stream, provider, cost } = await multiAI.streamChat(messages)
         const content = await readStreamToString(stream)
 
+        // AI Ethics: post-generation check + metadata
+        const postCheck = postGenerationEthicsCheck(content)
+        const isGrading = rawMessages[0]?.content?.includes("myTArequestType:")
+        const ethicsMetadata = createEthicsMetadata(
+            provider || "unknown",
+            preCheck.flags,
+            postCheck.flags,
+            { reasoning: isGrading ? AI_DISCLOSURE.grading : AI_DISCLOSURE.discussion }
+        )
+
         return NextResponse.json({
             content,
             provider,
             cost,
             durationMs: Date.now() - start,
+            ethics: ethicsMetadata,
         })
     } catch (error) {
         console.error("Chat route error:", error)

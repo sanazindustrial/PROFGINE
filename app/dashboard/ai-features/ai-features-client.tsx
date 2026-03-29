@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { sanitizeSVG } from '@/lib/sanitize-svg'
 import {
     Bot,
     Star,
@@ -617,7 +618,7 @@ export function AIFeaturesClient() {
                                 <div className="space-y-3 rounded-lg border bg-purple-50/50 p-4 dark:bg-purple-950/20">
                                     <div
                                         className="flex items-center justify-center rounded-md border bg-white p-2 dark:bg-gray-900"
-                                        dangerouslySetInnerHTML={{ __html: generatedImage.svg }}
+                                        dangerouslySetInnerHTML={{ __html: sanitizeSVG(generatedImage.svg) }}
                                     />
                                     <p className="text-xs text-muted-foreground">{generatedImage.altText}</p>
                                     {generatedImage.palette && (
@@ -741,8 +742,8 @@ export function AIFeaturesClient() {
                                     key={mode.value}
                                     onClick={() => setQualityMode(mode.value)}
                                     className={`rounded-lg border-2 p-4 text-left transition-all ${qualityMode === mode.value
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-muted hover:border-muted-foreground/30'
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-muted hover:border-muted-foreground/30'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">

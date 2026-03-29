@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/prisma/client'
+import { checkRateLimit, getClientIP, rateLimiters } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
     try {
+        // Rate limit to prevent enumeration
+        const clientIP = getClientIP(req)
+        const rateCheck = checkRateLimit(rateLimiters.invitation, clientIP)
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests' },
+                { status: 429 }
+            )
+        }
+
         const { email } = await req.json()
 
         if (!email) {
@@ -12,27 +23,16 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-            where: { email }
-        })
-
-        if (existingUser) {
-            return NextResponse.json(
-                { hasInvitation: true, userExists: true },
-                { status: 200 }
-            )
-        }
-
-        // Check for valid invitation
+        // Check for valid invitation — do NOT reveal whether user already exists
         const invitation = await prisma.invitation.findUnique({
             where: { email }
         })
 
         const hasInvitation = invitation && invitation.status === 'PENDING'
 
+        // Return only invitation status — never expose user existence
         return NextResponse.json(
-            { hasInvitation, userExists: false },
+            { hasInvitation: !!hasInvitation },
             { status: 200 }
         )
 

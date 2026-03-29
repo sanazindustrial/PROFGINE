@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkRateLimit, getClientIP, rateLimiters } from "@/lib/rate-limit"
 
 const SUPPORT_EMAIL = "support@profgenie.ai"
 
@@ -28,6 +29,16 @@ const INQUIRY_LABELS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit: 3 requests per 15 minutes per IP
+        const clientIP = getClientIP(request)
+        const rateCheck = checkRateLimit(rateLimiters.contact, clientIP)
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                { error: "Too many requests. Please try again later." },
+                { status: 429 }
+            )
+        }
+
         const body: ContactFormData = await request.json()
 
         // Validate required fields

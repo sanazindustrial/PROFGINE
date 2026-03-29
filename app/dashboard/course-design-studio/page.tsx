@@ -18,6 +18,7 @@ import { SectionBuilder } from "@/components/course-design-studio/section-builde
 import { ReadyCheck } from "@/components/course-design-studio/ready-check"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { sanitizeSVG } from "@/lib/sanitize-svg"
 import {
     BookOpen,
     ClipboardList,
@@ -663,7 +664,7 @@ function CourseDesignStudioContent() {
                                                     <div
                                                         className="flex cursor-pointer items-center justify-center bg-gray-50 p-4 dark:bg-gray-800"
                                                         onClick={() => setLightboxImage({ src: img.svg, alt: img.altText || "Generated image", type: "svg" })}
-                                                        dangerouslySetInnerHTML={{ __html: img.svg }}
+                                                        dangerouslySetInnerHTML={{ __html: sanitizeSVG(img.svg) }}
                                                     />
                                                     <div className="space-y-2 p-3">
                                                         <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{img.altText}</p>
@@ -1167,7 +1168,7 @@ function CourseDesignStudioContent() {
                         <div className="max-h-[85vh] max-w-[85vw] overflow-auto rounded-lg bg-white p-2 shadow-2xl dark:bg-gray-900">
                             <div className="origin-top-left transition-transform duration-200 ease-in-out" style={{ transform: `scale(${lightboxZoom})` }}>
                                 {lightboxImage.type === "svg" ? (
-                                    <div dangerouslySetInnerHTML={{ __html: lightboxImage.src }} />
+                                    <div dangerouslySetInnerHTML={{ __html: sanitizeSVG(lightboxImage.src) }} />
                                 ) : (
                                     /* eslint-disable-next-line @next/next/no-img-element */
                                     <img src={lightboxImage.src} alt={lightboxImage.alt} className="max-w-none" />

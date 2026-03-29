@@ -1,5 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { promises as fs } from "fs"
 import path from "path"
 
@@ -27,6 +29,12 @@ export async function GET(
     { params }: { params: Promise<{ path: string[] }> }
 ) {
     try {
+        // Require authentication to access uploaded files
+        const session = await getServerSession(authOptions)
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        }
+
         const { path: pathSegments } = await params
         const filePath = pathSegments.join("/")
 
