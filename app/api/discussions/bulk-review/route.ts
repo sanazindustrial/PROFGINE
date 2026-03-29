@@ -311,10 +311,7 @@ export async function GET(req: NextRequest) {
         const threads = await prisma.discussionThread.findMany({
             where: {
                 course: {
-                    OR: [
-                        { instructorId: user.id },
-                        ...(user.role === UserRole.ADMIN ? [{}] : [])
-                    ]
+                    instructorId: user.id
                 }
             },
             include: {

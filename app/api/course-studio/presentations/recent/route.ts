@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { UserRole } from "@prisma/client"
 
 export const runtime = "nodejs"
 
@@ -19,9 +18,7 @@ export async function GET(req: NextRequest) {
 
         // Get recent presentations for the user (both course-linked and general)
         const presentations = await prisma.presentation.findMany({
-            where: session.user.role === UserRole.ADMIN
-                ? {}  // Admin can see all
-                : { userId: session.user.id },  // Users see their own
+            where: { userId: session.user.id },  // Users only see their own
             orderBy: { createdAt: "desc" },
             take: 10,
             select: {

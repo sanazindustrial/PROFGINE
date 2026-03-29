@@ -65,30 +65,7 @@ export default async function CoursesPage() {
   // Fetch courses based on user role
   let courses;
 
-  if (userWithDetails.role === UserRole.ADMIN) {
-    // Admins can see all courses
-    courses = await prisma.course.findMany({
-      include: {
-        instructor: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        _count: {
-          select: {
-            enrollments: true,
-            assignments: true,
-            discussions: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-  } else if (userWithDetails.role === UserRole.PROFESSOR) {
+  if (userWithDetails.role === UserRole.ADMIN || userWithDetails.role === UserRole.PROFESSOR) {
     // Professors can see courses they instruct
     const courseCreationAccess = subscriptionManager.hasFeature(FeatureType.COURSE_CREATION);
     const features = subscriptionManager.getFeatures();

@@ -33,10 +33,7 @@ export default async function DiscussionsPage() {
     const whereClause = isProfessor
         ? {
             course: {
-                OR: [
-                    { instructorId: user.id },
-                    ...(user.role === UserRole.ADMIN ? [{}] : [])
-                ]
+                instructorId: user.id
             }
         }
         : {

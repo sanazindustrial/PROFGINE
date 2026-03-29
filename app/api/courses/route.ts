@@ -14,7 +14,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const courses = await prisma.course.findMany({
-      where: user.role === UserRole.ADMIN ? undefined : { instructorId: user.id },
+      where: { instructorId: user.id },
       orderBy: { createdAt: "desc" },
     });
 

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { CourseStudioDesign } from "@/components/course-studio-design"
 import { Badge } from "@/components/ui/badge"
-import { UserRole } from "@prisma/client"
 import { BarChart3, Lightbulb, Star } from "lucide-react"
 
 export default async function CourseStudioPage({
@@ -18,21 +17,20 @@ export default async function CourseStudioPage({
         redirect("/login")
     }
 
-    // Verify user has access to this course
+    // Verify user has access to this course (always check ownership)
     const course = await prisma.course.findFirst({
-        where: session.user.role === UserRole.ADMIN
-            ? { id: courseId }
-            : { id: courseId, instructorId: session.user.id },
+        where: { id: courseId, instructorId: session.user.id },
     })
 
     if (!course) {
         redirect("/dashboard")
     }
 
-    // Get existing presentations for this course
+    // Get existing presentations for this course (only user's own)
     const presentations = await prisma.presentation.findMany({
         where: {
             courseId: courseId,
+            userId: session.user.id,
         },
         orderBy: {
             createdAt: "desc",

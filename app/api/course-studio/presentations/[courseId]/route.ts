@@ -14,18 +14,11 @@ export async function GET(
 
     const { courseId } = await params
 
-    // Check if user has access to course
+    // Check if user owns this course
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
-        OR: [
-          { instructorId: session.user.id },
-          {
-            enrollments: {
-              some: { userId: session.user.id },
-            },
-          },
-        ],
+        instructorId: session.user.id,
       },
     })
 
@@ -36,9 +29,9 @@ export async function GET(
       )
     }
 
-    // Get all presentations for this course
+    // Get presentations for this course (only user's own)
     const presentations = await prisma.presentation.findMany({
-      where: { courseId },
+      where: { courseId, userId: session.user.id },
       include: {
         user: {
           select: {

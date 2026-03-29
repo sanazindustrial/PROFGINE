@@ -23,7 +23,7 @@ import {
     CheckCircle,
     AlertCircle,
     Rocket,
-    Camera,
+    Camera as ImageIcon,
 } from "lucide-react"
 
 export default function HelpPage() {
@@ -236,7 +236,7 @@ export default function HelpPage() {
                                     </div>
                                     <div>
                                         <h4 className="flex items-center gap-2 font-medium">
-                                            <Camera className="size-4" />
+                                            <ImageIcon className="size-4" />
                                             Profile Picture
                                         </h4>
                                         <p className="mt-1 text-sm text-muted-foreground">
