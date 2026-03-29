@@ -337,7 +337,7 @@ export class LMSModuleManager {
             case LMSModule.COURSE_MANAGEMENT:
                 if (action === 'create' && context?.currentCount) {
                     const courseLimit = this.subscriptionManager.getFeatures().maxCourses;
-                    if (courseLimit && context.currentCount >= courseLimit) {
+                    if (courseLimit && courseLimit !== -1 && context.currentCount >= courseLimit) {
                         return {
                             canPerform: false,
                             reason: `Course limit reached (${courseLimit})`,
@@ -350,7 +350,7 @@ export class LMSModuleManager {
             case LMSModule.ASSIGNMENT_SYSTEM:
                 if (action === 'create' && context?.currentCount) {
                     const assignmentLimit = this.subscriptionManager.getFeatures().maxAssignments;
-                    if (assignmentLimit && context.currentCount >= assignmentLimit) {
+                    if (assignmentLimit && assignmentLimit !== -1 && context.currentCount >= assignmentLimit) {
                         return {
                             canPerform: false,
                             reason: `Assignment limit reached (${assignmentLimit})`,

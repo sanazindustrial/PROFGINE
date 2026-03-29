@@ -3,7 +3,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/prisma/client';
 import { createModuleManager, LMSModule } from '@/lib/module-manager';
-import { UserRole, AssignmentType } from '@prisma/client';
+import { AssignmentType } from '@prisma/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,33 +23,26 @@ function formatLimit(limit: number | null | undefined): string {
 export default async function AssignmentsPage() {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.id) {
+    if (!session?.user?.email) {
         redirect('/auth/signin');
     }
 
-    // Get or create user
-    let user = await prisma.user.findUnique({
-        where: { id: session.user.id }
+    // Get user by email (session.user.id can be unreliable)
+    const user = await prisma.user.findUnique({
+        where: { email: session.user.email }
     });
 
     if (!user) {
-        user = await prisma.user.create({
-            data: {
-                id: session.user.id,
-                name: session.user.name,
-                email: session.user.email!,
-                role: UserRole.PROFESSOR
-            }
-        });
+        redirect('/auth/signin');
     }
 
     // Check module access
     const moduleManager = createModuleManager({
         userId: user.id,
         role: user.role,
-        subscriptionType: 'PREMIUM', // Simulated
-        subscriptionExpiresAt: null,
-        trialExpiresAt: null
+        subscriptionType: user.subscriptionType,
+        subscriptionExpiresAt: user.subscriptionExpiresAt,
+        trialExpiresAt: user.trialExpiresAt
     });
 
     const hasAccess = moduleManager.hasModuleAccess(LMSModule.ASSIGNMENT_SYSTEM);

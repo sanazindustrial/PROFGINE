@@ -99,6 +99,8 @@ model Course {
   presentations Presentation[]
   designMetadata CourseDesignMetadata?
   notifications  Notification[]
+
+  @@index([instructorId])
 }
 
 model Enrollment {
@@ -129,6 +131,8 @@ model Module {
   course      Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
   contents    ModuleContent[] // Files, assignments, links, pages
   sections    ModuleSection[] // Sub-sections within module
+
+  @@index([courseId])
 }
 
 // Module Sections - Sub-divisions within a module
@@ -220,6 +224,8 @@ model ModuleContent {
   updatedAt    DateTime    @updatedAt
   module       Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   assignment   Assignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+
+  @@index([moduleId])
 }
 
 model Assignment {
@@ -245,6 +251,7 @@ model Assignment {
   notifications         Notification[]  // Related notifications
 
   @@unique([courseId, lmsId], name: "courseId_lmsId")
+  @@index([courseId])
 }
 
 model Rubric {
@@ -277,6 +284,9 @@ model Submission {
   gradingActivities GradingActivity[]
   assignment        Assignment        @relation(fields: [assignmentId], references: [id])
   student           User              @relation(fields: [studentId], references: [id])
+
+  @@index([assignmentId])
+  @@index([studentId])
 }
 
 model Grade {
@@ -300,6 +310,8 @@ model DiscussionThread {
   updatedAt DateTime         @updatedAt
   posts     DiscussionPost[]
   course    Course           @relation(fields: [courseId], references: [id])
+
+  @@index([courseId])
 }
 
 model DiscussionPost {
@@ -312,6 +324,9 @@ model DiscussionPost {
   author    User                @relation(fields: [authorId], references: [id])
   thread    DiscussionThread    @relation(fields: [threadId], references: [id])
   feedback  DiscussionFeedback?
+
+  @@index([threadId])
+  @@index([authorId])
 }
 
 // AI-Generated Discussion Feedback
@@ -391,6 +406,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -598,6 +614,9 @@ model CreditTransaction {
   createdAt      DateTime      @default(now())
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User?         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([organizationId])
 }
 
 model OrganizationUsageCounter {

@@ -78,7 +78,7 @@ export default function SubscriptionBanner({ subscriptionContext }: Subscription
     { name: 'API Access', enabled: canUseApiAccess, premium: true }
   ];
 
-  const isLimitReached = courseLimit && coursesUsed >= courseLimit;
+  const isLimitReached = courseLimit && courseLimit !== -1 && coursesUsed >= courseLimit;
 
   return (
     <div className="mb-6 space-y-4">

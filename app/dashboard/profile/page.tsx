@@ -42,16 +42,18 @@ import {
     Cpu,
     Server,
     XCircle,
-    Info
+    Info,
+    ExternalLink
 } from 'lucide-react';
+import { SignOutAllSessionsButton } from '@/components/sign-out-all-sessions-button';
 
 export default async function ProfilePage() {
     const session = await requireSession();
     const billingContext = await getBillingContext();
 
-    // Get user with comprehensive data
+    // Get user with comprehensive data (use email for reliable lookup)
     const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { email: session.user.email! },
         include: {
             courses: {
                 include: {
@@ -851,13 +853,20 @@ export default async function ProfilePage() {
 
                                 <div className="flex items-center justify-between rounded-lg border p-3">
                                     <div className="flex items-center gap-3">
-                                        <Lock className="size-5 text-muted-foreground" />
+                                        <Lock className="size-5 text-blue-500" />
                                         <div>
                                             <p className="text-sm font-medium">Two-Factor Authentication</p>
-                                            <p className="text-xs text-muted-foreground">Add an extra layer of security</p>
+                                            <p className="text-xs text-muted-foreground">Managed by your Google account</p>
                                         </div>
                                     </div>
-                                    <Badge variant="outline" className="text-yellow-600">Not Enabled</Badge>
+                                    <a
+                                        href="https://myaccount.google.com/security"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                                    >
+                                        Manage <ExternalLink className="size-3" />
+                                    </a>
                                 </div>
                             </CardContent>
                         </Card>
@@ -883,8 +892,8 @@ export default async function ProfilePage() {
                                         <span className="text-sm">Google OAuth connected</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <AlertTriangle className="size-4 text-yellow-500" />
-                                        <span className="text-sm">Two-factor authentication not enabled</span>
+                                        <CheckCircle className="size-4 text-green-500" />
+                                        <span className="text-sm">Two-factor authentication via Google</span>
                                     </div>
                                 </div>
 
@@ -922,10 +931,7 @@ export default async function ProfilePage() {
                                 <Badge variant="outline" className="text-green-600">Active</Badge>
                             </div>
 
-                            <Button variant="outline" className="w-full">
-                                <EyeOff className="mr-2 size-4" />
-                                Sign Out All Other Sessions
-                            </Button>
+                            <SignOutAllSessionsButton />
                         </CardContent>
                     </Card>
                 </TabsContent>
