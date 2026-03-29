@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
+import { checkContentSmuggling, wrapUntrustedContent } from "@/lib/prompt-guard"
 
 export async function POST(
     request: NextRequest,
@@ -16,9 +17,16 @@ export async function POST(
         const { content, assignmentTitle, maxPoints, config } = await request.json()
         const { submissionId } = await params
 
-        // Security validation
+        // Prompt injection guard for student content
+        const contentCheck = checkContentSmuggling(content || "")
+        if (!contentCheck.safe) {
+            return NextResponse.json({
+                error: "Security validation failed - suspicious content detected"
+            }, { status: 400 })
+        }
+
+        // Security validation for XSS
         if (config.securityLevel === "ENHANCED") {
-            // Check for potential security issues
             const securityFlags = [
                 /script\s*>/i,
                 /javascript:/i,
@@ -34,6 +42,8 @@ export async function POST(
                 }, { status: 400 })
             }
         }
+
+        const wrappedContent = wrapUntrustedContent("Student Submission", content)
 
         // Automated grading system prompt
         const systemPrompt = `You are an advanced automated grading assistant. Analyze the submission and provide:
@@ -52,7 +62,7 @@ Respond with structured JSON containing all assessment data.`
 
         const chatResult = await multiAI.streamChat([
             { role: "system", content: systemPrompt },
-            { role: "user", content }
+            { role: "user", content: wrappedContent }
         ])
 
         // Convert stream to text

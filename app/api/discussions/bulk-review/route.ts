@@ -4,6 +4,7 @@ import { requireSession } from "@/lib/auth";
 import { UserRole } from "@prisma/client";
 import { multiAI } from "@/adaptors/multi-ai.adaptor";
 import { ChatMessage } from "@/types/ai.types";
+import { wrapUntrustedContent } from "@/lib/prompt-guard";
 
 interface BulkReviewRequest {
     threadId: string;
@@ -69,7 +70,7 @@ ${discussionPrompt}
 STUDENT NAME: ${studentName}
 
 STUDENT'S RESPONSE:
-${studentPost}
+${wrapUntrustedContent("Student Post", studentPost)}
 
 ${style.rubric ? `GRADING RUBRIC:\n${style.rubric}\n` : ""}
 ${style.customInstructions ? `ADDITIONAL INSTRUCTIONS:\n${style.customInstructions}\n` : ""}

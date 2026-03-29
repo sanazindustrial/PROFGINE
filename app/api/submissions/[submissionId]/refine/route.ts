@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
+import { checkInjection, wrapUntrustedContent } from "@/lib/prompt-guard"
 
 export async function POST(
     request: NextRequest,
@@ -21,29 +22,22 @@ export async function POST(
             return NextResponse.json({ error: "Refinement prompt is required" }, { status: 400 })
         }
 
-        // Security check for refinement prompt
-        const dangerousPatterns = [
-            /system\s*prompt/i,
-            /ignore\s*previous/i,
-            /forget\s*instructions/i,
-            /pretend\s*you\s*are/i,
-            /<script/i,
-            /javascript:/i
-        ]
-
-        const hasDangerousPattern = dangerousPatterns.some(pattern => pattern.test(refinementPrompt))
-        if (hasDangerousPattern) {
+        // Prompt injection guard (replaces old weak pattern list)
+        const injectionCheck = checkInjection(refinementPrompt)
+        if (!injectionCheck.safe) {
             return NextResponse.json({
                 error: "Security violation: Invalid refinement prompt"
             }, { status: 400 })
         }
+
+        const wrappedRefinement = wrapUntrustedContent("Refinement Request", refinementPrompt)
 
         const systemPrompt = `You are a grading refinement specialist. Given the current grading and a specific refinement request, provide an improved version of the grading.
 
 Current Grading:
 ${JSON.stringify(currentGrading, null, 2)}
 
-Refinement Request: ${refinementPrompt}
+${wrappedRefinement}
 
 Provide:
 1. A refined grading with improved feedback

@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { chromeExtensionConfig } from "@/lib/config/services";
 import { multiAI } from "@/adaptors/multi-ai.adaptor";
+import { checkContentSmuggling, wrapUntrustedContent } from "@/lib/prompt-guard";
 import { UserRole } from "@prisma/client";
 
 interface ScannedPost {
@@ -206,7 +207,7 @@ Format your response as JSON:
                 const userMessage = `Student: ${post.studentName || "Anonymous"}
 Word Count: ${post.wordCount}
 Post Content:
-${post.content}`;
+${wrapUntrustedContent("Student Discussion Post", post.content)}`;
 
                 let aiFeedback: any = null;
                 let aiScore: number | null = null;

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
 import { ChatMessage } from "@/types/ai.types"
+import { sanitizeMessages } from "@/lib/prompt-guard"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -89,7 +90,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Messages are required" }, { status: 400 })
         }
 
-        const messages = withSystemPrompt(rawMessages)
+        // Prompt injection guard: strip client system messages and check for injection
+        const sanitized = sanitizeMessages(rawMessages)
+        if (sanitized.blocked) {
+            return NextResponse.json({ error: sanitized.reason || "Message blocked" }, { status: 400 })
+        }
+
+        const messages = withSystemPrompt(sanitized.messages)
         const start = Date.now()
 
         const { stream, provider, cost } = await multiAI.streamChat(messages)

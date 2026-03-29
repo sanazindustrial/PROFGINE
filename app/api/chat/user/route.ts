@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { getUserAIConfig } from "@/lib/user-ai-config"
 import { ChatMessage } from "@/types/ai.types"
 import { multiAI } from "@/adaptors/multi-ai.adaptor"
+import { sanitizeMessages } from "@/lib/prompt-guard"
 import OpenAI from "openai"
 import Anthropic from "@anthropic-ai/sdk"
 
@@ -201,14 +202,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Messages are required" }, { status: 400 })
         }
 
+        // Prompt injection guard
+        const sanitized = sanitizeMessages(rawMessages)
+        if (sanitized.blocked) {
+            return NextResponse.json({ error: sanitized.reason || "Message blocked" }, { status: 400 })
+        }
+
         // Add system prompt if not present
-        const hasSystem = rawMessages.some(m => m.role === 'system')
-        const useGradingPrompt = rawMessages[0]?.content?.includes("myTArequestType:")
+        const hasSystem = sanitized.messages.some(m => m.role === 'system')
+        const useGradingPrompt = sanitized.messages[0]?.content?.includes("myTArequestType:")
         const systemContent = useGradingPrompt ? GRADING_SYSTEM_PROMPT : DISCUSSION_SYSTEM_PROMPT
 
         const messages: ChatMessage[] = hasSystem
-            ? rawMessages
-            : [{ role: 'system', content: systemContent }, ...rawMessages]
+            ? sanitized.messages
+            : [{ role: 'system', content: systemContent }, ...sanitized.messages]
 
         const start = Date.now()
         let result: { content: string; provider: string }
