@@ -534,11 +534,28 @@ model FeatureCost {
   id          String      @id @default(cuid())
   featureType FeatureType @unique
   creditCost  Int         @default(1)
+  dollarPrice Float       @default(0)
   displayName String
   description String?
   isActive    Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+}
+
+// Admin audit log for tracking actions
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userEmail String?
+  action    String
+  resource  String
+  details   String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+  @@map("audit_logs")
 }
 
 model Invitation {
@@ -1328,6 +1345,12 @@ enum NotificationType {
   // General
   ENROLLMENT_CONFIRMED
   SYSTEM_ANNOUNCEMENT
+
+  // Admin notifications
+  ADMIN_ALERT
+  COST_ALERT
+  SECURITY_ALERT
+  USAGE_ALERT
 }
 
 enum NotificationPriority {
